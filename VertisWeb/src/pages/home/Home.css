@@ -22,19 +22,6 @@ a {
     border-bottom: 1px solid #ffffff;
 }
 
-.header-menu a {
-    gap: 20px;
-    margin-left: 15px;
-    font-size: 0.8rem;
-    font-weight: 200;
-    text-decoration: none;
-    color: white;
-}
-
-.header-menu a:hover {
-    color: #ffa569;
-}
-
 .header-login-button {
     background-color: #ff6600;
     border-radius: 10px;
