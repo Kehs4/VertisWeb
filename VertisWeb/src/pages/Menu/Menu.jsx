@@ -16,11 +16,12 @@ const menuItems = [
                     { label: 'Fornecedor', path: '/parceiros/fornecedor' }
                 ]
             },
-            { label: 'Unidade de Negócio', path: '#',
+            {
+                label: 'Unidade de Negócio', path: '#',
                 items: [
-                    {label: 'Unidades Operacionais', path: '/unidades-operacionais'}
+                    { label: 'Unidades Operacionais', path: '/unidades-operacionais' }
                 ]
-             },
+            },
             { label: 'Exames', path: '#' },
             { label: 'Animal', path: '#' },
         ],
@@ -68,8 +69,9 @@ function Menu() {
     return (
         <>
             <div className='header-vertis'>
-                <img src="/public/logo-white.png" alt="" width={60} height={40} />
-
+                <Link to={'/dashboard'}>
+                    <img src="/public/logo-white.png" alt="" width={60} height={40} />
+                </Link>
                 <div className='header-menu'>
                     <nav className='header-nav'>
                         {menuItems.map((item, idx) => (
@@ -84,7 +86,7 @@ function Menu() {
                                     menuTimeoutRef.current = setTimeout(() => {
                                         setActiveMenu(null);
                                         setActiveSubmenu(null);
-                                    }, 300); 
+                                    }, 300);
                                 }}
                                 style={{ position: 'relative', display: 'inline-block' }}
                             >

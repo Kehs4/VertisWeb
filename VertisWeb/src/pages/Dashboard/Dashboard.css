@@ -1,0 +1,119 @@
+.dashboard-container {
+    padding: 2rem;
+    background-color: #f4f6f8;
+}
+
+.dashboard-title {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin-bottom: 2rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.widget-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.widget-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.widget-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #34495e;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 1rem;
+}
+
+.widget-header .MuiSvgIcon-root {
+    color: #3498db;
+}
+
+.widget-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.widget-content .main-metric {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    text-align: center;
+}
+
+.widget-content .sub-metric {
+    display: block;
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.widget-content .comparison {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.comparison.positive {
+    color: #2ecc71;
+}
+
+.comparison.negative {
+    color: #e74c3c;
+}
+
+/* Estilos para widgets de lista */
+.large-widget {
+    grid-column: span 2; /* Faz o widget ocupar 2 colunas */
+}
+
+.list-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+.list-item span {
+    color: #555;
+}
+
+.list-item strong {
+    color: #333;
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+    .large-widget {
+        grid-column: span 1; /* Em telas menores, ocupa 1 coluna */
+    }
+}
