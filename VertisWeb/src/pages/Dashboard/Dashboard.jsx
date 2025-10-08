@@ -23,7 +23,7 @@ const mockData = {
         { animal: 'Rex', datetime: '2024-07-26 14:00', user: 'ana.silva' },
         { animal: 'Misty', datetime: '2024-07-26 15:30', user: 'carlos.santos' },
         { animal: 'Buddy', datetime: '2024-07-26 16:45', user: 'maria.oliveira' },
-        { animal: 'Bella', datetime: '2024-07-26 18:15', user: 'pedro.rodrigues' },
+        { animal: 'Bella', datetime: '2024-07-26 17:15', user: 'pedro.rodrigues' },
     ],
     lastServiceOrders: [
         { id: 'OS-7891', animal: 'Thor', tutor: 'Maria Souza', clinic: 'Clínica Vet ABC' },
@@ -32,16 +32,16 @@ const mockData = {
         { id: 'OS-7888', animal: 'Minnie', tutor: 'Edson Marques', clinic: 'Animais Clínica Veterinária' },
     ],
     patientsThisMonth: {
-        count: 125,
-        comparison: 15, // Porcentagem positiva em relação ao mês passado
+        count: 941,
+        comparison: -4.7, // Porcentagem em relação ao mês passado
     },
     invoices: {
         issued: 80,
         toIssue: 25,
     },
-    hospitalized: 8,
-    examsInProgress: 12,
-    activeUsers: 5,
+    hospitalized: 14,
+    examsInProgress: 35,
+    activeUsers: 16,
     laudos: 72,
 };
 // --- FIM DOS DADOS DE EXEMPLO ---
@@ -55,14 +55,14 @@ function Dashboard() {
         <>
             <Menu />
             <main className="dashboard-container">
-                <h1 className="dashboard-title">Painel de Controle</h1>
+                <h1 className="dashboard-title">Painel de Controle - Clínica GPI</h1>
 
                 <div className="dashboard-grid">
                     {/* Agendas para hoje */}
                     <div className="widget-card large-widget">
                         <div className="widget-header">
                             <EventIcon />
-                            <h3>Agendas para Hoje</h3>
+                            <h3>Próximos Agendamentos</h3>
                         </div>
                         <div className="widget-content list-content">
                             {mockData.schedules.map((item, index) => (
@@ -154,7 +154,7 @@ function Dashboard() {
                         </div>
                         <div className="widget-content">
                             <p className="main-metric">{mockData.activeUsers}</p>
-                            <span className="sub-metric">ativos na unidade</span>
+                            <span className="sub-metric">ativos agora na unidade</span>
                         </div>
                     </div>
 
@@ -162,7 +162,7 @@ function Dashboard() {
                     <div className="widget-card">
                         <div className="widget-header">
                             <Summarize />
-                            <h3>Laudos Emitidos Hoje</h3>
+                            <h3>Laudos Emitidos</h3>
                         </div>
                         <div className="widget-content">
                             <p className="main-metric">{mockData.laudos}</p>
