@@ -11,7 +11,7 @@
     --sub-metric-color: #8b8b8b;
     --list-item-bg-color: #474747;
     --list-item-text-color: #dddddd;
-    --theme-toggle-color: #ff9100;
+    --theme-toggle-color: #000000;
     --theme-button-bgcolor: #ffffff;
     --pizza-text: #ffffff;
     --text-shadow: 0 2px 1px rgb(64, 75, 95);
@@ -23,12 +23,12 @@
     --title-color: #3b3b3b;
     --widget-bg-color: #ffffff;
     --widget-border-color: #e0e0e0;
-    --widget-hover-border-color: #3498db;
+    --widget-hover-border-color: #ff6600;
     --header-color: #25282b;
     --header-border-color: #ecf0f1;
     --metric-color: #1f3b6b;
     --sub-metric-color: #5d5e5e;
-    --list-item-bg-color: #f9f9f9;
+    --list-item-bg-color: #f5f5f5;
     --list-item-text-color: #555;
     --theme-toggle-color: #ffffff;
     --theme-button-bgcolor: #000000;
