@@ -1,14 +1,61 @@
+/* --- Variáveis de Tema --- */
+.dark-mode {
+    --bg-color: #06080e;
+    --title-color: #ffffff;
+    --widget-bg-color: #242424;
+    --widget-border-color: rgba(255, 255, 255, 0.103);
+    --widget-hover-border-color: #707070;
+    --header-color: #cecece;
+    --header-border-color: rgba(236, 240, 241, 0.2);
+    --metric-color: #cccccc;
+    --sub-metric-color: #8b8b8b;
+    --list-item-bg-color: #474747;
+    --list-item-text-color: #dddddd;
+    --theme-toggle-color: #ff9100;
+    --theme-button-bgcolor: #ffffff;
+    --pizza-text: #ffffff;
+    --text-shadow: 0 2px 1px rgb(64, 75, 95);
+
+}
+
+.light-mode {
+    --bg-color: #fafafa;
+    --title-color: #3b3b3b;
+    --widget-bg-color: #ffffff;
+    --widget-border-color: #e0e0e0;
+    --widget-hover-border-color: #3498db;
+    --header-color: #25282b;
+    --header-border-color: #ecf0f1;
+    --metric-color: #1f3b6b;
+    --sub-metric-color: #5d5e5e;
+    --list-item-bg-color: #f9f9f9;
+    --list-item-text-color: #555;
+    --theme-toggle-color: #ffffff;
+    --theme-button-bgcolor: #000000;
+    --pizza-text: #040d13;
+    --text-shadow: 0 2px 1px rgba(212, 212, 212, 0.712);
+}
+/* --- Fim das Variáveis --- */
+
 .dashboard-container {
     padding: 3rem;
-    background-color: #06080e;
+    background-color: var(--bg-color);
     height: auto;
     min-height: 100dvh;
+    transition: background-color 0.3s ease;
+}
+
+.dashboard-header-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
 }
 
 .dashboard-title {
     font-size: 2rem;
-    color: #ffffff;
-    margin-bottom: 0.6rem;
+    color: var(--title-color);
+    text-shadow: var(--text-shadow);
 }
 
 .dashboard-grid {
@@ -18,27 +65,27 @@
 }
 
 .widget-card {
-    background-color: #242424;
+    background-color: var(--widget-bg-color);
     border-radius: 8px;
     padding: 1.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.103);
+    border: 1px solid var(--widget-border-color);
 }
 
 .widget-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-    border: 1px solid #707070;
+    border: 1px solid var(--widget-hover-border-color);
 }
 
 .widget-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #cecece;
+    color: var(--header-color);
     margin-bottom: 1rem;
-    border-bottom: 1px solid #ecf0f1b6;
+    border-bottom: 1px solid var(--header-border-color);
     padding-bottom: 1rem;
 }
 
@@ -46,14 +93,14 @@
 .widget-header h3 {
     margin: 0;
     font-size: 1.1rem;
-    text-shadow: 0 2px 1px rgb(64, 75, 95);
+    text-shadow: var(--text-shadow);
 }
 
 .widget-content .main-metric {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #cccccc;
-    text-shadow: 0 2px 1px rgb(107, 106, 106);
+    color: var(--metric-color);
+    text-shadow: var(--text-shadow);
     margin: 0;
     text-align: center;
 }
@@ -61,8 +108,10 @@
 .widget-content .sub-metric {
     display: block;
     text-align: center;
-    color: #8b8b8b;
-    font-size: 0.9rem;
+    color: var(--sub-metric-color);
+    text-shadow: 1px 2px 1px rgba(148, 148, 148, 0.308);
+    font-weight: 500;
+    font-size: 0.85rem;
     margin-top: 5px;
 }
 
@@ -77,10 +126,12 @@
 
 .comparison.positive {
     color: #2ecc71;
+    text-shadow: 1px 2px 1px rgba(148, 148, 148, 0.308);
 }
 
 .comparison.negative {
     color: #ff7060;
+    text-shadow: 1px 2px 1px rgba(148, 148, 148, 0.308);
 }
 
 /* Estilos para widgets de lista */
@@ -101,21 +152,25 @@
     flex-wrap: wrap;
     gap: 10px;
     padding: 10px;
-    background-color: #474747;
+    background-color: var(--list-item-bg-color);
     border-radius: 5px;
     font-size: 0.9rem;
 }
 
 .list-item span {
-    color: #dddddd;
+    color: var(--list-item-text-color);
+    text-shadow: var(--text-shadow);
 }
 
 .list-item strong {
     color: #e6640d;
+    text-shadow: var(--text-shadow);
 }
 
 .MuiChartsLegend-item {
-    color: white;
+    color: var(--pizza-text);
+    font-weight: 400;
+    text-shadow: var(--text-shadow);
 }
 
 .css-32sa41-MuiChartsWrapper-root { /* Gráfico de Pizza do Laudos Emitidos */
@@ -123,6 +178,16 @@
     margin-top: 5px;
 }
 
+.theme-toggle-button {
+    background: none;
+    cursor: pointer;
+    border: 1px solid var(--theme-toggle-color);
+    border-radius: 5px;
+    background-color: var(--theme-button-bgcolor);
+    color: var(--theme-toggle-color);
+    padding: 8px 12px;
+    font-weight: 500;
+}
 
 /* Responsividade */
 @media (max-width: 992px) {

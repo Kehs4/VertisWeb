@@ -15,7 +15,8 @@ import {
     Assignment as AssignmentIcon,
     People as PeopleIcon,
     Summarize as SummarizeIcon,
-    Summarize
+    Brightness4 as Brightness4Icon, // Ícone para modo escuro
+    Brightness7 as Brightness7Icon, // Ícone para modo claro
 } from '@mui/icons-material';
 
 // --- DADOS DE EXEMPLO (MOCK DATA) ---
@@ -57,7 +58,32 @@ const mockData = {
 };
 // --- FIM DOS DADOS DE EXEMPLO ---
 
+// Define as cores do gráfico para cada tema
+const chartThemeColors = {
+    dark: {
+        line: 'rgb(183, 0, 255)',
+        gradientStart: 'rgba(224, 68, 255, 0.8)',
+        gradientEnd: 'rgba(0, 119, 255, 0)',
+        axisLabel: 'rgba(255, 255, 255, 0.26)',
+        axisLine: 'rgba(255, 255, 255, 0.26)',
+        axisTick: 'rgba(255, 255, 255, 0.12)',
+        marker: 'rgba(100, 66, 179, 0.36)',
+    },
+    light: {
+        line: 'rgb(183, 0, 255)',
+        gradientStart: 'rgba(224, 68, 255, 0.8)',
+        gradientEnd: 'rgba(0, 119, 255, 0)',
+        axisLabel: 'rgba(0, 0, 0, 0.5)',
+        axisLine: 'rgba(0, 0, 0, 0.2)',
+        axisTick: 'rgba(0, 0, 0, 0.1)',
+        marker: 'rgba(0, 119, 255, 0.2)',
+    }
+};
+
 function Dashboard() {
+    const [theme, setTheme] = useState<'dark' | 'light'>('light'); // 'dark' ou 'light'
+    const currentChartColors = chartThemeColors[theme];
+
     useEffect(() => {
         document.title = "Vertis | Dashboard";
     }, []);
@@ -65,8 +91,13 @@ function Dashboard() {
     return (
         <>
             <Menu />
-            <main className="dashboard-container">
-                <h1 className="dashboard-title">Dashboard - Clínica GPI</h1>
+            <main className={`dashboard-container ${theme}-mode`}>
+                <div className="dashboard-header-toolbar">
+                    <h1 className="dashboard-title">Dashboard</h1>
+                    <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="theme-toggle-button">
+                        {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+                    </button>
+                </div>
 
                 <div className="dashboard-grid">
                     {/* Agendas para hoje */}
@@ -123,15 +154,15 @@ function Dashboard() {
                             xAxis={[{ 
                                 data: mockData.monthPatientData.month,
                                 scaleType: 'point',
-                                tickLabelStyle: { fill: 'rgba(255, 255, 255, 0.26)', fontSize: 10, fontWeight: 300},
+                                tickLabelStyle: { fill: currentChartColors.axisLabel, fontSize: 10, fontWeight: 300},
                             }]}
                             yAxis={[{
-                                tickLabelStyle: { fill: 'rgba(255, 255, 255, 0.26)', fontSize: 10, fontWeight: 300},
+                                tickLabelStyle: { fill: currentChartColors.axisLabel, fontSize: 10, fontWeight: 300},
                             }]}
                             series={[
                                 {
                                     data: mockData.monthPatientData.counts,
-                                    color: 'rgb(145, 11, 255)',
+                                    color: currentChartColors.line,
                                     type: 'line',
                                     area: true,
                                     curve: 'linear'
@@ -144,23 +175,23 @@ function Dashboard() {
                                   strokeDasharray: '10 2',
                                   strokeWidth: 1,
                                   
-                                  stroke: 'rgb(183, 0, 255)', // Garante a cor da linha
+                                  stroke: currentChartColors.line, // Garante a cor da linha
                                 },
                                 '& .MuiAreaElement-root': {
                                   fill: "url('#myGradient')",
                                 },
                                 // Força a cor da linha do eixo para garantir a prioridade
                                 '.MuiChartsAxis-line': {
-                                  stroke: 'rgba(255, 255, 255, 0.26) !important',
+                                  stroke: `${currentChartColors.axisLine} !important`,
                                 },
                                 '.MuiChartsAxis-tick': {
-                                    stroke: 'rgba(255, 255, 255, 0.12) !important',
+                                    stroke: `${currentChartColors.axisTick} !important`,
                                     
                                 },
 
                                 // Estilo dos círculos (marcadores) na linha
                                 '.MuiMarkElement-root': {
-                                    fill: 'rgba(100, 66, 179, 0.36)',
+                                    fill: currentChartColors.marker,
                                     strokeWidth: 0,
                                 },
                                 
@@ -170,8 +201,8 @@ function Dashboard() {
                         >
                             <defs>
                                 <linearGradient id="myGradient" gradientTransform="rotate(90)">
-                                    <stop offset="5%" stopColor="rgba(224, 68, 255, 0.8)" />
-                                    <stop offset="95%" stopColor="rgba(0, 119, 255, 0)" />
+                                    <stop offset="5%" stopColor={currentChartColors.gradientStart} />
+                                    <stop offset="95%" stopColor={currentChartColors.gradientEnd} />
                                 </linearGradient>
                             </defs>
                         </LineChart>
@@ -181,7 +212,7 @@ function Dashboard() {
                     {/* Laudos emitidos */}
                     <div className="widget-card">
                         <div className="widget-header">
-                            <Summarize style={{color: 'rgb(253, 79, 117)'}}/>
+                            <SummarizeIcon style={{color: 'rgb(253, 79, 117)'}}/>
                             <h3>Laudos Emitidos</h3>
                         </div>
                         <div className="widget-content" style={{display: 'flex', alignItems: 'center'}}>
