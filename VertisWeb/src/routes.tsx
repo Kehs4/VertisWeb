@@ -6,12 +6,14 @@ import NotFound from './pages/NotFound/NotFound.tsx';
 import Dashboard from './pages/Dashboard/Dashboard.tsx';
 import PartnerPage from './pages/Vertis/Arquivo/Parceiro de Negocio/PartnerPage.tsx';
 import OperationalUnitPage from './pages/Vertis/Arquivo/Unidades Operacionais/OperationalUnitPage.tsx';
+import ServiceOrderPage from './pages/Vertis/Operacional/Ordem de Serviço/ServiceOrderPage.tsx';
 
 function AppRoutes() {
 
   return (
     <Routes>
       <Route index element={<Home />} />
+      <Route path="/ordem-de-servico" element={<ServiceOrderPage />} />
       <Route path="/unidades-operacionais" element={<OperationalUnitPage />} />
       <Route path="/parceiros/:partnerType" element={<PartnerPage />} />
       <Route path="/login" element={<Login />} />

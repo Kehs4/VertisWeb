@@ -36,7 +36,7 @@ const menuItems: MenuItem[] = [
     {
         label: 'Operacional',
         items: [
-            { label: 'Ordem de Serviço', path: '#' },
+            { label: 'Ordem de Serviço', path: '/ordem-de-servico' },
             { label: 'Agendas', path: '#' },
             { label: 'Admissões', path: '#' },
             { label: 'Mapa de Trabalho', path: '#' },
@@ -102,33 +102,38 @@ function Menu() {
                                 {activeMenu === idx && (
                                     <div className='vertical-submenu'>
                                         {item.items && item.items.map((subItem, subIdx) => (
-                                            <Link
-                                                key={subItem.label}
-                                                to={subItem.path || '#'}
-                                                className='submenu-item'
-                                                onMouseEnter={() => {
-                                                    if (submenuTimeoutRef.current) clearTimeout(submenuTimeoutRef.current);
-                                                    setActiveSubmenu(subIdx); // Define o submenu ativo
-                                                }}
-                                                onMouseLeave={() => {
-                                                    submenuTimeoutRef.current = setTimeout(() => { 
-                                                        setActiveSubmenu(null);
-                                                    }, 300); // 300ms de atraso
-                                                }}
-                                                onClick={(e) => { if (subItem.items) e.preventDefault(); }}
-                                            >
-                                                {subItem.label}
-
-                                                {subItem.items && activeSubmenu === subIdx && (
-                                                    <div className='vertical-subsubmenu'>
-                                                        {subItem.items.map(option => (
-                                                            <Link to={option.path || '#'} key={option.label} className="subsubmenu-item">
-                                                                {option.label}
-                                                            </Link>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </Link>
+                                            subItem.items ? (
+                                                // If the item has a submenu, render it as a DIV
+                                                <div
+                                                    key={subItem.label}
+                                                    className='submenu-item has-submenu'
+                                                    onMouseEnter={() => {
+                                                        if (submenuTimeoutRef.current) clearTimeout(submenuTimeoutRef.current);
+                                                        setActiveSubmenu(subIdx);
+                                                    }}
+                                                    onMouseLeave={() => {
+                                                        submenuTimeoutRef.current = setTimeout(() => {
+                                                            setActiveSubmenu(null);
+                                                        }, 300);
+                                                    }}
+                                                >
+                                                    <span>{subItem.label}</span>
+                                                    {activeSubmenu === subIdx && (
+                                                        <div className='vertical-subsubmenu'>
+                                                            {subItem.items.map(option => (
+                                                                <Link to={option.path || '#'} key={option.label} className="subsubmenu-item">
+                                                                    {option.label}
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                // If it doesn't have a submenu, render it as a normal LINK
+                                                <Link key={subItem.label} to={subItem.path || '#'} className='submenu-item'>
+                                                    {subItem.label}
+                                                </Link>
+                                            )
                                         ))}
                                     </div>
                                 )}

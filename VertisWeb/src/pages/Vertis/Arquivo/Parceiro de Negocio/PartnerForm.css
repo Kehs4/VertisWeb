@@ -1,5 +1,4 @@
 .partner-form-container {
-    margin: 40px auto;
     background-color: #fff;
     padding: 3rem;
     border-radius: 8px;
@@ -8,14 +7,72 @@
 }
 
 .partner-form-title {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: white;
-    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.322);
+    text-align: start;
+    color: rgb(0, 0, 0);
+    text-shadow: 1px 2px 3px rgba(116, 116, 116, 0.26);
     padding: 10px;
     border-radius: 20px;
     font-size: 1.6rem;
-    background-color: #b6b6b6;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end; /* Alinha os botões à direita */
+    gap: 15px;
+}
+
+.action-button {
+    padding: 0.6rem 1.2rem;
+    background-color: #FF6600;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.action-button.submit {
+    background-color: #FF6600; /* Laranja para ação principal */
+}
+
+.action-button.submit:hover {
+    background-color: #e75d00;
+}
+
+.action-button.update {
+    background-color: #3498db; /* Azul para alteração */
+}
+
+.action-button.update:hover {
+    background-color: #2980b9;
+}
+
+.action-button.search {
+    background-color: #2ecc71; /* Verde para pesquisa */
+}
+
+.action-button.search:hover {
+    background-color: #27ae60;
+}
+
+.action-button.delete {
+    background-color: #e74c3c; /* Vermelho para exclusão */
+}
+
+.action-button.delete:hover {
+    background-color: #c0392b;
 }
 
 .form-section {
@@ -79,10 +136,10 @@
 .partner-form input,
 .partner-form select {
     width: 100%;
-    padding: 0.7rem;
+    padding: 0.6rem;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 0.9rem;
     box-sizing: border-box;
     transition: border-color 0.3s;
 }
@@ -91,65 +148,4 @@
 .partner-form select:focus {
     outline: none;
     border-color: #3498db;
-}
-
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end; /* Alinha os botões à direita */
-    gap: 15px;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #eee;
-}
-
-.action-button {
-    padding: 0.6rem 1.2rem;
-    background-color: #FF6600;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    margin-bottom: 15px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.action-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.action-button.submit {
-    background-color: #FF6600; /* Laranja para ação principal */
-}
-
-.action-button.submit:hover {
-    background-color: #e75d00;
-}
-
-.action-button.update {
-    background-color: #3498db; /* Azul para alteração */
-}
-
-.action-button.update:hover {
-    background-color: #2980b9;
-}
-
-.action-button.search {
-    background-color: #2ecc71; /* Verde para pesquisa */
-}
-
-.action-button.search:hover {
-    background-color: #27ae60;
-}
-
-.action-button.delete {
-    background-color: #e74c3c; /* Vermelho para exclusão */
-}
-
-.action-button.delete:hover {
-    background-color: #c0392b;
 }

@@ -18,6 +18,10 @@ import LanguageIcon from '@mui/icons-material/Language';
 import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import PhoneIcon from '@mui/icons-material/Phone';
+import EditIcon from '@mui/icons-material/Edit';
+import SearchIcon from '@mui/icons-material/Search';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 
 function PartnerForm({ title, labels, partnerType }) {
     const [formData, setFormData] = useState({
@@ -75,19 +79,21 @@ function PartnerForm({ title, labels, partnerType }) {
 
     return (
         <div className="partner-form-container">
-            <h1 className="partner-form-title">{title}</h1>
             <form onSubmit={handleSubmit} className="partner-form">
                 {/* --- DADOS GERAIS --- */}
                 <div className="form-section">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', marginBottom: '10px', paddingBottom: '25px' }}>
+                        <h1 className="partner-form-title">{title}</h1>
 
-                <div className="form-actions">
-                    <button type="submit" className="action-button submit">Cadastrar</button>
-                    <button type="button" className="action-button update" onClick={() => alert('Função "Alterar" a ser implementada.')}>Alterar</button>
-                    <button type="button" className="action-button search" onClick={() => alert('Função "Pesquisar" a ser implementada.')}>Pesquisar</button>
-                    <button type="button" className="action-button delete" onClick={() => alert('Função "Excluir" a ser implementada.')}>Excluir</button>
-                </div>
+                        <div className="form-actions">
+                            <button type="submit" className="action-button submit"><AddIcon fontSize="small" />Cadastrar</button>
+                            <button type="button" className="action-button update" onClick={() => alert('Função "Alterar" a ser implementada.')}><EditIcon fontSize="small" />Alterar</button>
+                            <button type="button" className="action-button search" onClick={() => alert('Função "Pesquisar" a ser implementada.')}><SearchIcon fontSize="small" />Pesquisar</button>
+                            <button type="button" className="action-button delete" onClick={() => alert('Função "Excluir" a ser implementada.')}><DeleteIcon fontSize="small" />Excluir</button>
+                        </div>
+                    </div>
 
-                    <div className="form-row">
+                    <div className="form-row" style={{marginTop: '25px'}}>
 
                         <div className="form-group" style={{ flex: 1 }}>
                             <label htmlFor="code">Código</label>
@@ -146,14 +152,14 @@ function PartnerForm({ title, labels, partnerType }) {
                                 </div>
                             </div>
                             <div className="form-group" style={{ flex: 0.4 }}>
-                            <label>Mensalista</label>
-                            <div className="form-group">
-                                <select name="isMonthlyPayer" id="isMonthlyPayer" value={formData.isMonthlyPayer} onChange={handleChange}>
-                                    <option value="Sim">Sim</option>
-                                    <option value="Não">Não</option>
-                                </select>
+                                <label>Mensalista</label>
+                                <div className="form-group">
+                                    <select name="isMonthlyPayer" id="isMonthlyPayer" value={formData.isMonthlyPayer} onChange={handleChange}>
+                                        <option value="Sim">Sim</option>
+                                        <option value="Não">Não</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
                             <div className="form-group" style={{ flex: 0.5 }}>
                                 <label htmlFor="paymentDay">Dia de Pagamento</label>
                                 <div className="input-with-icon">
@@ -162,53 +168,53 @@ function PartnerForm({ title, labels, partnerType }) {
                                 </div>
                             </div>
                             <div className="form-group" style={{ flex: 1 }}>
-                            <label htmlFor="gender">Sexo</label>
-                            <select id="gender" name="gender" value={formData.gender} onChange={handleChange}>
-                                <option value="">Selecione...</option>
-                                <option value="Masculino">Masculino</option>
-                                <option value="Feminino">Feminino</option>
-                                <option value="Outro">Outro</option>
-                                <option value="NaoInformado">Não Informado</option>
-                            </select>
-                        </div>
+                                <label htmlFor="gender">Sexo</label>
+                                <select id="gender" name="gender" value={formData.gender} onChange={handleChange}>
+                                    <option value="">Selecione...</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Feminino">Feminino</option>
+                                    <option value="Outro">Outro</option>
+                                    <option value="NaoInformado">Não Informado</option>
+                                </select>
+                            </div>
                         </div>
                     )}
 
                     {(partnerType === 'clinica' || partnerType === 'fornecedor') && (
-                        
-                        <div className="form-row">
-                        <div className="form-group" style={{ flex: 2 }}>
-                            <label htmlFor="nomeFantasia">Nome Fantasia</label>
-                            <div className="input-with-icon">
-                                <StorefrontIcon />
-                                <input type="text" id="nomeFantasia" name="nomeFantasia" value={formData.nomeFantasia} onChange={handleChange} required />
-                            </div>
-                        </div>
 
-                        <div className="form-group" style={{ flex: 1 }}>
-                            <label htmlFor="priceTable">Tabela de Preço</label>
-                            <div className="input-with-icon">
-                                <PriceCheckIcon />
-                                <input type="text" id="priceTable" name="priceTable" value={formData.priceTable} onChange={handleChange} />
+                        <div className="form-row">
+                            <div className="form-group" style={{ flex: 2 }}>
+                                <label htmlFor="nomeFantasia">Nome Fantasia</label>
+                                <div className="input-with-icon">
+                                    <StorefrontIcon />
+                                    <input type="text" id="nomeFantasia" name="nomeFantasia" value={formData.nomeFantasia} onChange={handleChange} required />
+                                </div>
+                            </div>
+
+                            <div className="form-group" style={{ flex: 1 }}>
+                                <label htmlFor="priceTable">Tabela de Preço</label>
+                                <div className="input-with-icon">
+                                    <PriceCheckIcon />
+                                    <input type="text" id="priceTable" name="priceTable" value={formData.priceTable} onChange={handleChange} />
+                                </div>
+                            </div>
+                            <div className="form-group" style={{ flex: 0.4 }}>
+                                <label>Mensalista</label>
+                                <div className="form-group">
+                                    <select name="isMonthlyPayer" id="isMonthlyPayer" value={formData.isMonthlyPayer} onChange={handleChange}>
+                                        <option value="Sim">Sim</option>
+                                        <option value="Não">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="form-group" style={{ flex: 0.5 }}>
+                                <label htmlFor="paymentDay">Dia de Pagamento</label>
+                                <div className="input-with-icon">
+                                    <CalendarTodayIcon />
+                                    <input type="number" id="paymentDay" name="paymentDay" value={formData.paymentDay} onChange={handleChange} min="1" max="31" />
+                                </div>
                             </div>
                         </div>
-                        <div className="form-group" style={{ flex: 0.4 }}>
-                            <label>Mensalista</label>
-                            <div className="form-group">
-                                <select name="isMonthlyPayer" id="isMonthlyPayer" value={formData.isMonthlyPayer} onChange={handleChange}>
-                                    <option value="Sim">Sim</option>
-                                    <option value="Não">Não</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="form-group" style={{ flex: 0.5 }}>
-                            <label htmlFor="paymentDay">Dia de Pagamento</label>
-                            <div className="input-with-icon">
-                                <CalendarTodayIcon />
-                                <input type="number" id="paymentDay" name="paymentDay" value={formData.paymentDay} onChange={handleChange} min="1" max="31" />
-                            </div>
-                        </div>
-                    </div>
                     )}
                 </div>
 
