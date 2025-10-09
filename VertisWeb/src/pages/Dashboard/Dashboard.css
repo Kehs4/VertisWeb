@@ -1,12 +1,14 @@
 .dashboard-container {
-    padding: 2rem;
-    background-color: #f4f6f8;
+    padding: 3rem;
+    background-color: #06080e;
+    height: auto;
+    min-height: 100dvh;
 }
 
 .dashboard-title {
     font-size: 2rem;
-    color: #2c3e50;
-    margin-bottom: 2rem;
+    color: #ffffff;
+    margin-bottom: 0.6rem;
 }
 
 .dashboard-grid {
@@ -16,41 +18,42 @@
 }
 
 .widget-card {
-    background-color: #fff;
+    background-color: #242424;
     border-radius: 8px;
     padding: 1.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.103);
 }
 
 .widget-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    border: 1px solid #707070;
 }
 
 .widget-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #34495e;
+    color: #cecece;
     margin-bottom: 1rem;
-    border-bottom: 1px solid #ecf0f1;
+    border-bottom: 1px solid #ecf0f1b6;
     padding-bottom: 1rem;
 }
 
-.widget-header .MuiSvgIcon-root {
-    color: #3498db;
-}
 
 .widget-header h3 {
     margin: 0;
     font-size: 1.1rem;
+    text-shadow: 0 2px 1px rgb(64, 75, 95);
 }
 
 .widget-content .main-metric {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: #cccccc;
+    text-shadow: 0 2px 1px rgb(107, 106, 106);
     margin: 0;
     text-align: center;
 }
@@ -58,7 +61,7 @@
 .widget-content .sub-metric {
     display: block;
     text-align: center;
-    color: #7f8c8d;
+    color: #8b8b8b;
     font-size: 0.9rem;
     margin-top: 5px;
 }
@@ -77,7 +80,7 @@
 }
 
 .comparison.negative {
-    color: #e74c3c;
+    color: #ff7060;
 }
 
 /* Estilos para widgets de lista */
@@ -98,18 +101,28 @@
     flex-wrap: wrap;
     gap: 10px;
     padding: 10px;
-    background-color: #f9f9f9;
+    background-color: #474747;
     border-radius: 5px;
     font-size: 0.9rem;
 }
 
 .list-item span {
-    color: #555;
+    color: #dddddd;
 }
 
 .list-item strong {
-    color: #333;
+    color: #e6640d;
 }
+
+.MuiChartsLegend-item {
+    color: white;
+}
+
+.css-32sa41-MuiChartsWrapper-root { /* Gráfico de Pizza do Laudos Emitidos */
+    padding: 5px;
+    margin-top: 5px;
+}
+
 
 /* Responsividade */
 @media (max-width: 992px) {

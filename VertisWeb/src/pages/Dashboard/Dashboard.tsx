@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import './Dashboard.css';
 import Menu from '../Menu/Menu.tsx';
+import { LineChart, PieChart } from '@mui/x-charts';
 
 // Ícones do Material-UI
 import {
@@ -31,9 +33,14 @@ const mockData = {
         { id: 'OS-7889', animal: 'Max', tutor: 'Ana Santos', clinic: 'Animacão Pet' },
         { id: 'OS-7888', animal: 'Minnie', tutor: 'Edson Marques', clinic: 'Animais Clínica Veterinária' },
     ],
+    monthPatientData: {
+        month: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+        // Contagem de pacientes para cada mês
+        counts: [137, 221, 194, 133, 182, 195, 222, 164, 199, 260, 153, 235],
+    },
     patientsThisMonth: {
-        count: 941,
-        comparison: -4.7, // Porcentagem em relação ao mês passado
+        count: 449,
+        comparison: 2.1, // Porcentagem em relação ao mês passado
     },
     invoices: {
         issued: 80,
@@ -42,7 +49,11 @@ const mockData = {
     hospitalized: 14,
     examsInProgress: 35,
     activeUsers: 16,
-    laudos: 72,
+    laudos: {
+        emitidos: 72,
+        fila: 18,
+    },
+    
 };
 // --- FIM DOS DADOS DE EXEMPLO ---
 
@@ -55,14 +66,14 @@ function Dashboard() {
         <>
             <Menu />
             <main className="dashboard-container">
-                <h1 className="dashboard-title">Painel de Controle - Clínica GPI</h1>
+                <h1 className="dashboard-title">Dashboard - Clínica GPI</h1>
 
                 <div className="dashboard-grid">
                     {/* Agendas para hoje */}
                     <div className="widget-card large-widget">
                         <div className="widget-header">
-                            <EventIcon />
-                            <h3>Próximos Agendamentos</h3>
+                            <EventIcon style={{color: 'rgb(0, 140, 255)'}}/>
+                            <h3 style={{fontSize: '1.4rem'}}>Próximos Agendamentos</h3>
                         </div>
                         <div className="widget-content list-content">
                             {mockData.schedules.map((item, index) => (
@@ -78,8 +89,8 @@ function Dashboard() {
                     {/* Últimas Ordens de Serviço */}
                     <div className="widget-card large-widget">
                         <div className="widget-header">
-                            <AssignmentIcon />
-                            <h3>Últimas Ordens de Serviço</h3>
+                            <AssignmentIcon style={{color: 'rgb(189, 189, 189)'}}/>
+                            <h3 style={{fontSize: '1.4rem'}}>Últimas Ordens de Serviço</h3>
                         </div>
                         <div className="widget-content list-content">
                             {mockData.lastServiceOrders.map((os, index) => (
@@ -93,82 +104,162 @@ function Dashboard() {
                         </div>
                     </div>
 
+
                     {/* Pacientes atendidos no mês */}
                     <div className="widget-card">
                         <div className="widget-header">
-                            <PetsIcon />
+                            <PetsIcon style={{color: 'rgb(183, 0, 255)'}}/>
                             <h3>Pacientes Atendidos (Mês)</h3>
                         </div>
                         <div className="widget-content">
                             <p className="main-metric">{mockData.patientsThisMonth.count}</p>
                             <div className={`comparison ${mockData.patientsThisMonth.comparison >= 0 ? 'positive' : 'negative'}`}>
                                 {mockData.patientsThisMonth.comparison >= 0 ? <TrendingUpIcon /> : <TrendingDownIcon />}
-                                <span>{Math.abs(mockData.patientsThisMonth.comparison)}% vs. mês anterior</span>
+                                <span>{Math.abs(mockData.patientsThisMonth.comparison)}% vs. Mês anterior</span>
                             </div>
+                        </div>
+
+                        <LineChart
+                            xAxis={[{ 
+                                data: mockData.monthPatientData.month,
+                                scaleType: 'point',
+                                tickLabelStyle: { fill: 'rgba(255, 255, 255, 0.26)', fontSize: 10, fontWeight: 300},
+                            }]}
+                            yAxis={[{
+                                tickLabelStyle: { fill: 'rgba(255, 255, 255, 0.26)', fontSize: 10, fontWeight: 300},
+                            }]}
+                            series={[
+                                {
+                                    data: mockData.monthPatientData.counts,
+                                    color: 'rgb(145, 11, 255)',
+                                    type: 'line',
+                                    area: true,
+                                    curve: 'linear'
+                                },
+                            ]}
+                            margin={{ left: 10, right: 30}}
+                            
+                            sx={{
+                                '& .MuiLineElement-root': {
+                                  strokeDasharray: '10 2',
+                                  strokeWidth: 1,
+                                  
+                                  stroke: 'rgb(183, 0, 255)', // Garante a cor da linha
+                                },
+                                '& .MuiAreaElement-root': {
+                                  fill: "url('#myGradient')",
+                                },
+                                // Força a cor da linha do eixo para garantir a prioridade
+                                '.MuiChartsAxis-line': {
+                                  stroke: 'rgba(255, 255, 255, 0.26) !important',
+                                },
+                                '.MuiChartsAxis-tick': {
+                                    stroke: 'rgba(255, 255, 255, 0.12) !important',
+                                    
+                                },
+
+                                // Estilo dos círculos (marcadores) na linha
+                                '.MuiMarkElement-root': {
+                                    fill: 'rgba(100, 66, 179, 0.36)',
+                                    strokeWidth: 0,
+                                },
+                                
+                              }}
+                            height={150}
+                            width={380}
+                        >
+                            <defs>
+                                <linearGradient id="myGradient" gradientTransform="rotate(90)">
+                                    <stop offset="5%" stopColor="rgba(224, 68, 255, 0.8)" />
+                                    <stop offset="95%" stopColor="rgba(0, 119, 255, 0)" />
+                                </linearGradient>
+                            </defs>
+                        </LineChart>
+
+                    </div>
+
+                    {/* Laudos emitidos */}
+                    <div className="widget-card">
+                        <div className="widget-header">
+                            <Summarize style={{color: 'rgb(253, 79, 117)'}}/>
+                            <h3>Laudos Emitidos</h3>
+                        </div>
+                        <div className="widget-content" style={{display: 'flex', alignItems: 'center'}}>
+                            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '10px'}}>
+                            <p className="main-metric">{mockData.laudos.emitidos}</p>
+                            <span className="sub-metric" style={{fontSize: '0.7rem'}}>Laudos emitidos hoje</span>
+                            </div>
+                            <PieChart
+                                series={[
+                                    {
+                                        data: [
+                                            { id: 0, value: mockData.laudos.emitidos, label: 'Emitidos', color: 'rgb(52, 148, 65)'},
+                                            { id: 1, value: mockData.laudos.fila, label: 'Na fila', color: 'rgb(202, 190, 130)' },
+                                        ],
+                                    },
+                                ]}
+                                
+                                width={80}
+                                height={80}
+                            />
                         </div>
                     </div>
 
                     {/* Faturas de Convênio */}
                     <div className="widget-card">
                         <div className="widget-header">
-                            <ReceiptIcon />
+                            <ReceiptIcon style={{color: 'rgb(49, 167, 13)'}}/>
                             <h3>Faturas de Convênio</h3>
                         </div>
                         <div className="widget-content">
                             <p className="main-metric">{mockData.invoices.toIssue}</p>
-                            <span className="sub-metric">a emitir de {mockData.invoices.issued + mockData.invoices.toIssue}</span>
+                            <span className="sub-metric">Pendente de {mockData.invoices.issued + mockData.invoices.toIssue}</span>
                         </div>
                     </div>
 
                     {/* Animais Internados */}
                     <div className="widget-card">
                         <div className="widget-header">
-                            <PetsIcon />
+                            <PetsIcon style={{color: 'rgb(255, 94, 0)'}}/>
                             <h3>Animais Internados</h3>
                         </div>
                         <div className="widget-content">
                             <p className="main-metric">{mockData.hospitalized}</p>
-                            <span className="sub-metric">em internação</span>
-                        </div>
-                    </div>
-
-                    {/* Exames em Execução */}
-                    <div className="widget-card">
-                        <div className="widget-header">
-                            <ScienceIcon />
-                            <h3>Exames em Execução</h3>
-                        </div>
-                        <div className="widget-content">
-                            <p className="main-metric">{mockData.examsInProgress}</p>
-                            <span className="sub-metric">em execução</span>
+                            <span className="sub-metric">Em internação</span>
                         </div>
                     </div>
 
                     
 
+                    {/* Exames em Execução */}
+                    <div className="widget-card">
+                        <div className="widget-header">
+                            <ScienceIcon style={{color: 'rgb(255, 187, 0)'}}/>
+                            <h3>Exames em Execução</h3>
+                        </div>
+                        <div className="widget-content">
+                            <p className="main-metric">{mockData.examsInProgress}</p>
+                            <span className="sub-metric">Em execução</span>
+                        </div>
+                    </div>
+
+
+
+
+
                     {/* Usuários Ativos */}
                     <div className="widget-card">
                         <div className="widget-header">
-                            <PeopleIcon />
+                            <PeopleIcon style={{color: 'rgb(255, 230, 0)'}}/>
                             <h3>Usuários Ativos</h3>
                         </div>
                         <div className="widget-content">
                             <p className="main-metric">{mockData.activeUsers}</p>
-                            <span className="sub-metric">ativos agora na unidade</span>
+                            <span className="sub-metric">Ativos agora </span>
                         </div>
                     </div>
 
-                    {/* Laudos emitidos */}
-                    <div className="widget-card">
-                        <div className="widget-header">
-                            <Summarize />
-                            <h3>Laudos Emitidos</h3>
-                        </div>
-                        <div className="widget-content">
-                            <p className="main-metric">{mockData.laudos}</p>
-                            <span className="sub-metric">laudos emitidos hoje na unidade</span>
-                        </div>
-                    </div>
+                    
                 </div>
             </main>
         </>
