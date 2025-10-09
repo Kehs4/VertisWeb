@@ -1,9 +1,21 @@
 import React, { useEffect, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import PartnerForm from './PartnerForm';
-import Menu from '../../../Menu/Menu'; // Importando o menu
+import PartnerForm from './PartnerForm.tsx';
+import Menu from '../../../Menu/Menu.tsx';
 
-const partnerConfig = {
+// Definindo tipos para maior segurança e clareza
+type PartnerType = 'tutor' | 'clinica' | 'veterinario' | 'fornecedor';
+
+interface PartnerConfig {
+    title: string;
+    labels: {
+        nameLabel: string;
+        documentLabel: string;
+    };
+}
+
+// Tipando o objeto de configuração
+const partnerConfig: Record<PartnerType, PartnerConfig> = {
     tutor: {
         title: 'Tutor',
         labels: {
@@ -35,8 +47,8 @@ const partnerConfig = {
 };
 
 function PartnerPage() {
-    const { partnerType } = useParams();
-    const config = useMemo(() => partnerConfig[partnerType], [partnerType]);
+    const { partnerType } = useParams<{ partnerType: PartnerType }>();
+    const config = useMemo(() => partnerType ? partnerConfig[partnerType] : undefined, [partnerType]);
 
     useEffect(() => {
         if (config) document.title = `Vertis | ${config.title}`;

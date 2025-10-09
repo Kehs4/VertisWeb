@@ -3,7 +3,14 @@ import { Link } from 'react-router-dom'
 import '../home/Home.css'
 import './Menu.css'
 
-const menuItems = [
+// Tipagem para os itens do menu para garantir a consistência dos dados
+interface MenuItem {
+    label: string;
+    path?: string;
+    items?: MenuItem[];
+}
+
+const menuItems: MenuItem[] = [
     {
         label: 'Arquivo',
         items: [
@@ -57,10 +64,10 @@ const menuItems = [
 ];
 
 function Menu() {
-    const [activeMenu, setActiveMenu] = useState(null);
-    const [activeSubmenu, setActiveSubmenu] = useState(null);
-    const menuTimeoutRef = useRef(null);
-    const submenuTimeoutRef = useRef(null);
+    const [activeMenu, setActiveMenu] = useState<number | null>(null);
+    const [activeSubmenu, setActiveSubmenu] = useState<number | null>(null);
+    const menuTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const submenuTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         document.title = "Vertis | Dashboard"
@@ -79,11 +86,11 @@ function Menu() {
                                 key={item.label}
                                 className='menu-item'
                                 onMouseEnter={() => {
-                                    clearTimeout(menuTimeoutRef.current);
+                                    if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current);
                                     setActiveMenu(idx);
                                 }}
                                 onMouseLeave={() => {
-                                    menuTimeoutRef.current = setTimeout(() => {
+                                    menuTimeoutRef.current = setTimeout(() => { 
                                         setActiveMenu(null);
                                         setActiveSubmenu(null);
                                     }, 300);
@@ -94,29 +101,28 @@ function Menu() {
                                 {/* Submenu */}
                                 {activeMenu === idx && (
                                     <div className='vertical-submenu'>
-                                        {item.items.map((subItem, subIdx) => (
+                                        {item.items && item.items.map((subItem, subIdx) => (
                                             <Link
                                                 key={subItem.label}
                                                 to={subItem.path || '#'}
                                                 className='submenu-item'
-                                                onMouseEnter={() => setActiveSubmenu(subIdx)}
+                                                onMouseEnter={() => {
+                                                    if (submenuTimeoutRef.current) clearTimeout(submenuTimeoutRef.current);
+                                                    setActiveSubmenu(subIdx); // Define o submenu ativo
+                                                }}
                                                 onMouseLeave={() => {
-                                                    submenuTimeoutRef.current = setTimeout(() => {
+                                                    submenuTimeoutRef.current = setTimeout(() => { 
                                                         setActiveSubmenu(null);
                                                     }, 300); // 300ms de atraso
                                                 }}
-                                                // Impede o clique se houver um submenu, para priorizar o hover
                                                 onClick={(e) => { if (subItem.items) e.preventDefault(); }}
                                             >
-                                                {/* Clear submenu timeout if mouse re-enters */}
-                                                {activeSubmenu === subIdx && clearTimeout(submenuTimeoutRef.current)}
-
                                                 {subItem.label}
 
                                                 {subItem.items && activeSubmenu === subIdx && (
                                                     <div className='vertical-subsubmenu'>
                                                         {subItem.items.map(option => (
-                                                            <Link to={option.path} key={option.label} className="subsubmenu-item">
+                                                            <Link to={option.path || '#'} key={option.label} className="subsubmenu-item">
                                                                 {option.label}
                                                             </Link>
                                                         ))}

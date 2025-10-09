@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import Menu from '../Menu/Menu'; // Importando o menu principal
 import './Dashboard.css';
+import Menu from '../Menu/Menu.tsx';
 
 // Ícones do Material-UI
 import {

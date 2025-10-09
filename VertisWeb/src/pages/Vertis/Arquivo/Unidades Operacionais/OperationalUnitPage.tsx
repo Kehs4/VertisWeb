@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import Menu from '../../../Menu/Menu';
-import OperationalUnitForm from './OperationalUnitForm';
+import OperationalUnitForm from './OperationalUnitForm.tsx';
+import Menu from '../../../Menu/Menu.tsx';
 
 function OperationalUnitPage() {
 
