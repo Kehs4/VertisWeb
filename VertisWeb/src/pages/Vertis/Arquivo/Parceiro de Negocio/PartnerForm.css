@@ -27,7 +27,6 @@
     color: white;
     border: none;
     border-radius: 4px;
-    margin-bottom: 15px;
     font-size: 0.85rem;
     font-weight: bold;
     cursor: pointer;
@@ -78,7 +77,6 @@
 .form-section {
     border-top: 1px solid #eee;
     padding-top: 1.5rem;
-    margin-top: 1.5rem;
 }
 
 .form-section:first-child {

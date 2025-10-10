@@ -12,7 +12,9 @@
     --list-item-bg-color: #474747;
     --list-item-text-color: #dddddd;
     --theme-toggle-color: #000000;
-    --theme-button-bgcolor: #ffffff;
+    --theme-button-textcolor: #ffffff;
+    --theme-button-bgcolor: #000000;
+    --theme-button-border: #ffffff;
     --pizza-text: #ffffff;
     --text-shadow: 0 2px 1px rgb(64, 75, 95);
 
@@ -26,12 +28,13 @@
     --widget-hover-border-color: #ff6600;
     --header-color: #25282b;
     --header-border-color: #ecf0f1;
-    --metric-color: #1f3b6b;
     --sub-metric-color: #5d5e5e;
     --list-item-bg-color: #f5f5f5;
     --list-item-text-color: #555;
-    --theme-toggle-color: #ffffff;
-    --theme-button-bgcolor: #000000;
+    --theme-toggle-color: #FFFFFF;
+    --theme-button-textcolor: #000000;
+    --theme-button-bgcolor: #ffffff;
+    --theme-button-border: #000000;
     --pizza-text: #040d13;
     --text-shadow: 0 2px 1px rgba(212, 212, 212, 0.712);
 }
@@ -39,7 +42,6 @@
 
 .dashboard-container {
     padding: 3rem;
-    background-color: var(--bg-color);
     height: auto;
     min-height: 100dvh;
     transition: background-color 0.3s ease;
@@ -181,10 +183,10 @@
 .theme-toggle-button {
     background: none;
     cursor: pointer;
-    border: 1px solid var(--theme-toggle-color);
+    border: 1px solid var(--theme-button-border);
     border-radius: 5px;
     background-color: var(--theme-button-bgcolor);
-    color: var(--theme-toggle-color);
+    color: var(--theme-button-textcolor);
     padding: 8px 12px;
     font-weight: 500;
 }

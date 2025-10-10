@@ -135,13 +135,18 @@ function OperationalUnitForm() {
                 onSelect={handleSelectUnit}
                 config={operationalUnitSearchConfig}
             />
-            <h1 className="partner-form-title">Unidades Operacionais</h1>
+            
             <form onSubmit={handleSubmit} className="partner-form">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', paddingBottom: '25px' }}>
+
+                
+            <h1 className="partner-form-title">Unidades Operacionais</h1>
                 <div className="form-actions">
                     <button type="submit" className="action-button submit">Cadastrar</button>
                     <button type="button" className="action-button update" onClick={() => alert('Função "Alterar" a ser implementada.')}>Alterar</button>
                     <button type="button" className="action-button search" onClick={handleOpenSearchModal}>Pesquisar</button>
                     <button type="button" className="action-button delete" onClick={() => alert('Função "Excluir" a ser implementada.')}>Excluir</button>
+                </div>
                 </div>
 
                 <div className="form-section">

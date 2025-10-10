@@ -9,8 +9,7 @@ function ServiceOrderPage() {
     }, []);
 
     return (
-        <>
-            <Menu />
+        <> {/* MainLayout already renders Menu and Header */}
             <ServiceOrderForm />
         </>
     );

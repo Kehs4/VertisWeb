@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import './Dashboard.css';
-import Menu from '../Menu/Menu.tsx';
+import { useTheme } from '../../components/ThemeContext';
 import { LineChart, PieChart } from '@mui/x-charts';
 
 // Ícones do Material-UI
@@ -81,7 +81,7 @@ const chartThemeColors = {
 };
 
 function Dashboard() {
-    const [theme, setTheme] = useState<'dark' | 'light'>('light'); // 'dark' ou 'light'
+    const { theme, setTheme } = useTheme();
     const currentChartColors = chartThemeColors[theme];
 
     useEffect(() => {
@@ -89,12 +89,11 @@ function Dashboard() {
     }, []);
 
     return (
-        <>
-            <Menu />
-            <main className={`dashboard-container ${theme}-mode`}>
+        <> {/* MainLayout already renders Menu and Header */}
+            <main className="dashboard-container"> {/* A classe de tema foi movida para o MainLayout */}
                 <div className="dashboard-header-toolbar">
                     <h1 className="dashboard-title">Dashboard</h1>
-                    <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="theme-toggle-button">
+                    <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="theme-toggle-button">
                         {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
                     </button>
                 </div>
@@ -154,10 +153,10 @@ function Dashboard() {
                             xAxis={[{ 
                                 data: mockData.monthPatientData.month,
                                 scaleType: 'point',
-                                tickLabelStyle: { fill: currentChartColors.axisLabel, fontSize: 10, fontWeight: 300},
+                                tickLabelStyle: { fill: currentChartColors?.axisLabel, fontSize: 10, fontWeight: 300},
                             }]}
                             yAxis={[{
-                                tickLabelStyle: { fill: currentChartColors.axisLabel, fontSize: 10, fontWeight: 300},
+                                tickLabelStyle: { fill: currentChartColors?.axisLabel, fontSize: 10, fontWeight: 300},
                             }]}
                             series={[
                                 {

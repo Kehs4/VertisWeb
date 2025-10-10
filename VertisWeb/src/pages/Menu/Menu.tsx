@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import '../home/Home.css'
 import './Menu.css'
+import { ChevronRight as ChevronRightIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 
 // Tipagem para os itens do menu para garantir a consistência dos dados
 interface MenuItem {
+    id: string; // Unique ID for each menu item
     label: string;
     path?: string;
     items?: MenuItem[];
@@ -12,141 +13,141 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
     {
-        label: 'Arquivo',
-        items: [
-            {
-                label: 'Parceiro de Negócio',
-                items: [
-                    { label: 'Tutor', path: '/parceiros/tutor' },
-                    { label: 'Clínica', path: '/parceiros/clinica' },
-                    { label: 'Veterinário', path: '/parceiros/veterinario' },
-                    { label: 'Fornecedor', path: '/parceiros/fornecedor' }
-                ]
-            },
-            {
-                label: 'Unidade de Negócio', path: '#',
-                items: [
-                    { label: 'Unidades Operacionais', path: '/unidades-operacionais' }
-                ]
-            },
-            { label: 'Exames', path: '#' },
-            { label: 'Animal', path: '#' },
-        ],
+        id: 'dashboard',
+        label: 'Dashboard',
+        path: '/dashboard'
     },
     {
+        id: 'arquivo-parceiro-negocio',
+        label: 'Parceiro de Negócio',
+        items: [
+            { id: 'arquivo-parceiro-negocio-tutor', label: 'Tutor', path: '/parceiros/tutor' },
+            { id: 'arquivo-parceiro-negocio-clinica', label: 'Clínica', path: '/parceiros/clinica' },
+            { id: 'arquivo-parceiro-negocio-veterinario', label: 'Veterinário', path: '/parceiros/veterinario' },
+            { id: 'arquivo-parceiro-negocio-fornecedor', label: 'Fornecedor', path: '/parceiros/fornecedor' }
+        ]
+    },
+    {
+        id: 'arquivo-unidade-negocio',
+        label: 'Unidade de Negócio',
+        items: [
+            { id: 'arquivo-unidade-negocio-operacionais', label: 'Unidades Operacionais', path: '/unidades-operacionais' }
+        ]
+    },
+    { id: 'arquivo-exames', label: 'Exames', path: '#' },
+    { id: 'arquivo-animal', label: 'Animal', path: '#' },
+    {
+        id: 'operacional',
         label: 'Operacional',
         items: [
-            { label: 'Ordem de Serviço', path: '/ordem-de-servico' },
-            { label: 'Agendas', path: '#' },
-            { label: 'Admissões', path: '#' },
-            { label: 'Mapa de Trabalho', path: '#' },
+            { id: 'operacional-ordem-servico', label: 'Ordem de Serviço', path: '/ordem-de-servico' },
+            { id: 'operacional-agendas', label: 'Agendas', path: '#' },
+            { id: 'operacional-admissoes', label: 'Admissões', path: '#' },
+            { id: 'operacional-mapa-trabalho', label: 'Mapa de Trabalho', path: '#' },
         ],
     },
     {
+        id: 'financeiro',
         label: 'Financeiro',
         items: [
-            { label: 'Caixa', path: '#' },
-            { label: 'Faturamentos', path: '#' },
-            { label: 'Contas a Pagar e Receber', path: '#' },
-            { label: 'Orçamentos', path: '#' },
+            { id: 'financeiro-caixa', label: 'Caixa', path: '#' },
+            { id: 'financeiro-faturamentos', label: 'Faturamentos', path: '#' },
+            { id: 'financeiro-contas', label: 'Contas a Pagar e Receber', path: '#' },
+            { id: 'financeiro-orcamentos', label: 'Orçamentos', path: '#' },
         ],
     },
     {
+        id: 'relatorios',
         label: 'Relatórios',
         items: [
-            { label: 'Analise de Desempenho', path: '#' },
-            { label: 'Cadastros por Parceiro', path: '#' },
-            { label: 'Estatísticos', path: '#' },
-            { label: 'Prontuários', path: '#' },
+            { id: 'relatorios-analise', label: 'Analise de Desempenho', path: '#' },
+            { id: 'relatorios-cadastros', label: 'Cadastros por Parceiro', path: '#' },
+            { id: 'relatorios-estatisticos', label: 'Estatísticos', path: '#' },
+            { id: 'relatorios-prontuarios', label: 'Prontuários', path: '#' },
         ],
     },
     // Adicione outros menus conforme necessário
+    { id: 'pesquisa', label: 'Pesquisa', path: '#' },
+    { id: 'suprimentos', label: 'Suprimentos', path: '#' },
+    { id: 'interface', label: 'Interface', path: '#' },
+    { id: 'crm', label: 'CRM', path: '#' },
+    { id: 'ajuda', label: 'Ajuda', path: '#' },
 ];
 
-function Menu() {
-    const [activeMenu, setActiveMenu] = useState<number | null>(null);
-    const [activeSubmenu, setActiveSubmenu] = useState<number | null>(null);
-    const menuTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const submenuTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+interface MenuProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
 
-    useEffect(() => {
-        document.title = "Vertis | Dashboard"
-    }, []);
+function Menu({ isOpen, onClose }: MenuProps) {
+    // State to manage which main menu item is open (for submenus)
+    const [openMainMenuId, setOpenMainMenuId] = useState<string | null>(null);
+    // State to manage which submenu item is open (for sub-submenus)
+    const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
 
     return (
-        <>
-            <div className='header-vertis'>
-                <Link to={'/dashboard'}>
-                    <img src="/public/logo-white.png" alt="" width={60} height={40} />
-                </Link>
-                <div className='header-menu'>
-                    <nav className='header-nav'>
-                        {menuItems.map((item, idx) => (
-                            <div
-                                key={item.label}
-                                className='menu-item'
-                                onMouseEnter={() => {
-                                    if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current);
-                                    setActiveMenu(idx);
-                                }}
-                                onMouseLeave={() => {
-                                    menuTimeoutRef.current = setTimeout(() => { 
-                                        setActiveMenu(null);
-                                        setActiveSubmenu(null);
-                                    }, 300);
-                                }}
-                                style={{ position: 'relative', display: 'inline-block' }}
-                            >
-                                <a href="#">{item.label}</a>
-                                {/* Submenu */}
-                                {activeMenu === idx && (
-                                    <div className='vertical-submenu'>
-                                        {item.items && item.items.map((subItem, subIdx) => (
-                                            <Link
-                                                key={subItem.label}
-                                                to={subItem.path || '#'}
-                                                className='submenu-item'
-                                                onMouseEnter={() => {
-                                                    if (submenuTimeoutRef.current) clearTimeout(submenuTimeoutRef.current);
-                                                    setActiveSubmenu(subIdx); // Define o submenu ativo
-                                                }}
-                                                onMouseLeave={() => {
-                                                    submenuTimeoutRef.current = setTimeout(() => { 
-                                                        setActiveSubmenu(null);
-                                                    }, 300); // 300ms de atraso
-                                                }}
-                                                onClick={(e) => { if (subItem.items) e.preventDefault(); }}
+        <div className={`sidebar-overlay ${isOpen ? 'open' : ''}`} onClick={onClose}>
+            <nav className={`sidebar-container ${isOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
+                <div className="sidebar-header">
+                    <Link to={'/dashboard'} className='sidebar-logo-link' onClick={onClose}>
+                        <img src="/public/logo-white.png" alt="Vertis Logo" className="sidebar-logo" />
+                    </Link>
+                </div>
+                <ul className='sidebar-menu'>
+                    {menuItems.map((item) => (
+                        <li key={item.id} className='sidebar-menu-item'>
+                            {item.items ? (
+                                <div
+                                    className={`menu-toggle-button ${openMainMenuId === item.id ? 'active' : ''}`}
+                                    onClick={() => setOpenMainMenuId(openMainMenuId === item.id ? null : item.id)}
+                                >
+                                    {item.label}
+                                    {openMainMenuId === item.id ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+                                </div>
+                            ) : (
+                                <Link to={item.path || '#'} className='menu-link' onClick={onClose}>
+                                    {item.label}
+                                </Link>
+                            )}
+
+                            {/* Submenu */}
+                            {item.items && (
+                                <ul className={`sidebar-submenu ${openMainMenuId === item.id ? 'open' : ''}`}>
+                                {item.items.map((subItem) => (
+                                    <li key={subItem.id} className='sidebar-submenu-item'>
+                                        {subItem.items ? (
+                                            <div
+                                                className={`submenu-toggle-button ${openSubmenuId === subItem.id ? 'active' : ''}`}
+                                                onClick={() => setOpenSubmenuId(openSubmenuId === subItem.id ? null : subItem.id)}
                                             >
                                                 {subItem.label}
-
-                                                {subItem.items && activeSubmenu === subIdx && (
-                                                    <div className='vertical-subsubmenu'>
-                                                        {subItem.items.map(option => (
-                                                            <Link to={option.path || '#'} key={option.label} className="subsubmenu-item">
-                                                                {option.label}
-                                                            </Link>
-                                                        ))}
-                                                    </div>
-                                                )}
+                                                {openSubmenuId === subItem.id ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+                                            </div>
+                                        ) : (
+                                            <Link to={subItem.path || '#'} className='submenu-link' onClick={onClose}>
+                                                {subItem.label}
                                             </Link>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                        <a href="#">Pesquisa</a>
-                        <a href="#">Suprimentos</a>
-                        <a href="#">Interface</a>
-                        <a href="#">CRM</a>
-                        <a href="#">Ajuda</a>
-                    </nav>
-                </div>
-
-                <div>
-                </div>
-            </div>
-
-        </>
+                                        )}
+                                        {/* Sub-submenu */}
+                                        {subItem.items && (
+                                            <ul className={`sidebar-subsubmenu ${openSubmenuId === subItem.id ? 'open' : ''}`}>
+                                                {subItem.items.map(option => (
+                                                    <li key={option.id} className="sidebar-subsubmenu-item">
+                                                        <Link to={option.path || '#'} className="subsubmenu-link" onClick={onClose}>
+                                                            {option.label}
+                                                        </Link>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>)}
+                        </li>
+                    ))}
+                </ul>
+            </nav>
+        </div>
     )
 }
 

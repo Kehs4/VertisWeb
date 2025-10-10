@@ -9,8 +9,7 @@ function OperationalUnitPage() {
     }, []);
 
     return (
-        <>
-            <Menu />
+        <> {/* MainLayout already renders Menu and Header */}
             <OperationalUnitForm />
         </>
     );

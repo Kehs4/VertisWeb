@@ -59,8 +59,7 @@ function PartnerPage() {
     }
 
     return (
-        <>
-            <Menu />
+        <> {/* MainLayout already renders Menu and Header */}
             <PartnerForm title={config.title} labels={config.labels} partnerType={partnerType} />
         </>
     );
