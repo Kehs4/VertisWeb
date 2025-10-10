@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './PartnerForm.css';
+import SearchModal, { SearchConfig, SearchResult } from '../../../../components/SearchModal';
 
 // Importando os ícones do Material-UI
 import PersonIcon from '@mui/icons-material/Person';
@@ -27,7 +28,7 @@ function PartnerForm({ title, labels, partnerType }) {
     const [formData, setFormData] = useState({
         // Dados Gerais
         code: '',
-        lgpdConsent: false,
+        lgpdConsent: 'A',
         gender: '',
         status: 'Ativo', // Default status
         name: '',
@@ -77,8 +78,66 @@ function PartnerForm({ title, labels, partnerType }) {
         // Aqui você pode adicionar a lógica para enviar os dados para o backend
     };
 
+     // Estado para controlar o modal
+     const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+
+    const handleOpenSearchModal = () => {
+        setIsSearchModalOpen(true);
+    };
+
+    const handleSelectPartner = (partner: SearchResult) => {
+        console.log('Parceiro Selecionado:', partner);
+        // Preenche o formulário com os dados do parceiro selecionado.
+        setFormData({
+            ...formData,
+            code: partner.id.toString(),
+            document: partner.document,
+            name: partner.name,
+            email1: partner.email || '',
+            phones: [
+                { number: partner.phone || '', type: 'Cel' },
+                ...formData.phones.slice(1)
+            ],
+            // Adicione outros campos conforme necessário
+        });
+    };
+
+    // --- DADOS E CONFIGURAÇÃO PARA O MODAL DE PESQUISA (Exemplo) ---
+const mockPartners: SearchResult[] = [
+    { id: 101, name: 'JOAO DA SILVA', document: '341.459.725-70',  email: 'matriz@vertis.com', phone: '11999998888' },
+    { id: 102, name: 'MARIA EDUARDA OLIVEIRA', document: '111.222.333-44',  email: 'sp@vertis.com', phone: '11777776666' },
+    { id: 103, name: 'ANA CAROLINE FIGUEIREDO', document: '222.333.444-55',  email: 'contato@vetabc.com', phone: '1144332211' },
+];
+
+    const PartnerSearchConfig: SearchConfig = {
+        title: `Pesquisar ${title}`,
+        searchOptions: [
+            { value: 'name', label: 'Nome' },
+            { value: 'document', label: 'CPF' },
+            { value: 'email', label: 'E-mail' },
+            { value: 'phone', label: 'Telefone' },
+        ],
+        resultHeaders: [
+            { key: 'id', label: 'Código' },
+            { key: 'name', label: 'Nome' },
+            { key: 'document', label: 'CNPJ' },
+            { key: 'email', label: 'E-mail' },
+            { key: 'phone', label: 'Telefone' },
+        ],
+        mockData: mockPartners,
+    };
+    // --- FIM DADOS E CONFIGURAÇÃO ---
+
+
     return (
         <div className="partner-form-container">
+            <SearchModal
+                isOpen={isSearchModalOpen}
+                onClose={() => setIsSearchModalOpen(false)}
+                onSelect={handleSelectPartner}
+                config={PartnerSearchConfig}
+            />
+
             <form onSubmit={handleSubmit} className="partner-form">
                 {/* --- DADOS GERAIS --- */}
                 <div className="form-section">
@@ -88,7 +147,7 @@ function PartnerForm({ title, labels, partnerType }) {
                         <div className="form-actions">
                             <button type="submit" className="action-button submit"><AddIcon fontSize="small" />Cadastrar</button>
                             <button type="button" className="action-button update" onClick={() => alert('Função "Alterar" a ser implementada.')}><EditIcon fontSize="small" />Alterar</button>
-                            <button type="button" className="action-button search" onClick={() => alert('Função "Pesquisar" a ser implementada.')}><SearchIcon fontSize="small" />Pesquisar</button>
+                            <button type="button" className="action-button search" onClick={handleOpenSearchModal}><SearchIcon fontSize="small" />Pesquisar</button>
                             <button type="button" className="action-button delete" onClick={() => alert('Função "Excluir" a ser implementada.')}><DeleteIcon fontSize="small" />Excluir</button>
                         </div>
                     </div>

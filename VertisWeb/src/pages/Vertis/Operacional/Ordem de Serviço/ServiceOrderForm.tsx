@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../../../Vertis/Arquivo/Parceiro de Negocio/PartnerForm.css'; // Reutilizando o mesmo estilo
 import './ServiceOrderForm.css'; // Estilos específicos para esta página
+import SearchModal, { SearchConfig, SearchResult } from '../../../../components/SearchModal';
 
 // Ícones
 import { AddCircleOutline, Edit, Delete, Search as SearchIcon, Add as AddIcon, Save as SaveIcon } from '@mui/icons-material';
@@ -18,11 +19,179 @@ interface OrderItem {
     deliveryDate: string;
 }
 
+// New type for Service Order search results, extending SearchResult
+// This allows the SearchModal to return a more complete object for OS
+interface ServiceOrderSearchResult extends SearchResult {
+    animalName: string;
+    tutorName: string;
+    clinicName: string;
+    veterinarianName: string;
+    status: string;
+    creationDate: string; // YYYY-MM-DD format for easier comparison
+    productSummary: string; // e.g., "Consulta de Rotina, Vacina V8"
+    fullOrderItems: OrderItem[]; // To populate the form
+    // Fields from formData that are populated by selecting an OS
+    breed: string; species: string; animalGender: string; animalDob: string; isNeutered: string; weight: string;
+    providerUnit: string; type: string; onCredit: string; origin: string;
+}
+
+// --- DADOS E CONFIGURAÇÕES PARA OS MODAIS DE PESQUISA ---
+
+// Mock Data para Animal
+const mockAnimals: SearchResult[] = [
+    { id: 1, name: 'Rex', document: '12345', breed: 'Labrador', species: 'Canina', tutorName: 'João Silva', gender: 'Macho', dob: '2018-05-10', isNeutered: 'Sim', weight: '30kg' },
+    { id: 2, name: 'Miau', document: '67890', breed: 'Siamês', species: 'Felina', tutorName: 'Maria Oliveira', gender: 'Fêmea', dob: '2020-01-15', isNeutered: 'Não', weight: '4kg' },
+    { id: 3, name: 'Bob', document: '11223', breed: 'Poodle', species: 'Canina', tutorName: 'João Silva', gender: 'Macho', dob: '2019-03-22', isNeutered: 'Sim', weight: '10kg' },
+];
+const animalSearchConfig: SearchConfig = {
+    title: 'Pesquisar Animal',
+    searchOptions: [
+        { value: 'name', label: 'Nome do Animal' },
+        { value: 'document', label: 'Código' },
+        { value: 'tutorName', label: 'Nome do Tutor' },
+        { value: 'breed', label: 'Raça' },
+        { value: 'species', label: 'Espécie' },
+    ],
+    resultHeaders: [
+        { key: 'id', label: 'Cód.' },
+        { key: 'name', label: 'Animal' },
+        { key: 'tutorName', label: 'Tutor' },
+        { key: 'breed', label: 'Raça' },
+        { key: 'species', label: 'Espécie' },
+    ],
+    mockData: mockAnimals,
+};
+
+// Mock Data para Tutor
+const mockTutors: SearchResult[] = [
+    { id: 101, name: 'João Silva', document: '111.222.333-44', phone: '11987654321', email: 'joao@email.com' },
+    { id: 102, name: 'Maria Oliveira', document: '555.666.777-88', phone: '11912345678', email: 'maria@email.com' },
+    { id: 103, name: 'Carlos Souza', document: '999.888.777-66', phone: '11955554444', email: 'carlos@email.com' },
+];
+const tutorSearchConfig: SearchConfig = {
+    title: 'Pesquisar Tutor',
+    searchOptions: [
+        { value: 'name', label: 'Nome' },
+        { value: 'document', label: 'CPF' },
+        { value: 'phone', label: 'Telefone' },
+        { value: 'email', label: 'E-mail' },
+    ],
+    resultHeaders: [
+        { key: 'id', label: 'Cód.' },
+        { key: 'name', label: 'Nome' },
+        { key: 'document', label: 'CPF' },
+        { key: 'phone', label: 'Telefone' },
+    ],
+    mockData: mockTutors,
+};
+
+// Mock Data para Clínica
+const mockClinics: SearchResult[] = [
+    { id: 201, name: 'Clínica Vet Amigo', document: '11.222.333/0001-44', corporateName: 'Vet Amigo Ltda', email: 'contato@vetamigo.com', phone: '1133332222' },
+    { id: 202, name: 'Pet Saúde', document: '44.555.666/0001-77', corporateName: 'Pet Saúde S.A.', email: 'info@petsaude.com', phone: '1144445555' },
+];
+const clinicSearchConfig: SearchConfig = {
+    title: 'Pesquisar Clínica',
+    searchOptions: [
+        { value: 'name', label: 'Nome Fantasia' },
+        { value: 'corporateName', label: 'Razão Social' },
+        { value: 'document', label: 'CNPJ' },
+        { value: 'email', label: 'E-mail' },
+        { value: 'phone', label: 'Telefone' },
+    ],
+    resultHeaders: [
+        { key: 'id', label: 'Cód.' },
+        { key: 'name', label: 'Nome Fantasia' },
+        { key: 'corporateName', label: 'Razão Social' },
+        { key: 'document', label: 'CNPJ' },
+    ],
+    mockData: mockClinics,
+};
+
+// Mock Data para Veterinário
+const mockVeterinarians: SearchResult[] = [
+    { id: 301, name: 'Dr. Ana Costa', document: 'CRMV-SP 12345', phone: '11977776666', email: 'ana.costa@vet.com' },
+    { id: 302, name: 'Dr. Pedro Santos', document: 'CRMV-RJ 67890', phone: '21988887777', email: 'pedro.santos@vet.com' },
+];
+const veterinarianSearchConfig: SearchConfig = {
+    title: 'Pesquisar Veterinário',
+    searchOptions: [
+        { value: 'name', label: 'Nome' },
+        { value: 'document', label: 'CRMV' },
+        { value: 'phone', label: 'Telefone' },
+        { value: 'email', label: 'E-mail' },
+    ],
+    resultHeaders: [
+        { key: 'id', label: 'Cód.' },
+        { key: 'name', label: 'Nome' },
+        { key: 'document', label: 'CRMV' },
+        { key: 'phone', label: 'Telefone' },
+    ],
+    mockData: mockVeterinarians,
+};
+
+// Mock Data para Unidade Operacional (reutilizando do OperationalUnitForm ou criando novos)
+const mockOperationalUnits: SearchResult[] = [
+    { id: 401, name: 'Vertis Matriz', document: '11.222.333/0001-44', corporateName: 'Vertis Tecnologia Ltda', email: 'matriz@vertis.com', phone: '11999998888' },
+    { id: 402, name: 'Vertis Filial SP', document: '11.222.333/0002-55', corporateName: 'Vertis Tecnologia Filial SP', email: 'sp@vertis.com', phone: '11777776666' },
+];
+const operationalUnitSearchConfig: SearchConfig = {
+    title: 'Pesquisar Unidade Prestadora',
+    searchOptions: [
+        { value: 'name', label: 'Nome Fantasia' },
+        { value: 'corporateName', label: 'Razão Social' },
+        { value: 'document', label: 'CNPJ' },
+        { value: 'email', label: 'E-mail' },
+        { value: 'phone', label: 'Telefone' },
+    ],
+    resultHeaders: [
+        { key: 'id', label: 'Cód.' },
+        { key: 'name', label: 'Nome Fantasia' },
+        { key: 'document', label: 'CNPJ' },
+    ],
+    mockData: mockOperationalUnits,
+};
+
+// Mock Data para Produtos/Serviços
+const mockProductsServices: SearchResult[] = [
+    { id: 501, name: 'Consulta de Rotina', document: 'SERV001', shortName: 'CONSULTA', price: 150.00, unit: 'UN' },
+    { id: 502, name: 'Vacina V8', document: 'PROD002', shortName: 'VACINA V8', price: 80.00, unit: 'DOSE' },
+    { id: 503, name: 'Exame de Sangue Completo', document: 'EXAM003', shortName: 'HEMOGRAMA', price: 120.00, unit: 'EXAME' },
+];
+const productSearchConfig: SearchConfig = {
+    title: 'Pesquisar Produto/Serviço',
+    searchOptions: [
+        { value: 'name', label: 'Nome do Produto/Serviço' },
+        { value: 'document', label: 'Código do Produto' },
+        { value: 'shortName', label: 'Nome Reduzido' },
+    ],
+    resultHeaders: [
+        { key: 'id', label: 'Cód.' },
+        { key: 'name', label: 'Nome' },
+        { key: 'shortName', label: 'Nome Reduzido' },
+        { key: 'price', label: 'Preço' },
+    ],
+    mockData: mockProductsServices,
+};
+// --- FIM DADOS E CONFIGURAÇÕES ---
+
 function ServiceOrderForm() {
+    // Mock Data para Ordens de Serviço
+    const mockServiceOrders: ServiceOrderSearchResult[] = [
+        { id: 'OS-001', name: 'OS-001 - Rex (João Silva)', document: '', animalName: 'Rex', tutorName: 'João Silva', clinicName: 'Clínica Vet Amigo', veterinarianName: 'Dr. Ana Costa', status: 'Aberta', creationDate: '2024-07-20', productSummary: 'Consulta de Rotina, Vacina V8', fullOrderItems: [ { id: 1, status: 'Pendente', service: 'Consulta de Rotina', quantity: 1, unit: 'UN', price: 150.00, discount: 0, applicationValue: 150.00, deliveryDate: '2024-07-20' }, { id: 2, status: 'Pendente', service: 'Vacina V8', quantity: 1, unit: 'DOSE', price: 80.00, discount: 0, applicationValue: 80.00, deliveryDate: '2024-07-20' }, ], breed: 'Labrador', species: 'Canina', animalGender: 'Macho', animalDob: '2018-05-10', isNeutered: 'Sim', weight: '30kg', providerUnit: 'Vertis Matriz', type: 'Serviço', onCredit: 'Não', origin: 'Balcão', },
+        { id: 'OS-002', name: 'OS-002 - Miau (Maria Oliveira)', document: '', animalName: 'Miau', tutorName: 'Maria Oliveira', clinicName: 'Pet Saúde', veterinarianName: 'Dr. Pedro Santos', status: 'Finalizada', creationDate: '2024-07-15', productSummary: 'Exame de Sangue Completo', fullOrderItems: [ { id: 3, status: 'Concluído', service: 'Exame de Sangue Completo', quantity: 1, unit: 'EXAME', price: 120.00, discount: 0, applicationValue: 120.00, deliveryDate: '2024-07-15' }, ], breed: 'Siamês', species: 'Felina', animalGender: 'Fêmea', animalDob: '2020-01-15', isNeutered: 'Não', weight: '4kg', providerUnit: 'Vertis Filial SP', type: 'Serviço', onCredit: 'Sim', origin: 'Telefone', },
+    ];
+
+    const serviceOrderSearchConfig: SearchConfig = {
+        title: 'Pesquisar Ordem de Serviço',
+        searchOptions: [ { value: 'id', label: 'Código da O.S' }, { value: 'animalName', label: 'Animal' }, { value: 'tutorName', label: 'Tutor' }, { value: 'clinicName', label: 'Clínica' }, { value: 'veterinarianName', label: 'Veterinário' }, { value: 'status', label: 'Situação' }, { value: 'productSummary', label: 'Produto/Serviço' }, { value: 'creationDate', label: 'Data de Criação' }, ],
+        resultHeaders: [ { key: 'id', label: 'Cód. O.S' }, { key: 'animalName', label: 'Animal' }, { key: 'tutorName', label: 'Tutor' }, { key: 'status', label: 'Situação' }, { key: 'creationDate', label: 'Data Criação' }, ],
+        mockData: mockServiceOrders,
+    };
     // Controla o modo do formulário: 'view', 'new', 'edit'
     const [formMode, setFormMode] = useState<'view' | 'new' | 'edit'>('view');
     // Guarda o ID da OS carregada para habilitar/desabilitar botões
-    const [loadedOrderId, setLoadedOrderId] = useState<number | null>(null);
+    const [loadedOrderId, setLoadedOrderId] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
         code: '',
@@ -46,6 +215,11 @@ function ServiceOrderForm() {
     // Estado para os itens da ordem de serviço
     const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
+    // Estados para o modal de pesquisa
+    const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+    const [currentSearchConfig, setCurrentSearchConfig] = useState<SearchConfig | null>(null);
+    const [targetField, setTargetField] = useState<string>(''); // Para saber qual campo do form atualizar
+
     // Determina se os campos devem estar desabilitados
     const isReadOnly = formMode === 'view';
     // Determina se o bloco de itens deve ser visível
@@ -54,21 +228,6 @@ function ServiceOrderForm() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prevState => ({ ...prevState, [name]: value }));
-    };
-
-    const handleAddItem = () => {
-        const newItem: OrderItem = {
-            id: Date.now(), // ID simples para o exemplo
-            status: 'Pendente',
-            service: 'Consulta de Rotina', // Exemplo
-            quantity: 1,
-            unit: 'UN',
-            price: 150.00,
-            discount: 0,
-            applicationValue: 0,
-            deliveryDate: new Date().toISOString().split('T')[0],
-        };
-        setOrderItems(prevItems => [...prevItems, newItem]);
     };
 
     // Lógica para o botão INCLUIR
@@ -91,31 +250,9 @@ function ServiceOrderForm() {
         }
     };
 
-    // Lógica para o botão PESQUISAR (simulação)
     const handleSearchClick = () => {
-        // Lógica para abrir o modal de pesquisa viria aqui
-        alert('Abriria o modal de pesquisa de Ordens de Serviço...');
-        // Simulando que uma OS foi encontrada e selecionada
-        const foundId = 12345;
-        setLoadedOrderId(foundId);
-        setFormData({
-            ...formData,
-            code: foundId.toString(),
-            priceTable: 'PARTICULAR',
-            providerUnit: `CLÍNICA GPI`,
-            animal: 'Rex',
-            tutor: 'João Silva',
-            clinic: 'Animais Clínica Veterinária',
-            veterinarian: 'MARIO ALVES ANTONIO DA SILVA',
-            breed: 'SRD',
-            type: 'Serviço',
-            onCredit: 'Não',
-            species: 'CANINA',
-            animalGender: 'Macho',
-            weight: '14,5',
-        }); // Popula o form
-        setOrderItems([{ id: 1, status: 'Concluído', service: 'Exame de Sangue', quantity: 1, unit: 'UN', price: 80, discount: 0, applicationValue: 0, deliveryDate: '2023-10-10' }]);
-        setFormMode('view'); // Volta para o modo de visualização após a pesquisa
+        // Abre o modal de pesquisa de Ordens de Serviço
+        handleOpenSearchModal(serviceOrderSearchConfig, 'serviceOrder');
     };
 
     // Lógica para o botão EXCLUIR
@@ -125,7 +262,23 @@ function ServiceOrderForm() {
             alert(`OS #${loadedOrderId} excluída!`);
             // Resetar a tela
             setLoadedOrderId(null);
-            setFormData({ code: '', priceTable: '', animal: '', breed: '', tutor: '', clinic: '', veterinarian: '', providerUnit: '', type: 'Serviço', onCredit: 'Não', origin: '', animalGender: '', animalDob: '', species: '', isNeutered: 'Não', weight: '' });
+            setFormData({ 
+                code: '', 
+                priceTable: '', 
+                animal: '', 
+                breed: '', 
+                tutor: '', 
+                clinic: '', 
+                veterinarian: '', 
+                providerUnit: '', 
+                type: 'Serviço', 
+                onCredit: 'Não', 
+                origin: '', 
+                animalGender: '', 
+                animalDob: '', 
+                species: '', 
+                isNeutered: 'Não', 
+                weight: '' });
             setOrderItems([]);
             setFormMode('view');
         }
@@ -138,8 +291,92 @@ function ServiceOrderForm() {
         setFormMode('view'); // Bloqueia o formulário após salvar
     };
 
+    // Funções para o modal de pesquisa
+    const handleOpenSearchModal = (config: SearchConfig, field: string) => {
+        setCurrentSearchConfig(config);
+        setTargetField(field);
+        setIsSearchModalOpen(true);
+    };
+
+    const handleSelectResult = (item: SearchResult) => {
+        if (targetField === 'animal') {
+            setFormData(prev => ({
+                ...prev,
+                animal: item.name,
+                breed: item.breed || '',
+                species: item.species || '',
+                animalGender: item.gender || '',
+                animalDob: item.dob || '',
+                isNeutered: item.isNeutered || 'Não',
+                weight: item.weight || '',
+                tutor: item.tutorName || prev.tutor, // Se a busca de animal também retornar o tutor
+            }));
+        } else if (targetField === 'tutor') {
+            setFormData(prev => ({ ...prev, tutor: item.name }));
+        } else if (targetField === 'clinic') {
+            setFormData(prev => ({ ...prev, clinic: item.name }));
+        } else if (targetField === 'veterinarian') {
+            setFormData(prev => ({ ...prev, veterinarian: item.name }));
+        } else if (targetField === 'providerUnit') {
+            setFormData(prev => ({ ...prev, providerUnit: item.name }));
+        } else if (targetField === 'orderItem') {
+            // Adiciona um novo item à lista de itens da ordem
+            const newItem: OrderItem = {
+                id: Date.now(), // ID temporário
+                status: 'Pendente', // Status inicial
+                service: item.name,
+                quantity: 1, // Quantidade padrão
+                unit: item.unit || 'UN', // Unidade padrão
+                price: item.price || 0,
+                discount: 0,
+                applicationValue: item.price || 0,
+                deliveryDate: new Date().toISOString().split('T')[0], // Data atual
+            };
+            setOrderItems(prevItems => [...prevItems, newItem]);
+        } else if (targetField === 'serviceOrder') {
+            const selectedOrder = item as ServiceOrderSearchResult; // Cast to specific type
+            setFormData({
+                code: selectedOrder.id.toString(),
+                priceTable: '', // Assuming priceTable is not directly from OS search result
+                animal: selectedOrder.animalName,
+                breed: selectedOrder.breed,
+                tutor: selectedOrder.tutorName,
+                clinic: selectedOrder.clinicName,
+                veterinarian: selectedOrder.veterinarianName,
+                providerUnit: selectedOrder.providerUnit,
+                type: selectedOrder.type,
+                onCredit: selectedOrder.onCredit,
+                origin: selectedOrder.origin,
+                animalGender: selectedOrder.animalGender,
+                animalDob: selectedOrder.animalDob,
+                species: selectedOrder.species,
+                isNeutered: selectedOrder.isNeutered,
+                weight: selectedOrder.weight,
+            });
+            setOrderItems(selectedOrder.fullOrderItems);
+            setLoadedOrderId(selectedOrder.id.toString());
+        }
+        // Fechar o modal após a seleção
+        setIsSearchModalOpen(false);
+        setCurrentSearchConfig(null);
+        setTargetField('');
+    };
+
+    const handleAddItem = () => {
+        // Abre o modal de pesquisa de produtos/serviços para adicionar um item
+        handleOpenSearchModal(productSearchConfig, 'orderItem');
+    };
+
     return (
         <div className="partner-form-container">
+            {isSearchModalOpen && currentSearchConfig && (
+                <SearchModal
+                    isOpen={isSearchModalOpen}
+                    onClose={() => setIsSearchModalOpen(false)}
+                    onSelect={handleSelectResult}
+                    config={currentSearchConfig}
+                />
+            )}
             <form onSubmit={handleSubmit} className="partner-form">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h1 className="partner-form-title">Ordem de Serviço - #1</h1>
@@ -159,15 +396,15 @@ function ServiceOrderForm() {
                         <div className="form-group" style={{ flex: 1 }}>
                             <label>Animal</label>
                             <div className="input-with-search">
-                                <input value={formData.animal} readOnly placeholder="Selecione um animal..." />
-                                <button type="button" className="search-modal-button" onClick={() => alert('Abrir modal de pesquisa de Animal...')} disabled={isReadOnly}><SearchIcon fontSize="small" /></button>
+                                <input value={formData.animal} readOnly={isReadOnly} placeholder="Selecione um animal..." />
+                                <button type="button" className="search-modal-button" onClick={() => handleOpenSearchModal(animalSearchConfig, 'animal')} disabled={isReadOnly}><SearchIcon fontSize="small" /></button>
                             </div>
                         </div>
                         <div className="form-group" style={{ flex: 1 }}>
                             <label>Tutor</label>
                             <div className="input-with-search">
-                                <input value={formData.tutor} readOnly placeholder="Selecione um tutor..." />
-                                <button type="button" className="search-modal-button" onClick={() => alert('Abrir modal de pesquisa de Tutor...')} disabled={isReadOnly}><SearchIcon fontSize="small" /></button>
+                                <input value={formData.tutor} readOnly={isReadOnly} placeholder="Selecione um tutor..." />
+                                <button type="button" className="search-modal-button" onClick={() => handleOpenSearchModal(tutorSearchConfig, 'tutor')} disabled={isReadOnly}><SearchIcon fontSize="small" /></button>
                             </div>
                         </div>
                     </div>
@@ -175,15 +412,15 @@ function ServiceOrderForm() {
                         <div className="form-group" style={{ flex: 1 }}>
                             <label>Clínica</label>
                             <div className="input-with-search">
-                                <input value={formData.clinic} readOnly placeholder="Selecione uma clínica..." />
-                                <button type="button" className="search-modal-button" onClick={() => alert('Abrir modal de pesquisa de Clínica...')} disabled={isReadOnly}><SearchIcon fontSize="small" /></button>
+                                <input value={formData.clinic} readOnly={isReadOnly} placeholder="Selecione uma clínica..." />
+                                <button type="button" className="search-modal-button" onClick={() => handleOpenSearchModal(clinicSearchConfig, 'clinic')} disabled={isReadOnly}><SearchIcon fontSize="small" /></button>
                             </div>
                         </div>
                         <div className="form-group" style={{ flex: 1 }}>
                             <label>Veterinário</label>
                             <div className="input-with-search">
-                                <input value={formData.veterinarian} readOnly placeholder="Selecione um veterinário..." />
-                                <button type="button" className="search-modal-button" onClick={() => alert('Abrir modal de pesquisa de Veterinário...')} disabled={isReadOnly}><SearchIcon fontSize="small" /></button>
+                                <input value={formData.veterinarian} readOnly={isReadOnly} placeholder="Selecione um veterinário..." />
+                                <button type="button" className="search-modal-button" onClick={() => handleOpenSearchModal(veterinarianSearchConfig, 'veterinarian')} disabled={isReadOnly}><SearchIcon fontSize="small" /></button>
                             </div>
                         </div>
                     </div>
@@ -196,8 +433,8 @@ function ServiceOrderForm() {
                         <div className="form-group" style={{ flex: 1.5 }}>
                             <label>Unidade Prestadora</label>
                             <div className="input-with-search">
-                                <input name="providerUnit" value={formData.providerUnit} onChange={handleChange} readOnly={isReadOnly} placeholder="Selecione uma unidade..." />
-                                <button type="button" className="search-modal-button" onClick={() => alert('Abrir modal de pesquisa de Unidade...')} disabled={isReadOnly}><SearchIcon fontSize="small" /></button>
+                                <input name="providerUnit" value={formData.providerUnit} readOnly={isReadOnly} placeholder="Selecione uma unidade..." />
+                                <button type="button" className="search-modal-button" onClick={() => handleOpenSearchModal(operationalUnitSearchConfig, 'providerUnit')} disabled={isReadOnly}><SearchIcon fontSize="small" /></button>
                             </div>
                         </div>
                         <div className="form-group" style={{ flex: 1 }}>
@@ -221,7 +458,7 @@ function ServiceOrderForm() {
                         <div className="form-group" style={{ flex: 1 }}>
                             <label>Espécie</label>
                             <div className="input-with-search">
-                                <input value={formData.species} readOnly placeholder="Selecione uma espécie..." />
+                                <input value={formData.species} readOnly={isReadOnly} placeholder="Selecione uma espécie..." />
                                 <button type="button" className="search-modal-button" onClick={() => alert('Abrir modal de pesquisa de Espécie...')} disabled={isReadOnly}><SearchIcon fontSize="small" /></button>
                             </div>
                         </div>

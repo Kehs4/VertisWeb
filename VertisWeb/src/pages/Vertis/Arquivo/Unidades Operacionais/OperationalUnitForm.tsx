@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SearchModal, { SearchConfig, SearchResult } from '../../../../components/SearchModal';
 import '../Parceiro de Negocio/PartnerForm.css'; // Reutilizando o mesmo estilo
 
 // Importando ícones
@@ -21,6 +22,33 @@ import AddHomeIcon from '@mui/icons-material/AddHome';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
 import PublicIcon from '@mui/icons-material/Public';
 import PhoneIcon from '@mui/icons-material/Phone';
+
+// --- DADOS E CONFIGURAÇÃO PARA O MODAL DE PESQUISA (Exemplo) ---
+const mockOperationalUnits: SearchResult[] = [
+    { id: 101, name: 'Vertis Matriz', document: '11.222.333/0001-44', corporateName: 'Vertis Tecnologia Ltda', email: 'matriz@vertis.com', phone: '11999998888' },
+    { id: 102, name: 'Vertis Filial SP', document: '11.222.333/0002-55', corporateName: 'Vertis Tecnologia Filial SP', email: 'sp@vertis.com', phone: '11777776666' },
+    { id: 103, name: 'Clínica Vet ABC', document: '44.555.666/0001-77', corporateName: 'Clínica Veterinária ABC Ltda', email: 'contato@vetabc.com', phone: '1144332211' },
+];
+
+const operationalUnitSearchConfig: SearchConfig = {
+    title: 'Pesquisar Unidade Operacional',
+    searchOptions: [
+        { value: 'name', label: 'Nome Fantasia' },
+        { value: 'corporateName', label: 'Razão Social' },
+        { value: 'document', label: 'CNPJ' },
+        { value: 'email', label: 'E-mail' },
+        { value: 'phone', label: 'Telefone' },
+    ],
+    resultHeaders: [
+        { key: 'id', label: 'Código' },
+        { key: 'name', label: 'Nome Fantasia' },
+        { key: 'corporateName', label: 'Razão Social' },
+        { key: 'document', label: 'CNPJ' },
+    ],
+    mockData: mockOperationalUnits,
+};
+// --- FIM DADOS E CONFIGURAÇÃO ---
+
 
 function OperationalUnitForm() {
     const [formData, setFormData] = useState({
@@ -57,6 +85,9 @@ function OperationalUnitForm() {
         ],
     });
 
+    // Estado para controlar o modal
+    const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prevState => ({
@@ -77,14 +108,39 @@ function OperationalUnitForm() {
         alert(`Unidade Operacional cadastrada com sucesso! (Verifique o console para ver os dados)`);
     };
 
+    const handleOpenSearchModal = () => {
+        setIsSearchModalOpen(true);
+    };
+
+    const handleSelectUnit = (unit: SearchResult) => {
+        console.log('Unidade Selecionada:', unit);
+        // Preenche o formulário com os dados da unidade selecionada
+        setFormData({
+            ...formData, // Mantém outros dados que não vêm da busca
+            code: unit.id.toString(),
+            cnpj: unit.document,
+            operationalUnit: unit.name,
+            corporateName: unit.corporateName || '',
+            shortName: unit.name,
+            email: unit.email || '',
+            // Adicione outros campos conforme necessário
+        });
+    };
+
     return (
         <div className="partner-form-container">
+            <SearchModal
+                isOpen={isSearchModalOpen}
+                onClose={() => setIsSearchModalOpen(false)}
+                onSelect={handleSelectUnit}
+                config={operationalUnitSearchConfig}
+            />
             <h1 className="partner-form-title">Unidades Operacionais</h1>
             <form onSubmit={handleSubmit} className="partner-form">
                 <div className="form-actions">
                     <button type="submit" className="action-button submit">Cadastrar</button>
                     <button type="button" className="action-button update" onClick={() => alert('Função "Alterar" a ser implementada.')}>Alterar</button>
-                    <button type="button" className="action-button search" onClick={() => alert('Função "Pesquisar" a ser implementada.')}>Pesquisar</button>
+                    <button type="button" className="action-button search" onClick={handleOpenSearchModal}>Pesquisar</button>
                     <button type="button" className="action-button delete" onClick={() => alert('Função "Excluir" a ser implementada.')}>Excluir</button>
                 </div>
 
