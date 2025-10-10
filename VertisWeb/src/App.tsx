@@ -1,4 +1,5 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import React from 'react';
 
 // Layout Principal que contém o Header e o Menu Lateral
 import MainLayout from './components/MainLayout';
