@@ -87,10 +87,17 @@
     padding-top: 0;
 }
 
+.items-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
 .form-section-title {
     font-size: 1.2rem;
-    color: #3498db;
-    margin-bottom: 1.5rem;
+    color: #414141;
+    margin-bottom: 1rem;
 }
 
 .form-row {
@@ -105,8 +112,9 @@
 .partner-form label {
     display: block;
     margin-bottom: 0.5rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    color: #555;
+    color: #2e3855fd;
 }
 
 .input-with-icon {

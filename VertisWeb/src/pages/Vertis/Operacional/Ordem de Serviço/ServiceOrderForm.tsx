@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import '../../../Vertis/Arquivo/Parceiro de Negocio/PartnerForm.css'; // Reutilizando o mesmo estilo
 import './ServiceOrderForm.css'; // Estilos específicos para esta página
 import SearchModal, { SearchConfig, SearchResult } from '../../../../components/SearchModal';
+import EditItemModal from '../../../../components/EditItemModal';
 
 // Ícones
-import { AddCircleOutline, Edit, Delete, Search as SearchIcon, Add as AddIcon, Save as SaveIcon } from '@mui/icons-material';
+import { AddCircleOutline, Edit, Delete, Search as SearchIcon, Add as AddIcon, Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
 
 // Tipagem para os produtos/serviços da ordem
-interface OrderItem {
+export interface OrderItem {
     id: number;
     status: string;
     service: string;
@@ -219,11 +220,30 @@ function ServiceOrderForm() {
     const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
     const [currentSearchConfig, setCurrentSearchConfig] = useState<SearchConfig | null>(null);
     const [targetField, setTargetField] = useState<string>(''); // Para saber qual campo do form atualizar
+    
+    // Estados para o modal de edição de item
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<OrderItem | null>(null);
+
+    // Função para resetar o formulário para o estado inicial
+    const resetFormToInitialState = () => {
+        setFormMode('view');
+        setLoadedOrderId(null);
+        setFormData({
+            code: '', priceTable: '', animal: '', breed: '', tutor: '', clinic: '', veterinarian: '',
+            providerUnit: '', type: 'Serviço', onCredit: 'Não', origin: '', animalGender: '',
+            animalDob: '', species: '', isNeutered: 'Não', weight: '',
+        });
+        setOrderItems([]);
+    };
 
     // Determina se os campos devem estar desabilitados
     const isReadOnly = formMode === 'view';
     // Determina se o bloco de itens deve ser visível
     const showItemsBlock = formMode === 'new' || formMode === 'edit' || (formMode === 'view' && loadedOrderId !== null);
+
+    // Determina se os botões de ação detalhados (Alterar, Excluir, gerenciar itens) devem ser visíveis
+    const showDetailedActions = formMode === 'new' || formMode === 'edit' || loadedOrderId !== null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -234,12 +254,7 @@ function ServiceOrderForm() {
     const handleNewClick = () => {
         setFormMode('new');
         setLoadedOrderId(null); // Limpa qualquer OS carregada
-        // Limpar formData e orderItems
-        setFormData({
-            code: '', priceTable: '', animal: '', breed: '', tutor: '', clinic: '', veterinarian: '',
-            providerUnit: '', type: 'Serviço', onCredit: 'Não', origin: '', animalGender: '',
-            animalDob: '', species: '', isNeutered: 'Não', weight: '',
-        });
+        setFormData({ code: '', priceTable: '', animal: '', breed: '', tutor: '', clinic: '', veterinarian: '', providerUnit: '', type: 'Serviço', onCredit: 'Não', origin: '', animalGender: '', animalDob: '', species: '', isNeutered: 'Não', weight: '' });
         setOrderItems([]);
     };
 
@@ -260,27 +275,15 @@ function ServiceOrderForm() {
         if (window.confirm(`Deseja realmente excluir a Ordem de Serviço #${loadedOrderId}?`)) {
             console.log(`Excluindo OS #${loadedOrderId}...`);
             alert(`OS #${loadedOrderId} excluída!`);
-            // Resetar a tela
-            setLoadedOrderId(null);
-            setFormData({ 
-                code: '', 
-                priceTable: '', 
-                animal: '', 
-                breed: '', 
-                tutor: '', 
-                clinic: '', 
-                veterinarian: '', 
-                providerUnit: '', 
-                type: 'Serviço', 
-                onCredit: 'Não', 
-                origin: '', 
-                animalGender: '', 
-                animalDob: '', 
-                species: '', 
-                isNeutered: 'Não', 
-                weight: '' });
-            setOrderItems([]);
-            setFormMode('view');
+            resetFormToInitialState();
+        }
+    };
+
+    // Lógica para o botão CANCELAR
+    const handleCancelClick = () => {
+        // Confirmação opcional para evitar perda de dados não salvos
+        if (window.confirm('Deseja realmente cancelar? Todas as alterações não salvas serão perdidas.')) {
+            resetFormToInitialState();
         }
     };
 
@@ -367,6 +370,36 @@ function ServiceOrderForm() {
         handleOpenSearchModal(productSearchConfig, 'orderItem');
     };
 
+    const handleEditItem = (itemId: number) => {
+        if (isReadOnly) return;
+        // Lógica para alterar o item. Pode abrir um modal de edição.
+        const itemToEdit = orderItems.find(item => item.id === itemId);
+        console.log("Editando item:", itemToEdit);
+        if (itemToEdit) {
+            setEditingItem(itemToEdit);
+            setIsEditModalOpen(true);
+        }
+    };
+
+    const handleSaveItem = (updatedItem: OrderItem) => {
+        setOrderItems(prevItems =>
+            prevItems.map(item =>
+                item.id === updatedItem.id ? updatedItem : item
+            )
+        );
+        // Fechar o modal e limpar o estado de edição
+        setIsEditModalOpen(false);
+        setEditingItem(null);
+    };
+
+    const handleDeleteItem = (itemId: number) => {
+        // Impede a exclusão se o formulário estiver bloqueado
+        if (isReadOnly) return;
+        if (window.confirm('Tem certeza que deseja excluir este item da ordem de serviço?')) {
+            setOrderItems(prevItems => prevItems.filter(item => item.id !== itemId));
+        }
+    };
+
     return (
         <div className="partner-form-container">
             {isSearchModalOpen && currentSearchConfig && (
@@ -377,16 +410,28 @@ function ServiceOrderForm() {
                     config={currentSearchConfig}
                 />
             )}
+            {isEditModalOpen && editingItem && (
+                <EditItemModal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    onSave={handleSaveItem}
+                    item={editingItem}
+                />
+            )}
             <form onSubmit={handleSubmit} className="partner-form">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h1 className="partner-form-title">Ordem de Serviço - #1</h1>
+                    <h1 className="partner-form-title" style={{ display: 'flex', alignItems: 'center', gap: '10px'}}>Ordem de Serviço <span style={{ marginTop: '5px', color: 'rgba(255, 72, 0, 0.77)', fontSize: '14px', fontWeight: 'bold' }}>{loadedOrderId ? `#${loadedOrderId}` : ''}</span></h1>
 
                     <div className="form-actions-main">
 
                         <button type="button" className="action-button submit" onClick={handleNewClick}><AddIcon fontSize="small" />Nova Ordem de Serviço</button>
-                        <button type="button" className="action-button update" onClick={handleEditClick} disabled={!loadedOrderId || formMode !== 'view'}><Edit fontSize="small" />Alterar</button>
                         <button type="button" className="action-button search" onClick={handleSearchClick}><SearchIcon fontSize="small" />Pesquisar</button>
-                        <button type="button" className="action-button delete" onClick={handleDeleteClick} disabled={!loadedOrderId}><Delete fontSize="small" />Excluir</button>
+                        {showDetailedActions && (
+                            <>
+                                <button type="button" className="action-button update" onClick={handleEditClick} disabled={!loadedOrderId || formMode !== 'view'}><Edit fontSize="small" />Alterar</button>
+                                <button type="button" className="action-button delete" onClick={handleDeleteClick} disabled={!loadedOrderId}><Delete fontSize="small" />Excluir</button>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -472,11 +517,11 @@ function ServiceOrderForm() {
                     <div className="form-section">
                         <div className="items-header">
                             <h2 className="form-section-title">Itens da Ordem</h2>
-                            <div className="item-actions">
-                                <button type="button" className="item-button add" onClick={handleAddItem} disabled={isReadOnly}><AddCircleOutline fontSize="small" /> Incluir</button>
-                                <button type="button" className="item-button edit" disabled={isReadOnly}><Edit fontSize="small" /> Alterar</button>
-                                <button type="button" className="item-button delete" disabled={isReadOnly}><Delete fontSize="small" /> Excluir</button>
-                            </div>
+                            {showDetailedActions && (
+                                <div className="item-actions">
+                                    <button type="button" className="item-button add" onClick={handleAddItem} disabled={isReadOnly}><AddCircleOutline fontSize="small" /> Incluir</button>
+                                </div>
+                            )}
                         </div>
 
                         <div className="items-table-container">
@@ -491,6 +536,7 @@ function ServiceOrderForm() {
                                         <th>Desconto R$</th>
                                         <th>Vlr. Aplicação</th>
                                         <th>Data Entrega</th>
+                                        <th>Ação</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -500,15 +546,19 @@ function ServiceOrderForm() {
                                             <td>{item.service}</td>
                                             <td>{item.quantity}</td>
                                             <td>{item.unit}</td>
-                                            <td>{item.price.toFixed(2)}</td>
-                                            <td>{item.discount.toFixed(2)}</td>
-                                            <td>{item.applicationValue.toFixed(2)}</td>
+                                            <td>{item.price}</td>
+                                            <td>{item.discount}</td>
+                                            <td>{item.applicationValue}</td>
                                             <td>{new Date(item.deliveryDate).toLocaleDateString('pt-BR')}</td>
+                                            <td className="action-cell">
+                                                <button type="button" className="edit-item-button" onClick={() => handleEditItem(item.id)} disabled={isReadOnly} title="Editar item"><Edit fontSize="small" /></button>
+                                                <button type="button" className="delete-item-button" onClick={() => handleDeleteItem(item.id)} disabled={isReadOnly} title="Excluir item"><Delete fontSize="small" /></button>
+                                            </td>
                                         </tr>
                                     ))}
                                     {orderItems.length === 0 && (
                                         <tr>
-                                            <td colSpan={8} style={{ textAlign: 'center' }}>Nenhum item adicionado.</td>
+                                            <td colSpan={9} style={{ textAlign: 'center' }}>Nenhum item adicionado.</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -525,6 +575,7 @@ function ServiceOrderForm() {
                 {!isReadOnly && (
                     <div className="form-actions">
                         <button type="submit" className="action-button submit"><SaveIcon fontSize="small" />Salvar Ordem</button>
+                        <button type="button" className="action-button cancel" onClick={handleCancelClick}><CloseIcon fontSize="small" />Cancelar</button>
                     </div>
                 )}
             </form>
