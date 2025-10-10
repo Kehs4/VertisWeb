@@ -91,7 +91,7 @@ function PartnerForm({ title, labels, partnerType }) {
         setFormData({
             ...formData,
             code: partner.id.toString(),
-            document: partner.document,
+            document: partner.document || '',
             name: partner.name,
             email1: partner.email || '',
             phones: [

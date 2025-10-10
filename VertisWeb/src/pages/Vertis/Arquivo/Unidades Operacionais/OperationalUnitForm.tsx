@@ -118,7 +118,7 @@ function OperationalUnitForm() {
         setFormData({
             ...formData, // Mantém outros dados que não vêm da busca
             code: unit.id.toString(),
-            cnpj: unit.document,
+            cnpj: unit.document || '',
             operationalUnit: unit.name,
             corporateName: unit.corporateName || '',
             shortName: unit.name,
