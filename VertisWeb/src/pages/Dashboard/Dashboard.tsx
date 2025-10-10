@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import './Dashboard.css';
 import { useTheme } from '../../components/ThemeContext';
 import { LineChart, PieChart } from '@mui/x-charts';
@@ -15,8 +15,6 @@ import {
     Assignment as AssignmentIcon,
     People as PeopleIcon,
     Summarize as SummarizeIcon,
-    Brightness4 as Brightness4Icon, // Ícone para modo escuro
-    Brightness7 as Brightness7Icon, // Ícone para modo claro
 } from '@mui/icons-material';
 
 // --- DADOS DE EXEMPLO (MOCK DATA) ---
@@ -37,10 +35,10 @@ const mockData = {
     monthPatientData: {
         month: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
         // Contagem de pacientes para cada mês
-        counts: [137, 221, 194, 133, 182, 195, 222, 164, 199, 260, 153, 235],
+        counts: [137, 221, 194, 240, 182, 195, 316, 275, 199, 260, 374, 394],
     },
     patientsThisMonth: {
-        count: 449,
+        count: 394,
         comparison: 2.1, // Porcentagem em relação ao mês passado
     },
     invoices: {
@@ -82,15 +80,25 @@ const chartThemeColors = {
 
 function Dashboard() {
     const { theme, setTheme } = useTheme();
+    const [lastUpdated, setLastUpdated] = useState('');
+    const [isChartLoading, setIsChartLoading] = useState(true);
     const currentChartColors = chartThemeColors[theme];
 
     useEffect(() => {
         document.title = "Vertis | Dashboard";
+        const now = new Date();
+        setLastUpdated(
+            now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        );
+
+        // Simula um carregamento de 800ms para o gráfico
+        const timer = setTimeout(() => setIsChartLoading(false), 800);
+        return () => clearTimeout(timer); // Limpa o timer se o componente for desmontado
     }, []);
 
     return (
         <> {/* MainLayout already renders Menu and Header */}
-            <main className="dashboard-container"> {/* A classe de tema foi movida para o MainLayout */}
+            <main className="dashboard-container">
                 <div className="dashboard-header-toolbar">
                     <h1 className="dashboard-title">Dashboard</h1>
                     <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="theme-toggle-button">
@@ -114,6 +122,9 @@ function Dashboard() {
                                 </div>
                             ))}
                         </div>
+                        <div className="widget-footer">
+                            <span>Atualizado por último às: {lastUpdated}</span>
+                        </div>
                     </div>
 
                     {/* Últimas Ordens de Serviço */}
@@ -132,6 +143,9 @@ function Dashboard() {
                                 </div>
                             ))}
                         </div>
+                        <div className="widget-footer">
+                            <span>Atualizado por último às: {lastUpdated}</span>
+                        </div>
                     </div>
 
 
@@ -149,62 +163,66 @@ function Dashboard() {
                             </div>
                         </div>
 
-                        <LineChart
-                            xAxis={[{ 
-                                data: mockData.monthPatientData.month,
-                                scaleType: 'point',
-                                tickLabelStyle: { fill: currentChartColors?.axisLabel, fontSize: 10, fontWeight: 300},
-                            }]}
-                            yAxis={[{
-                                tickLabelStyle: { fill: currentChartColors?.axisLabel, fontSize: 10, fontWeight: 300},
-                            }]}
-                            series={[
-                                {
-                                    data: mockData.monthPatientData.counts,
-                                    color: currentChartColors.line,
-                                    type: 'line',
-                                    area: true,
-                                    curve: 'linear'
-                                },
-                            ]}
-                            margin={{ left: 10, right: 30}}
-                            
-                            sx={{
-                                '& .MuiLineElement-root': {
-                                  strokeDasharray: '10 2',
-                                  strokeWidth: 1,
-                                  
-                                  stroke: currentChartColors.line, // Garante a cor da linha
-                                },
-                                '& .MuiAreaElement-root': {
-                                  fill: "url('#myGradient')",
-                                },
-                                // Força a cor da linha do eixo para garantir a prioridade
-                                '.MuiChartsAxis-line': {
-                                  stroke: `${currentChartColors.axisLine} !important`,
-                                },
-                                '.MuiChartsAxis-tick': {
-                                    stroke: `${currentChartColors.axisTick} !important`,
-                                    
-                                },
-
-                                // Estilo dos círculos (marcadores) na linha
-                                '.MuiMarkElement-root': {
-                                    fill: currentChartColors.marker,
-                                    strokeWidth: 0,
-                                },
-                                
-                              }}
-                            height={150}
-                            width={380}
-                        >
-                            <defs>
-                                <linearGradient id="myGradient" gradientTransform="rotate(90)">
-                                    <stop offset="5%" stopColor={currentChartColors.gradientStart} />
-                                    <stop offset="95%" stopColor={currentChartColors.gradientEnd} />
-                                </linearGradient>
-                            </defs>
-                        </LineChart>
+                        <div className="chart-container">
+                            {isChartLoading ? (
+                                <div className="loading-placeholder">Carregando gráfico...</div>
+                            ) : (
+                                <LineChart
+                                    xAxis={[{
+                                        data: mockData.monthPatientData.month,
+                                        scaleType: 'point',
+                                        tickLabelStyle: { fill: currentChartColors?.axisLabel, fontSize: 10, fontWeight: 300 },
+                                    }]}
+                                    yAxis={[{
+                                        tickLabelStyle: { fill: currentChartColors?.axisLabel, fontSize: 10, fontWeight: 300 },
+                                    }]}
+                                    series={[
+                                        {
+                                            data: mockData.monthPatientData.counts,
+                                            color: currentChartColors.line,
+                                            type: 'line',
+                                            area: true,
+                                            curve: 'linear'
+                                        },
+                                    ]}
+                                    margin={{ left: 15, right: 40 }}
+                                    sx={{
+                                        '& .MuiLineElement-root': {
+                                            strokeDasharray: '10 2',
+                                            strokeWidth: 1,
+                                            stroke: currentChartColors.line, // Garante a cor da linha
+                                        },
+                                        '& .MuiAreaElement-root': {
+                                            fill: "url('#myGradient')",
+                                        },
+                                        // Força a cor da linha do eixo para garantir a prioridade
+                                        '.MuiChartsAxis-line': {
+                                            stroke: `${currentChartColors.axisLine} !important`,
+                                        },
+                                        '.MuiChartsAxis-tick': {
+                                            stroke: `${currentChartColors.axisTick} !important`,
+                                        },
+                                        // Estilo dos círculos (marcadores) na linha
+                                        '.MuiMarkElement-root': {
+                                            fill: currentChartColors.marker,
+                                            strokeWidth: 0,
+                                        },
+                                    }}
+                                    height={150}
+                                    width={380}
+                                >
+                                    <defs>
+                                        <linearGradient id="myGradient" gradientTransform="rotate(90)">
+                                            <stop offset="5%" stopColor={currentChartColors.gradientStart} />
+                                            <stop offset="95%" stopColor={currentChartColors.gradientEnd} />
+                                        </linearGradient>
+                                    </defs>
+                                </LineChart>
+                            )}
+                        </div>
+                        <div className="widget-footer">
+                            <span>Atualizado por último às: {lastUpdated}</span>
+                        </div>
 
                     </div>
 
@@ -233,6 +251,9 @@ function Dashboard() {
                                 height={80}
                             />
                         </div>
+                        <div className="widget-footer">
+                            <span>Atualizado por último às: {lastUpdated}</span>
+                        </div>
                     </div>
 
                     {/* Faturas de Convênio */}
@@ -245,6 +266,9 @@ function Dashboard() {
                             <p className="main-metric">{mockData.invoices.toIssue}</p>
                             <span className="sub-metric">Pendente de {mockData.invoices.issued + mockData.invoices.toIssue}</span>
                         </div>
+                        <div className="widget-footer">
+                            <span>Atualizado por último às: {lastUpdated}</span>
+                        </div>
                     </div>
 
                     {/* Animais Internados */}
@@ -256,6 +280,9 @@ function Dashboard() {
                         <div className="widget-content">
                             <p className="main-metric">{mockData.hospitalized}</p>
                             <span className="sub-metric">Em internação</span>
+                        </div>
+                        <div className="widget-footer">
+                            <span>Atualizado por último às: {lastUpdated}</span>
                         </div>
                     </div>
 
@@ -270,6 +297,9 @@ function Dashboard() {
                         <div className="widget-content">
                             <p className="main-metric">{mockData.examsInProgress}</p>
                             <span className="sub-metric">Em execução</span>
+                        </div>
+                        <div className="widget-footer">
+                            <span>Atualizado por último às: {lastUpdated}</span>
                         </div>
                     </div>
 
@@ -286,6 +316,9 @@ function Dashboard() {
                         <div className="widget-content">
                             <p className="main-metric">{mockData.activeUsers}</p>
                             <span className="sub-metric">Ativos agora </span>
+                        </div>
+                        <div className="widget-footer">
+                            <span>Atualizado por último às: {lastUpdated}</span>
                         </div>
                     </div>
 
