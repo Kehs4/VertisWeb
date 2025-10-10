@@ -63,14 +63,17 @@
 .sidebar-submenu-item,
 .sidebar-subsubmenu-item {
   position: relative;
+  font-size: 0.85rem;
+  gap: 10px;
+  align-items: center
 }
 
 .menu-toggle-button,
-.submenu-toggle-button {
+.submenu-toggle-button{
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
+  gap: 10px;
+  padding: 10px 20px;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
@@ -82,14 +85,17 @@
 
 .menu-toggle-button.active,
 .submenu-toggle-button.active {
-  background-color: #444444; /* Cor para item de menu ativo */
+  background-color: #ff5100; /* Cor para item de menu ativo */
 }
 
 .menu-link,
 .submenu-link,
 .subsubmenu-link {
-  display: block;
-  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  padding: 10px 20px;
   color: white;
   text-decoration: none;
   transition: background-color 0.2s ease;
@@ -130,14 +136,9 @@
   max-height: 500px; /* Valor grande o suficiente para mostrar todo o conteúdo */
 }
 
+
 /* Ícones de expansão */
 .menu-toggle-button svg,
 .submenu-toggle-button svg {
-  font-size: 1.4rem;
   transition: transform 0.2s ease;
-}
-
-.menu-toggle-button.active svg,
-.submenu-toggle-button.active svg {
-  transform: rotate(90deg); /* Gira o ícone quando expandido */
 }

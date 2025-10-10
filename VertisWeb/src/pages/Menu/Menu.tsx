@@ -1,11 +1,39 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './Menu.css'
 import { ChevronRight as ChevronRightIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import GroupIcon from '@mui/icons-material/Group';
+import BusinessIcon from '@mui/icons-material/Business';
+import BiotechIcon from '@mui/icons-material/Biotech';
+import PetsIcon from '@mui/icons-material/Pets';
+import HandymanIcon from '@mui/icons-material/Handyman';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import SearchIcon from '@mui/icons-material/Search';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import TerminalIcon from '@mui/icons-material/Terminal';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import HelpIcon from '@mui/icons-material/Help';
+import PersonSearchIcon from '@mui/icons-material/PersonSearch';
+import EmergencyIcon from '@mui/icons-material/Emergency';
+import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
+import ContentPasteSearchIcon from '@mui/icons-material/ContentPasteSearch';
+import AddBusinessIcon from '@mui/icons-material/AddBusiness';
+import FormatListBulletedAddIcon from '@mui/icons-material/FormatListBulletedAdd';
+import TodayIcon from '@mui/icons-material/Today';
+import HealingIcon from '@mui/icons-material/Healing';
+import Diversity2Icon from '@mui/icons-material/Diversity2';
+import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
+import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
+import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
+import Icon from '@mui/material/Icon';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 
 // Tipagem para os itens do menu para garantir a consistência dos dados
 interface MenuItem {
     id: string; // Unique ID for each menu item
+    icon?: React.ReactNode; // Icon for the menu item
     label: string;
     path?: string;
     items?: MenuItem[];
@@ -14,49 +42,55 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
     {
         id: 'dashboard',
+        icon: <DashboardIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>,
         label: 'Dashboard',
         path: '/dashboard'
     },
     {
+        icon: <GroupIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>,
         id: 'arquivo-parceiro-negocio',
         label: 'Parceiro de Negócio',
         items: [
-            { id: 'arquivo-parceiro-negocio-tutor', label: 'Tutor', path: '/parceiros/tutor' },
-            { id: 'arquivo-parceiro-negocio-clinica', label: 'Clínica', path: '/parceiros/clinica' },
-            { id: 'arquivo-parceiro-negocio-veterinario', label: 'Veterinário', path: '/parceiros/veterinario' },
-            { id: 'arquivo-parceiro-negocio-fornecedor', label: 'Fornecedor', path: '/parceiros/fornecedor' }
+            { id: 'arquivo-parceiro-negocio-tutor', icon: <PersonSearchIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Tutor', path: '/parceiros/tutor' },
+            { id: 'arquivo-parceiro-negocio-clinica', icon: <EmergencyIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Clínica', path: '/parceiros/clinica' },
+            { id: 'arquivo-parceiro-negocio-veterinario', icon: <MedicalServicesIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Veterinário', path: '/parceiros/veterinario' },
+            { id: 'arquivo-parceiro-negocio-fornecedor', icon: <ContentPasteSearchIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Fornecedor', path: '/parceiros/fornecedor' }
         ]
     },
     {
+        icon: <BusinessIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>,
         id: 'arquivo-unidade-negocio',
         label: 'Unidade de Negócio',
         items: [
-            { id: 'arquivo-unidade-negocio-operacionais', label: 'Unidades Operacionais', path: '/unidades-operacionais' }
+            { id: 'arquivo-unidade-negocio-operacionais', icon: <AddBusinessIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Unidades Operacionais', path: '/unidades-operacionais' }
         ]
     },
-    { id: 'arquivo-exames', label: 'Exames', path: '#' },
-    { id: 'arquivo-animal', label: 'Animal', path: '#' },
+    { id: 'arquivo-exames', icon: <BiotechIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Exames', path: '#' },
+    { id: 'arquivo-animal', icon: <PetsIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Animal', path: '#' },
     {
+        icon: <HandymanIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>,
         id: 'operacional',
         label: 'Operacional',
         items: [
-            { id: 'operacional-ordem-servico', label: 'Ordem de Serviço', path: '/ordem-de-servico' },
-            { id: 'operacional-agendas', label: 'Agendas', path: '#' },
-            { id: 'operacional-admissoes', label: 'Admissões', path: '#' },
-            { id: 'operacional-mapa-trabalho', label: 'Mapa de Trabalho', path: '#' },
+            { id: 'operacional-ordem-servico', icon: <FormatListBulletedAddIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Ordem de Serviço', path: '/ordem-de-servico' },
+            { id: 'operacional-agendas', icon: <TodayIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Agendas', path: '#' },
+            { id: 'operacional-admissoes', icon: <HealingIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Admissões', path: '#' },
+            { id: 'operacional-mapa-trabalho', icon: <Diversity2Icon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Mapa de Trabalho', path: '#' },
         ],
     },
     {
+        icon: <MonetizationOnIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>,
         id: 'financeiro',
         label: 'Financeiro',
         items: [
-            { id: 'financeiro-caixa', label: 'Caixa', path: '#' },
-            { id: 'financeiro-faturamentos', label: 'Faturamentos', path: '#' },
-            { id: 'financeiro-contas', label: 'Contas a Pagar e Receber', path: '#' },
-            { id: 'financeiro-orcamentos', label: 'Orçamentos', path: '#' },
+            { id: 'financeiro-caixa', icon: <AssuredWorkloadIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Caixa', path: '#' },
+            { id: 'financeiro-faturamentos', icon: <RequestQuoteIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Faturamentos', path: '#' },
+            { id: 'financeiro-contas', icon: <CurrencyExchangeIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Contas a Pagar e Receber', path: '#' },
+            { id: 'financeiro-orcamentos', icon: <ReceiptLongIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Orçamentos', path: '#' },
         ],
     },
     {
+        icon: <AssessmentIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>,
         id: 'relatorios',
         label: 'Relatórios',
         items: [
@@ -67,11 +101,11 @@ const menuItems: MenuItem[] = [
         ],
     },
     // Adicione outros menus conforme necessário
-    { id: 'pesquisa', label: 'Pesquisa', path: '#' },
-    { id: 'suprimentos', label: 'Suprimentos', path: '#' },
-    { id: 'interface', label: 'Interface', path: '#' },
-    { id: 'crm', label: 'CRM', path: '#' },
-    { id: 'ajuda', label: 'Ajuda', path: '#' },
+    { id: 'pesquisa', icon: <SearchIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Pesquisa', path: '#' },
+    { id: 'suprimentos', icon: <InventoryIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Suprimentos', path: '#' },
+    { id: 'interface', icon: <TerminalIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Interface', path: '#' },
+    { id: 'crm', icon: <SupportAgentIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'CRM', path: '#' },
+    { id: 'ajuda', icon: <HelpIcon style={{width: '20px', height: '20px'}} className='menu-icon'/>, label: 'Ajuda', path: '#' },
 ];
 
 interface MenuProps {
@@ -101,11 +135,13 @@ function Menu({ isOpen, onClose }: MenuProps) {
                                     className={`menu-toggle-button ${openMainMenuId === item.id ? 'active' : ''}`}
                                     onClick={() => setOpenMainMenuId(openMainMenuId === item.id ? null : item.id)}
                                 >
-                                    {item.label}
+                                    {item.icon}
+                                    <span>{item.label}</span>
                                     {openMainMenuId === item.id ? <ExpandMoreIcon /> : <ChevronRightIcon />}
                                 </div>
                             ) : (
                                 <Link to={item.path || '#'} className='menu-link' onClick={onClose}>
+                                    {item.icon}
                                     {item.label}
                                 </Link>
                             )}
@@ -120,11 +156,13 @@ function Menu({ isOpen, onClose }: MenuProps) {
                                                 className={`submenu-toggle-button ${openSubmenuId === subItem.id ? 'active' : ''}`}
                                                 onClick={() => setOpenSubmenuId(openSubmenuId === subItem.id ? null : subItem.id)}
                                             >
+                                                {subItem.icon}
                                                 {subItem.label}
                                                 {openSubmenuId === subItem.id ? <ExpandMoreIcon /> : <ChevronRightIcon />}
                                             </div>
                                         ) : (
                                             <Link to={subItem.path || '#'} className='submenu-link' onClick={onClose}>
+                                                {subItem.icon}
                                                 {subItem.label}
                                             </Link>
                                         )}
