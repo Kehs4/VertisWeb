@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import SearchModal, { SearchConfig, SearchResult } from '../../../../components/SearchModal';
+import React, { useState, useMemo } from 'react';
+import SearchModal, { SearchConfig, SearchResult } from '../../../../components/SearchModal.tsx';
 import '../Parceiro de Negocio/PartnerForm.css'; // Reutilizando o mesmo estilo
 
 // Importando ícones
@@ -22,6 +22,13 @@ import AddHomeIcon from '@mui/icons-material/AddHome';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
 import PublicIcon from '@mui/icons-material/Public';
 import PhoneIcon from '@mui/icons-material/Phone';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+
 
 // --- DADOS E CONFIGURAÇÃO PARA O MODAL DE PESQUISA (Exemplo) ---
 const mockOperationalUnits: SearchResult[] = [
@@ -51,6 +58,9 @@ const operationalUnitSearchConfig: SearchConfig = {
 
 
 function OperationalUnitForm() {
+    const [formMode, setFormMode] = useState<'view' | 'new' | 'edit'>('view');
+    const [loadedUnitId, setLoadedUnitId] = useState<string | number | null>(null);
+
     const [formData, setFormData] = useState({
         code: '',
         mapaRegistry: '',
@@ -85,6 +95,24 @@ function OperationalUnitForm() {
         ],
     });
 
+    const isReadOnly = formMode === 'view';
+    const showDetails = formMode === 'new' || formMode === 'edit';
+    const unitIsLoaded = loadedUnitId !== null;
+
+    const initialFormState = useMemo(() => ({
+        code: '', mapaRegistry: '', cnpj: '', stateRegistry: '', businessUnit: '',
+        municipalRegistry: '', operationalUnit: '', corporateName: '', shortName: '',
+        crmv: '', type: 'Clínica', status: 'Ativo', interfaceFilePath: '',
+        isMasterUnit: false, usePriceTableFrom: '', billingUnit: 'Unidade Master',
+        homepage: '', email: '', startTime: '', endTime: '', zipCode: '', street: '',
+        number: '', complement: '', neighborhood: '', city: '', state: '',
+        phones: [
+            { number: '', type: 'Cel' }, { number: '', type: 'Cel' },
+            { number: '', type: 'Cel' }, { number: '', type: 'Cel' }
+        ],
+    }), []);
+
+
     // Estado para controlar o modal
     const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
@@ -105,11 +133,32 @@ function OperationalUnitForm() {
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('Dados da Unidade Operacional:', formData);
-        alert(`Unidade Operacional cadastrada com sucesso! (Verifique o console para ver os dados)`);
+        alert(`Unidade Operacional salva com sucesso! (Verifique o console para ver os dados)`);
+        setFormMode('view');
+    };
+
+    const handleNewClick = () => {
+        setFormMode('new');
+        setLoadedUnitId(null);
+        setFormData(initialFormState);
+    };
+
+    const handleEditClick = () => setFormMode('edit');
+
+    const handleCancelClick = () => {
+        if (window.confirm('Deseja realmente cancelar? Todas as alterações não salvas serão perdidas.')) {
+            resetFormToInitialState();
+        }
     };
 
     const handleOpenSearchModal = () => {
         setIsSearchModalOpen(true);
+    };
+
+    const resetFormToInitialState = () => {
+        setFormMode('view');
+        setLoadedUnitId(null);
+        setFormData(initialFormState);
     };
 
     const handleSelectUnit = (unit: SearchResult) => {
@@ -125,6 +174,8 @@ function OperationalUnitForm() {
             email: unit.email || '',
             // Adicione outros campos conforme necessário
         });
+        setFormMode('view');
+        setLoadedUnitId(unit.id);
     };
 
     return (
@@ -135,41 +186,49 @@ function OperationalUnitForm() {
                 onSelect={handleSelectUnit}
                 config={operationalUnitSearchConfig}
             />
-            
+
             <form onSubmit={handleSubmit} className="partner-form">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', paddingBottom: '25px' }}>
+                    <h1 className="partner-form-title">Unidades Operacionais</h1>
+                    <div className="form-actions">
+                        <button type="button" className="action-button submit" onClick={handleNewClick}><AddIcon fontSize="small" />Nova</button>
+                        <button type="button" className="action-button search" onClick={handleOpenSearchModal}><SearchIcon fontSize="small" />Pesquisar</button>
+                        {unitIsLoaded && (
+                            <>
+                                <button type="button" className="action-button update" onClick={handleEditClick} disabled={isReadOnly}><EditIcon fontSize="small" />Alterar</button>
+                                <button type="button" className="action-button delete" onClick={() => alert('Função "Excluir" a ser implementada.')}><DeleteIcon fontSize="small" />Excluir</button>
+                            </>
+                        )}
+                    </div>
+                </div>
 
-                
-            <h1 className="partner-form-title">Unidades Operacionais</h1>
-                <div className="form-actions">
-                    <button type="submit" className="action-button submit">Cadastrar</button>
-                    <button type="button" className="action-button update" onClick={() => alert('Função "Alterar" a ser implementada.')}>Alterar</button>
-                    <button type="button" className="action-button search" onClick={handleOpenSearchModal}>Pesquisar</button>
-                    <button type="button" className="action-button delete" onClick={() => alert('Função "Excluir" a ser implementada.')}>Excluir</button>
-                </div>
-                </div>
+                {!showDetails && !unitIsLoaded && (
+                    <div className="form-placeholder">
+                        <p>Clique em "Nova" para cadastrar uma unidade ou em "Pesquisar" para encontrar uma existente.</p>
+                    </div>
+                )}
 
                 <div className="form-section">
                     <div className="form-row">
-                        <div className="form-group" style={{ flex: 1 }}><label>Código</label><div className="input-with-icon"><QrCode2Icon /><input name="code" value={formData.code} onChange={handleChange} /></div></div>
-                        <div className="form-group" style={{ flex: 1 }}><label>N° Registro MAPA</label><div className="input-with-icon"><ArticleIcon /><input name="mapaRegistry" value={formData.mapaRegistry} onChange={handleChange} /></div></div>
-                        <div className="form-group" style={{ flex: 1 }}><label>CNPJ</label><div className="input-with-icon"><BadgeIcon /><input name="cnpj" value={formData.cnpj} onChange={handleChange} /></div></div>
-                        <div className="form-group" style={{ flex: 1 }}><label>Estadual</label><div className="input-with-icon"><BadgeIcon /><input name="stateRegistry" value={formData.stateRegistry} onChange={handleChange} /></div></div>
+                        <div className="form-group" style={{ flex: 1 }}><label>Código</label><div className="input-with-icon"><QrCode2Icon /><input name="code" value={formData.code} onChange={handleChange} readOnly /></div></div>
+                        <div className="form-group" style={{ flex: 1 }}><label>N° Registro MAPA</label><div className="input-with-icon"><ArticleIcon /><input name="mapaRegistry" value={formData.mapaRegistry} onChange={handleChange} readOnly={isReadOnly} /></div></div>
+                        <div className="form-group" style={{ flex: 1 }}><label>CNPJ</label><div className="input-with-icon"><BadgeIcon /><input name="cnpj" value={formData.cnpj} onChange={handleChange} readOnly={isReadOnly} /></div></div>
+                        <div className="form-group" style={{ flex: 1 }}><label>Estadual</label><div className="input-with-icon"><BadgeIcon /><input name="stateRegistry" value={formData.stateRegistry} onChange={handleChange} readOnly={isReadOnly} /></div></div>
                     </div>
                     <div className="form-row">
-                        <div className="form-group" style={{ flex: 1 }}><label>Unidade de Negócio</label><div className="input-with-icon"><BusinessCenterIcon /><input name="businessUnit" value={formData.businessUnit} onChange={handleChange} /></div></div>
-                        <div className="form-group" style={{ flex: 1 }}><label>Municipal</label><div className="input-with-icon"><BadgeIcon /><input name="municipalRegistry" value={formData.municipalRegistry} onChange={handleChange} /></div></div>
+                        <div className="form-group" style={{ flex: 1 }}><label>Unidade de Negócio</label><div className="input-with-icon"><BusinessCenterIcon /><input name="businessUnit" value={formData.businessUnit} onChange={handleChange} readOnly={isReadOnly} /></div></div>
+                        <div className="form-group" style={{ flex: 1 }}><label>Municipal</label><div className="input-with-icon"><BadgeIcon /><input name="municipalRegistry" value={formData.municipalRegistry} onChange={handleChange} readOnly={isReadOnly} /></div></div>
                     </div>
                     <div className="form-row">
-                        <div className="form-group" style={{ flex: 1 }}><label>Unidade Operacional</label><div className="input-with-icon"><ApartmentIcon /><input name="operationalUnit" value={formData.operationalUnit} onChange={handleChange} /></div></div>
-                        <div className="form-group" style={{ flex: 2 }}><label>Razão Social</label><div className="input-with-icon"><BusinessIcon /><input name="corporateName" value={formData.corporateName} onChange={handleChange} /></div></div>
-                        <div className="form-group" style={{ flex: 1 }}><label>Nome Reduzido</label><div className="input-with-icon"><TextFieldsIcon /><input name="shortName" value={formData.shortName} onChange={handleChange} /></div></div>
-                        <div className="form-group" style={{ flex: 1 }}><label>CRMV</label><div className="input-with-icon"><BadgeIcon /><input name="crmv" value={formData.crmv} onChange={handleChange} /></div></div>
+                        <div className="form-group" style={{ flex: 1 }}><label>Unidade Operacional</label><div className="input-with-icon"><ApartmentIcon /><input name="operationalUnit" value={formData.operationalUnit} onChange={handleChange} readOnly={isReadOnly} /></div></div>
+                        <div className="form-group" style={{ flex: 2 }}><label>Razão Social</label><div className="input-with-icon"><BusinessIcon /><input name="corporateName" value={formData.corporateName} onChange={handleChange} readOnly={isReadOnly} /></div></div>
+                        <div className="form-group" style={{ flex: 1 }}><label>Nome Reduzido</label><div className="input-with-icon"><TextFieldsIcon /><input name="shortName" value={formData.shortName} onChange={handleChange} readOnly={isReadOnly} /></div></div>
+                        <div className="form-group" style={{ flex: 1 }}><label>CRMV</label><div className="input-with-icon"><BadgeIcon /><input name="crmv" value={formData.crmv} onChange={handleChange} readOnly={isReadOnly} /></div></div>
                     </div>
                     <div className="form-row">
                         <div className="form-group" style={{ flex: 2 }}>
                             <label>Tipo</label>
-                            <select name="type" value={formData.type} onChange={handleChange}>
+                            <select name="type" value={formData.type} onChange={handleChange} disabled={isReadOnly}>
                                 <option>Clínica</option><option>Laboratório</option><option>PetShop</option><option>Centro Médico</option>
                                 <option>Ambulatório</option><option>Hospital</option><option>Operadora</option>
                                 <option>Prestador de Serviço</option><option>Remoções</option>
@@ -177,100 +236,113 @@ function OperationalUnitForm() {
                         </div>
                         <div className="form-group" style={{ flex: 1 }}>
                             <label>Situação</label>
-                            <select name="status" value={formData.status} onChange={handleChange}>
+                            <select name="status" value={formData.status} onChange={handleChange} disabled={isReadOnly}>
                                 <option>Ativo</option><option>Inativo</option><option>Suspenso</option><option>Bloqueado</option>
                             </select>
                         </div>
                     </div>
                     <div className="form-row">
-                        <div className="form-group" style={{ flex: 1 }}><label>Path arquivo interface</label><div className="input-with-icon"><FolderOpenIcon /><input name="interfaceFilePath" value={formData.interfaceFilePath} onChange={handleChange} /></div></div>
+                        <div className="form-group" style={{ flex: 1 }}><label>Path arquivo interface</label><div className="input-with-icon"><FolderOpenIcon /><input name="interfaceFilePath" value={formData.interfaceFilePath} onChange={handleChange} readOnly={isReadOnly} /></div></div>
                     </div>
                     <div className="form-row">
                         <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <input type="checkbox" name="isMasterUnit" checked={formData.isMasterUnit} onChange={handleChange} id="isMasterUnit" style={{ width: 'auto' }} />
+                            <input type="checkbox" name="isMasterUnit" checked={formData.isMasterUnit} onChange={handleChange} id="isMasterUnit" style={{ width: 'auto' }} disabled={isReadOnly} />
                             <label htmlFor="isMasterUnit" style={{ marginBottom: 0 }}>Unidade master</label>
                         </div>
-                        <div className="form-group" style={{ flex: 1 }}><label>Utilizar a tabela de preços de</label><div className="input-with-icon"><PriceCheckIcon /><input name="usePriceTableFrom" value={formData.usePriceTableFrom} onChange={handleChange} /></div></div>
+                        <div className="form-group" style={{ flex: 1 }}><label>Utilizar a tabela de preços de</label><div className="input-with-icon"><PriceCheckIcon /><input name="usePriceTableFrom" value={formData.usePriceTableFrom} onChange={handleChange} readOnly={isReadOnly} /></div></div>
                     </div>
                 </div>
 
-                <div className="form-section">
-                    <h2 className="form-section-title">Faturamento e Internet</h2>
-                    <div className="form-row">
-                        <div className="form-group" style={{ flex: 1 }}>
-                            <label>Faturamento de Convênio</label>
-                            <select name="billingUnit" value={formData.billingUnit} onChange={handleChange}><option>Unidade Master</option></select>
-                        </div>
-                        <div className="form-group" style={{ flex: 1 }}><label>Home page</label><div className="input-with-icon"><LanguageIcon /><input name="homepage" value={formData.homepage} onChange={handleChange} /></div></div>
-                        <div className="form-group" style={{ flex: 1 }}><label>E-mail</label><div className="input-with-icon"><EmailIcon /><input type="email" name="email" value={formData.email} onChange={handleChange} /></div></div>
-                    </div>
-                </div>
+                {(showDetails || unitIsLoaded) && (
+                    <>
 
-                <div className="form-section">
-                    <h2 className="form-section-title">Horário de Funcionamento</h2>
-                    <div className="form-row">
-                        <div className="form-group" style={{ flex: 1 }}><label>Início</label><div className="input-with-icon"><AccessTimeIcon /><input type="time" name="startTime" value={formData.startTime} onChange={handleChange} /></div></div>
-                        <div className="form-group" style={{ flex: 1 }}><label>Término</label><div className="input-with-icon"><AccessTimeIcon /><input type="time" name="endTime" value={formData.endTime} onChange={handleChange} /></div></div>
-                    </div>
-                </div>
 
-                <div className="form-section">
-                    <h2 className="form-section-title">Endereço</h2>
-                    <div className="form-row">
-                        <div className="form-group" style={{ flex: 1 }}>
-                            <label>CEP</label>
-                            <div className="input-with-icon"><MarkunreadMailboxIcon /><input name="zipCode" value={formData.zipCode} onChange={handleChange} /></div>
+                        <div className="form-section">
+                            <h2 className="form-section-title">Faturamento e Internet</h2>
+                            <div className="form-row">
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>Faturamento de Convênio</label>
+                                    <select name="billingUnit" value={formData.billingUnit} onChange={handleChange} disabled={isReadOnly}><option>Unidade Master</option></select>
+                                </div>
+                                <div className="form-group" style={{ flex: 1 }}><label>Home page</label><div className="input-with-icon"><LanguageIcon /><input name="homepage" value={formData.homepage} onChange={handleChange} readOnly={isReadOnly} /></div></div>
+                                <div className="form-group" style={{ flex: 1 }}><label>E-mail</label><div className="input-with-icon"><EmailIcon /><input type="email" name="email" value={formData.email} onChange={handleChange} readOnly={isReadOnly} /></div></div>
+                            </div>
                         </div>
-                        <div className="form-group" style={{ flex: 3 }}>
-                            <label>Logradouro</label>
-                            <div className="input-with-icon"><SignpostIcon /><input name="street" value={formData.street} onChange={handleChange} /></div>
-                        </div>
-                    </div>
-                    <div className="form-row">
-                        <div className="form-group" style={{ flex: 1 }}>
-                            <label>Número</label>
-                            <div className="input-with-icon"><NumbersIcon /><input name="number" value={formData.number} onChange={handleChange} /></div>
-                        </div>
-                        <div className="form-group" style={{ flex: 1 }}>
-                            <label>Complemento</label>
-                            <div className="input-with-icon"><AddHomeIcon /><input name="complement" value={formData.complement} onChange={handleChange} /></div>
-                        </div>
-                        <div className="form-group" style={{ flex: 1 }}>
-                            <label>Bairro</label>
-                            <div className="input-with-icon"><LocationCityIcon /><input name="neighborhood" value={formData.neighborhood} onChange={handleChange} /></div>
-                        </div>
-                        <div className="form-group" style={{ flex: 1 }}>
-                            <label>Cidade</label>
-                            <div className="input-with-icon"><LocationCityIcon /><input name="city" value={formData.city} onChange={handleChange} /></div>
-                        </div>
-                        <div className="form-group" style={{ flex: 0.5 }}>
-                            <label>Estado</label>
-                            <div className="input-with-icon"><PublicIcon /><input name="state" value={formData.state} onChange={handleChange} /></div>
-                        </div>
-                    </div>
-                </div>
 
-                {/* --- TELEFONES --- */}
-                <div className="form-section">
-                    <h2 className="form-section-title">Telefones</h2>
-                    {formData.phones.map((phone, index) => (
-                        <div className="form-row" key={index}>
-                            <div className="form-group" style={{ flex: 2 }}>
-                                <label htmlFor={`phone_number_${index}`}>Telefone {index + 1}</label>
-                                <div className="input-with-icon">
-                                    <PhoneIcon />
-                                    <input type="tel" id={`phone_number_${index}`} name="number" value={phone.number} onChange={(e) => handlePhoneChange(index, 'number', e.target.value)} />
+                        <div className="form-section">
+                            <h2 className="form-section-title">Horário de Funcionamento</h2>
+                            <div className="form-row">
+                                <div className="form-group" style={{ flex: 1 }}><label>Início</label><div className="input-with-icon"><AccessTimeIcon /><input type="time" name="startTime" value={formData.startTime} onChange={handleChange} readOnly={isReadOnly} /></div></div>
+                                <div className="form-group" style={{ flex: 1 }}><label>Término</label><div className="input-with-icon"><AccessTimeIcon /><input type="time" name="endTime" value={formData.endTime} onChange={handleChange} readOnly={isReadOnly} /></div></div>
+                            </div>
+                        </div>
+
+                        <div className="form-section">
+                            <h2 className="form-section-title">Endereço</h2>
+                            <div className="form-row">
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>CEP</label>
+                                    <div className="input-with-icon"><MarkunreadMailboxIcon /><input name="zipCode" value={formData.zipCode} onChange={handleChange} readOnly={isReadOnly} /></div>
+                                </div>
+                                <div className="form-group" style={{ flex: 3 }}>
+                                    <label>Logradouro</label>
+                                    <div className="input-with-icon"><SignpostIcon /><input name="street" value={formData.street} onChange={handleChange} readOnly={isReadOnly} /></div>
                                 </div>
                             </div>
-                            <div className="form-group" style={{ flex: 1 }}>
-                                <label htmlFor={`phone_type_${index}`}>Identificação</label>
-                                <select id={`phone_type_${index}`} name="type" value={phone.type} onChange={(e) => handlePhoneChange(index, 'type', e.target.value)}>
-                                    <option value="Tel">Telefone</option><option value="Cel">Celular</option><option value="Whatsapp">Whatsapp</option>
-                                </select>
+                            <div className="form-row">
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>Número</label>
+                                    <div className="input-with-icon"><NumbersIcon /><input name="number" value={formData.number} onChange={handleChange} readOnly={isReadOnly} /></div>
+                                </div>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>Complemento</label>
+                                    <div className="input-with-icon"><AddHomeIcon /><input name="complement" value={formData.complement} onChange={handleChange} readOnly={isReadOnly} /></div>
+                                </div>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>Bairro</label>
+                                    <div className="input-with-icon"><LocationCityIcon /><input name="neighborhood" value={formData.neighborhood} onChange={handleChange} readOnly={isReadOnly} /></div>
+                                </div>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label>Cidade</label>
+                                    <div className="input-with-icon"><LocationCityIcon /><input name="city" value={formData.city} onChange={handleChange} readOnly={isReadOnly} /></div>
+                                </div>
+                                <div className="form-group" style={{ flex: 0.5 }}>
+                                    <label>Estado</label>
+                                    <div className="input-with-icon"><PublicIcon /><input name="state" value={formData.state} onChange={handleChange} readOnly={isReadOnly} /></div>
+                                </div>
                             </div>
                         </div>
-                    ))}
-                </div>
+
+                        {/* --- TELEFONES --- */}
+                        <div className="form-section">
+                            <h2 className="form-section-title">Telefones</h2>
+                            {formData.phones.map((phone, index) => (
+                                <div className="form-row" key={index}>
+                                    <div className="form-group" style={{ flex: 2 }}>
+                                        <label htmlFor={`phone_number_${index}`}>Telefone {index + 1}</label>
+                                        <div className="input-with-icon">
+                                            <PhoneIcon />
+                                            <input type="tel" id={`phone_number_${index}`} name="number" value={phone.number} onChange={(e) => handlePhoneChange(index, 'number', e.target.value)} readOnly={isReadOnly} />
+                                        </div>
+                                    </div>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label htmlFor={`phone_type_${index}`}>Identificação</label>
+                                        <select id={`phone_type_${index}`} name="type" value={phone.type} onChange={(e) => handlePhoneChange(index, 'type', e.target.value)} disabled={isReadOnly}>
+                                            <option value="Tel">Telefone</option><option value="Cel">Celular</option><option value="Whatsapp">Whatsapp</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+
+                {showDetails && (
+                    <div className="form-actions-footer">
+                        <button type="submit" className="action-button submit"><SaveIcon fontSize="small" />Salvar</button>
+                        <button type="button" className="action-button cancel" onClick={handleCancelClick}><CloseIcon fontSize="small" />Cancelar</button>
+                    </div>
+                )}
             </form>
         </div>
     );
