@@ -30,13 +30,13 @@
     --header-border-color: #ecf0f1;
     --sub-metric-color: #5d5e5e;
     --list-item-bg-color: #f5f5f5;
-    --list-item-text-color: #555;
+    --list-item-text-color: #2b2b2b;
     --theme-toggle-color: #FFFFFF;
     --theme-button-textcolor: #000000;
     --theme-button-bgcolor: #ffffff;
     --theme-button-border: #000000;
     --pizza-text: #040d13;
-    --text-shadow: 0 2px 1px rgba(212, 212, 212, 0.712);
+    --text-shadow: 1px 2px 5px rgba(172, 172, 172, 0.603);
 }
 /* --- Fim das Variáveis --- */
 
@@ -118,7 +118,7 @@
     display: block;
     text-align: center;
     color: var(--sub-metric-color);
-    text-shadow: 1px 2px 1px rgba(148, 148, 148, 0.308);
+    text-shadow: var(--text-shadow);
     font-weight: 500;
     font-size: 0.85rem;
     margin-top: 5px;
@@ -135,12 +135,12 @@
 
 .comparison.positive {
     color: #2ecc71;
-    text-shadow: 1px 2px 1px rgba(148, 148, 148, 0.308);
+    text-shadow: var(--text-shadow);
 }
 
 .comparison.negative {
     color: #ff7060;
-    text-shadow: 1px 2px 1px rgba(148, 148, 148, 0.308);
+    text-shadow: var(--text-shadow);
 }
 
 /* Estilos para widgets de lista */
