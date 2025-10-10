@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import PartnerPage from './pages/Vertis/Arquivo/Parceiro de Negocio/PartnerPage';
 import OperationalUnitPage from './pages/Vertis/Arquivo/Unidades Operacionais/OperationalUnitPage';
 import ServiceOrderPage from './pages/Vertis/Operacional/Ordem de Serviço/ServiceOrderPage';
+import NotFound from './pages/NotFound/NotFound';
 
 const router = createBrowserRouter([
   // Rotas públicas que NÃO usam o MainLayout
@@ -33,6 +34,11 @@ const router = createBrowserRouter([
       { path: '/ordem-de-servico', element: <ServiceOrderPage /> },
       // Adicione outras rotas protegidas aqui
     ],
+  },
+  // Rota "catch-all" para páginas não encontradas
+  {
+    path: '*',
+    element: <NotFound />,
   },
 ]);
 
