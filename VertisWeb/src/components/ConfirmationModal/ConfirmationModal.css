@@ -1,0 +1,38 @@
+/* Reutiliza estilos do modal principal */
+@import '../TaskModal/AddTaskModal.css';
+
+.modal-content.confirmation-modal {
+    max-width: 450px;
+}
+
+.confirmation-body {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 0;
+    font-size: 1.1rem;
+    color: #555;
+}
+
+.confirmation-icon {
+    font-size: 3rem !important;
+    color: #f39c12; /* Amarelo/Laranja para alerta */
+}
+
+.confirm-btn-delete {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #e74c3c; /* Vermelho para ação destrutiva */
+    color: white;
+}
+
+.confirm-btn-delete:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

@@ -1,27 +1,27 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import TaskListView from '../../../components/TaskListView/TaskListView';
 
 // --- Tipagem dos Dados ---
 // Esta tipagem pode ser movida para um arquivo central de tipos no futuro
 
-interface Recurso {
+export interface Recurso { // Exportando para utilizar no edit task
     id_recurso: number;
     nom_recurso: string;
 }
 
-interface Comentario {
+export interface Comentario { // Exportando para utilizar no edit task
     id_recurso: number;
     nom_recurso: string;
     comentario: string;
     dth_inclusao: string;
 }
 
-interface Contato {
+export interface Contato { // Exportando para utilizar no edit task
     id_contato: number;
     nom_recurso: string;
 }
 
-interface Task {
+export interface Task { // Exportando para ser usado no Modal
     id: number;
     id_unid_negoc: number;
     nom_unid_negoc: string;
@@ -44,10 +44,10 @@ interface Task {
 
 // --- Dados de Exemplo (Mock Data) ---
 // No futuro, esses dados virão de uma API
-const tasks: Task[] = [
+const initialTasks: Task[] = [
     {
         id: 1, id_unid_negoc: 118, nom_unid_negoc: 'VETEX', id_unid_oper: 1, nom_unid_oper: 'VETEX BLUMENAU',
-        criado_por: 'Ana Silva', ind_prioridade: 4, ind_sit_tarefa: 'ER', sit_tarefa: 'Aberto', qtd_pontos: 8,
+        criado_por: 'Ana Silva', ind_prioridade: 4, ind_sit_tarefa: 'ER', sit_tarefa: 'Em resolução', qtd_pontos: 8,
         titulo_tarefa: 'Corrigir bug na tela de login onde o botão "Entrar" não funciona em dispositivos móveis.',
         recursos: [{ id_recurso: 10, nom_recurso: 'Martins' }], dth_inclusao: '2025-10-13', dth_prev_entrega: '2025-10-15'
     },
@@ -66,14 +66,34 @@ const tasks: Task[] = [
 ];
 
 function TarefasPage() {
+    const [tasks, setTasks] = useState<Task[]>(initialTasks);
+
     useEffect(() => {
         document.title = "Vertis | Tarefas";
     }, []);
+
+    const handleAddTask = (newTask: Task) => {
+        setTasks(prevTasks => [newTask, ...prevTasks]);
+    };
+
+    const handleDeleteTask = (taskId: number) => {
+        // Adicionar um alerta de confirmação antes de remover
+        setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+    };
+
+    const handleUpdateTask = (updatedTask: Task) => {
+        setTasks(prevTasks => 
+            prevTasks.map(task => (task.id === updatedTask.id ? updatedTask : task))
+        );
+    };
 
     return (
         <TaskListView
             title="Planilha de Chamados - Suporte"
             tasks={tasks}
+            onAddTask={handleAddTask}
+            onUpdateTask={handleUpdateTask}
+            onDeleteTask={handleDeleteTask}
         />
     );
 }
