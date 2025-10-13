@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import React from 'react';
 
 // Layout Principal que contém o Header e o Menu Lateral
@@ -15,6 +15,8 @@ import OperationalUnitPage from './pages/Vertis/Arquivo/Unidades Operacionais/Op
 import ServiceOrderPage from './pages/Vertis/Operacional/Ordem de Serviço/ServiceOrderPage';
 import NotFound from './pages/NotFound/NotFound';
 import DashSupport from './pages/Dash Suporte/DashSupport'
+import ProtectedRoute from './components/ProtectedRoute';
+
 
 const router = createBrowserRouter([
   // Rotas públicas que NÃO usam o MainLayout
@@ -27,8 +29,11 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   // Rota "Pai" que usa o MainLayout. Todas as rotas filhas aparecerão dentro dele.
+  // Foi realizado a alteração para que o arquivo ProtectedRoute faça a verificação se há
+  // um token valido para o usuario, ou se ele realizou o login, se sim agora o projeto passa para o
+  // MainLayout.tsx e entrega as páginas normalmente, caso contrário envia o usuario para o /login.
   {
-    element: <MainLayout />,
+    element: <ProtectedRoute />,
     children: [
       { path: '/dashboard', element: <Dashboard /> },
       { path: '/parceiros/:partnerType', element: <PartnerPage /> },

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import './Menu.css'
 import { ChevronRight as ChevronRightIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -116,16 +116,31 @@ interface MenuProps {
 
 function Menu({ isOpen, onClose }: MenuProps) {
     // State to manage which main menu item is open (for submenus)
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [openMainMenuId, setOpenMainMenuId] = useState<string | null>(null);
     // State to manage which submenu item is open (for sub-submenus)
     const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
+    const navigate = useNavigate();
+
+    // Pega o nome do usuário do localStorage para exibição dinâmica
+    const userName = localStorage.getItem('userName') || 'Usuário';
+
+    const handleLogout = async () => {
+        // Chama o endpoint de logout para limpar o cookie HttpOnly
+        await fetch('/api/logout', { method: 'POST' });
+        // Limpa o sinal de autenticação do frontend
+        localStorage.removeItem('isAuthenticated');
+        // Redireciona para a página de login
+        localStorage.removeItem('userName');
+        navigate('/login');
+    };
 
     return (
         <div className={`sidebar-overlay ${isOpen ? 'open' : ''}`} onClick={onClose}>
             <nav className={`sidebar-container ${isOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
                 <div className="sidebar-header">
                     <Link to={'/dashboard'} className='sidebar-logo-link' onClick={onClose}>
-                        <img src="/public/logo-white.png" alt="Vertis Logo" className="sidebar-logo" />
+                        <img src="logo-white.png" alt="Vertis Logo" className="sidebar-logo" />
                     </Link>
                 </div>
                 <ul className='sidebar-menu'>
@@ -190,7 +205,7 @@ function Menu({ isOpen, onClose }: MenuProps) {
                     <div className='user-logged'>
                         <div className='user-image'>
                             <img
-                                src={"https://ui-avatars.com/api/?name=Kleyton+Holanda&background=ff5100&color=fff"}
+                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=ff5100&color=fff`}
                                 alt="Foto de perfil"
                                 className="user-avatar"
                                 style={{
@@ -203,9 +218,9 @@ function Menu({ isOpen, onClose }: MenuProps) {
                             />
                         </div>
 
-                        <h3 className='user-name'>Kleyton Holanda</h3>
+                        <h3 className='user-name'>{userName}</h3>
 
-                        <div className='user-logged-options'>
+                        <div className='user-logged-options' style={{ position: 'relative' }}>
                             <div className='user-logged-option'>
                                 <button
                                     className="settings-button"
@@ -219,6 +234,7 @@ function Menu({ isOpen, onClose }: MenuProps) {
                                         alignItems: 'center',
                                     }}
                                     title="Configurações"
+                                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -232,6 +248,13 @@ function Menu({ isOpen, onClose }: MenuProps) {
                                     </svg>
                                 </button>
                             </div>
+                            {isSettingsOpen && (
+                                <div className="settings-panel">
+                                    <button onClick={handleLogout} className="logout-button">
+                                        Sair
+                                    </button>
+                                </div>
+                            )}
 
                         </div>
                     </div>

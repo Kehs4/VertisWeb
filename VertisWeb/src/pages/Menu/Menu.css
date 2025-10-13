@@ -185,3 +185,34 @@
   background-color: #2c2c2c;
   color: white;
 }
+
+/* Adicione ao final do seu arquivo Menu.css */
+
+.settings-panel {
+  position: absolute;
+  bottom: 120%; /* Posiciona o painel acima do botão de engrenagem */
+  right: 0;
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  z-index: 100;
+  width: 120px;
+}
+
+.logout-button {
+  background-color: transparent;
+  color: #f1f1f1;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.logout-button:hover {
+  background-color: #ff5100;
+}

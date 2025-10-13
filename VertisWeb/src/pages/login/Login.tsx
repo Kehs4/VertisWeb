@@ -17,24 +17,22 @@ function Login() {
     setError('');
 
     try {
-      const response = await fetch('http://177.11.209.38/constellation/IISConstellationAPI.dll/login', {
+      const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': 'Basic ' + btoa(`${username}:${password}`),
         },
         body: JSON.stringify({
-          unid_negoc: 211,
-          unid_oper: 1,
-          dev_mode: "S",
-          svcName: "desenv-vertis"
+          username,
+          password
         })
       });
 
-      const data = await response.json();
-
       if (response.ok) {
+        localStorage.setItem('isAuthenticated', 'true'); // Salva um sinal de autenticação
+        const data = await response.json();
+        localStorage.setItem('userName', data.name); // Salva o nome do usuário
         navigate('/dashboard');
       } else {
         setError('Usuário ou senha incorretos.');

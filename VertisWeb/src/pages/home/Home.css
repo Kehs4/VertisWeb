@@ -24,30 +24,30 @@ a {
 
 .header-login-button {
     background-color: #ff6600;
-    border-radius: 10px;
-    padding: 10px 35px;
+    border-radius: 30px;
+    padding: 12px 50px;
     color: white;
-    border: 2px solid #242424;
-    font-size: 1rem;
+    border: 1px solid #242424;
+    font-size: 0.7rem;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 400;
 }
 
 .header-login-button:hover {
-    background-color: white;
-    border: 2px solid #ff6016;
-    color: var(--text-color);
-    transition: all 0.5s;
+    border: 1px solid #ff6600;
+    transition: all 0.4s;
+    background-color: #ffffff;
+    color: #ff5e00;
 }
 
 .section-dashboard {
     display: flex;
-    height: 100vh;
+    min-height: 100vh;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background-color: #ff6600;
+    background: linear-gradient(180deg, #060c14 85%, #0b2347 100%);
 }
 
 .dashboard-welcome-message {
@@ -82,32 +82,35 @@ a {
 }
 
 .dashboard-cards {
-    display: flex;
     gap: 20px;
-    flex-wrap: wrap;
-    margin: 15px;
-    justify-content: center;
+    margin: 20px auto;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(200px, 1fr));
+    width: 100%;
 }
 
 .dashboard-card {
-    background-color: #ffffff;
-    border-radius: 10px;
-    padding: 20px;
-    border: 1px solid #ff6600;
-    width: 250px;
-    color: var(--text-color);
-    text-align: center;
-    transition: transform 0.2s;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.199);
+    display: flex;
+    flex-direction: column;
+    max-width: 300px;
+    padding: 30px 23px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.205);
+    transition: transform 0.3s ease;
+    border: 1px solid #c2c2c2;
+    border-radius: 20px;
+    background-color: white;
+    border: 2px solid #242424;
 }
 
 .dashboard-card-title{
     font-size: 1.2rem;
     margin-bottom: 10px;
-    font-weight: 600;
-    color: #ff7b00;
+    font-weight: 500;
+    color: #ff5e00a9;
     border-bottom: 1px solid #242424;
     padding-bottom: 5px;
+    letter-spacing: -0.7px;
+    text-shadow: 1px 2px 1px rgba(24, 24, 24, 0.096);
 }
 
 .dashboard-card-content {
@@ -115,22 +118,24 @@ a {
     flex-direction: column;
     align-items: start;
     font-weight: 300;
-    color: #3d3d3d;
+    color: #333333;
+    letter-spacing: -0.2px;
+    text-shadow: 1px 2px 1px rgba(24, 24, 24, 0.096);
 }
 
 .dashboard-card:hover {
-    transform: translateY(-10px);
-    background-color: #2e2e2e;
-    border: 1px solid #FFFFFF;
+    border: 2px solid #d16907;
     transition: all 0.2s;
+    transform: translateY(-5px);
+    box-shadow: 0 0 15px 5px #1060aa80;
 }
 
 .dashboard-card:hover .dashboard-card-content {
-    color: white;
+    color: rgb(37, 37, 37);
 }
 
 .dashboard-card:hover .dashboard-card-title {
-    border-bottom: 1px solid #ffffff;
+    border-bottom: 1px solid #0a1435;
 }
 
 footer {
@@ -142,7 +147,4 @@ footer {
     background-color: #242424;
     border-top: 1px solid #ffffff;
 }
-
-
-
 
