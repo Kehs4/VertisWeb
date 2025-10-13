@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Login.css'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -12,7 +12,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  async function VertisLogin(e) {
+  async function VertisLogin(e: React.FormEvent) {
     e.preventDefault();
     setError('');
 
@@ -47,7 +47,7 @@ function Login() {
   return (
     <>
       <div className='login-box'>
-        <img src="/public/logo-white.png" alt="" />
+        <img src="/logo-white.png" alt="" width={200}/>
         <div className='login-box-content'>
           <div className='login-header'>
             <AccountCircleIcon style={{width: '25px', height: '25px'}}/>
@@ -92,13 +92,13 @@ function Login() {
                       zIndex: 2
                     }}
                   >
-                    {showPassword ? <VisibilityIcon className='login-password-icon' style={{ width: '18px', height: '18px', top: '-16px', position: 'absolute', right: '-15px', color: 'black', cursor: 'pointer' }} />
-                      : <VisibilityOffIcon className='login-password-icon' style={{ width: '18px', height: '18px', top: '-16px', position: 'absolute', right: '-15px', color: 'black', cursor: 'pointer' }} />}
+                    {showPassword ? <VisibilityIcon className='login-password-icon' style={{ width: '18px', height: '18px', top: '-14px', position: 'absolute', right: '-15px', color: 'black', cursor: 'pointer' }} />
+                      : <VisibilityOffIcon className='login-password-icon' style={{ width: '18px', height: '18px', top: '-14px', position: 'absolute', right: '-15px', color: 'black', cursor: 'pointer' }} />}
                   </span>
                 </div>
               </div>
             </div>
-            <div className='login-options' style={{ display: 'flex', marginBottom: '10px', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className='login-options' style={{ display: 'flex', marginBottom: '2px', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <input type="checkbox" name="remember" id="remember" className='login-checkbox' />
                 <label htmlFor="remember" className='login-remember-me'>Manter-me conectado</label>

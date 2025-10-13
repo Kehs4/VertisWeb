@@ -28,6 +28,7 @@ import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import InsightsIcon from '@mui/icons-material/Insights';
 
 // Tipagem para os itens do menu para garantir a consistência dos dados
 interface MenuItem {
@@ -105,6 +106,7 @@ const menuItems: MenuItem[] = [
     { id: 'interface', icon: <TerminalIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Interface', path: '#' },
     { id: 'crm', icon: <SupportAgentIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'CRM', path: '#' },
     { id: 'ajuda', icon: <HelpIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Ajuda', path: '#' },
+    { id: 'suporte', icon: <InsightsIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Dash Suporte', path: '/dashsuporte' }
 ];
 
 interface MenuProps {
