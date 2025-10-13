@@ -1,0 +1,131 @@
+.task-list-container {
+    padding: 20px;
+    background-color: var(--background-color, #eef2f9);
+    color: var(--text-color, #333);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.task-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.task-list-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--text-primary, #1a202c);
+}
+
+.add-task-button {
+    background-color: #ff6600;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.add-task-button:hover {
+    background-color: #e65c00;
+}
+
+.task-table-wrapper {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+.task-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.task-table th,
+.task-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.task-table th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.task-row:hover {
+    background-color: #f7fafc;
+}
+
+.task-row.status-ca {
+    background-color: #f1f1f1;
+    color: #a0aec0;
+}
+
+.task-row.status-ca .task-description {
+    text-decoration: line-through;
+}
+
+.cell-priority {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.cell-status .status-badge {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: white;
+}
+
+.cell-content .task-description {
+    font-weight: 500;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.cell-content .task-ai-flags {
+    margin-top: 8px;
+}
+
+.ai-flag {
+    background-color: #eaf2f8;
+    color: #3498db;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 5px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.cell-actions .action-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #a0aec0;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cell-actions .action-button:hover {
+    background-color: #e2e8f0;
+    color: #2d3748;
+}

@@ -15,6 +15,7 @@ import OperationalUnitPage from './pages/Vertis/Arquivo/Unidades Operacionais/Op
 import ServiceOrderPage from './pages/Vertis/Operacional/Ordem de Serviço/ServiceOrderPage';
 import NotFound from './pages/NotFound/NotFound';
 import DashSupport from './pages/Suporte/Dashboard/DashSupport'
+import TarefasPage from './pages/Suporte/Tarefas/TarefasPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -40,6 +41,7 @@ const router = createBrowserRouter([
       { path: '/unidades-operacionais', element: <OperationalUnitPage /> },
       { path: '/ordem-de-servico', element: <ServiceOrderPage /> },
       { path: '/suporte/dashboard', element: <DashSupport /> },
+      { path: '/suporte/tarefas', element: <TarefasPage /> },
       // Adicione outras rotas protegidas aqui
     ],
   },

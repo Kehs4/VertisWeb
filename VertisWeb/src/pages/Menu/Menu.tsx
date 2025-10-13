@@ -111,10 +111,21 @@ const menuItems: MenuItem[] = [
         label: 'Suporte Vertis', 
         items: [
             { id: 'suporte-dashboard', icon: <InsightsIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Dashboard', path: '/suporte/dashboard' },
-            { id: 'suporte-chamados', label: 'Chamados', path: '/suporte/tarefas' },
+            { id: 'suporte-tarefas', label: 'Tarefas', path: '/suporte/tarefas'},
             { id: 'suporte-notificacoes', label: 'Notificações', path: '#' },
-            { id: 'suporte-configuracoes', label: 'Configurações', path: '#' },
-        ] }
+        ] },
+    { id: 'desenvolvimento', 
+        label: 'Desenvolvimento', 
+        items: [
+            { id: 'desenvolvimento-tarefas', label: 'Tarefas', path: '/desenvolvimento/tarefas'},
+            { id: 'desenvolvimento-notificacoes', label: 'Notificações', path: '#' },
+        ] },
+        { id: 'comercial-vertis', 
+            label: 'Comercial Vertis', 
+            items: [
+                { id: 'comercial-tarefas', label: 'Tarefas', path: '/comercial/tarefas'},
+                { id: 'comercial-notificacoes', label: 'Notificações', path: '#' },
+            ] }
 ];
 
 interface MenuProps {
