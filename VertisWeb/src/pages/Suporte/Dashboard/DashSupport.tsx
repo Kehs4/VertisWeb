@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import './DashSupport.css';
-import { useTheme } from '../../components/ThemeContext';
+import { useTheme } from '../../../components/ThemeContext';
 import { LineChart, PieChart } from '@mui/x-charts';
 
 // Ícones do Material-UI

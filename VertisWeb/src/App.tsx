@@ -14,7 +14,7 @@ import PartnerPage from './pages/Vertis/Arquivo/Parceiro de Negocio/PartnerPage'
 import OperationalUnitPage from './pages/Vertis/Arquivo/Unidades Operacionais/OperationalUnitPage';
 import ServiceOrderPage from './pages/Vertis/Operacional/Ordem de Serviço/ServiceOrderPage';
 import NotFound from './pages/NotFound/NotFound';
-import DashSupport from './pages/Suporte/DashSupport'
+import DashSupport from './pages/Suporte/Dashboard/DashSupport'
 import ProtectedRoute from './components/ProtectedRoute';
 
 

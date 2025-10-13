@@ -111,7 +111,7 @@ const menuItems: MenuItem[] = [
         label: 'Suporte Vertis', 
         items: [
             { id: 'suporte-dashboard', icon: <InsightsIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Dashboard', path: '/suporte/dashboard' },
-            { id: 'suporte-chamados', label: 'Chamados', path: '/suporte/chamados' },
+            { id: 'suporte-chamados', label: 'Chamados', path: '/suporte/tarefas' },
             { id: 'suporte-notificacoes', label: 'Notificações', path: '#' },
             { id: 'suporte-configuracoes', label: 'Configurações', path: '#' },
         ] }
