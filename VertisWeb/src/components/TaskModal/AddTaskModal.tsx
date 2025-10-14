@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './AddTaskModal.css';
 import { Task } from '../../pages/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
-import CloseIcon from '@mui/icons-material/Close.js';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle.js';
-import CancelIcon from '@mui/icons-material/Cancel.js';
-import PersonAddIcon from '@mui/icons-material/PersonAdd.js';
+import CloseIcon from '@mui/icons-material/Close';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 interface AddTaskModalProps {
     title: string;

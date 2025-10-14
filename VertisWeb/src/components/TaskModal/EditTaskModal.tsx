@@ -1,12 +1,12 @@
 import React, { useState, useEffect, KeyboardEvent } from 'react';
 import './EditTaskModal.css';
 import { Task, Comentario } from '../../pages/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
-import CloseIcon from '@mui/icons-material/Close.js';
-import SendIcon from '@mui/icons-material/Send.js';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline.js';
-import PersonAddIcon from '@mui/icons-material/PersonAdd.js';
-import PhoneIcon from '@mui/icons-material/Phone.js';
-import StarIcon from '@mui/icons-material/Star.js';
+import CloseIcon from '@mui/icons-material/Close';
+import SendIcon from '@mui/icons-material/Send';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import PhoneIcon from '@mui/icons-material/Phone';
+import StarIcon from '@mui/icons-material/Star';
 
 interface EditTaskModalProps {
     isOpen: boolean;
