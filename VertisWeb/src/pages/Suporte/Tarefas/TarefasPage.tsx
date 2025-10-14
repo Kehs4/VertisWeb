@@ -19,6 +19,7 @@ export interface Comentario { // Exportando para utilizar no edit task
 export interface Contato { // Exportando para utilizar no edit task
     id_contato: number;
     nom_recurso: string;
+    telefone?: string;
 }
 
 export interface Task { // Exportando para ser usado no Modal
@@ -48,7 +49,7 @@ const initialTasks: Task[] = [
     {
         id: 1, id_unid_negoc: 118, nom_unid_negoc: 'VETEX', id_unid_oper: 1, nom_unid_oper: 'VETEX BLUMENAU',
         criado_por: 'Ana Silva', ind_prioridade: 4, ind_sit_tarefa: 'ER', sit_tarefa: 'Em resolução', qtd_pontos: 8,
-        titulo_tarefa: 'Corrigir bug na tela de login onde o botão "Entrar" não funciona em dispositivos móveis.',
+        titulo_tarefa: 'Problema na tela do Caixa.',
         recursos: [{ id_recurso: 10, nom_recurso: 'Martins' }], dth_inclusao: '2025-10-13', dth_prev_entrega: '2025-10-15'
     },
     {

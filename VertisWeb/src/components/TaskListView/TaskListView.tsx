@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useTheme } from '../ThemeContext'; // Importando o hook do tema
 import './TaskListView.css';
 import FlagIcon from '@mui/icons-material/Flag';
 import { IconButton, Menu, MenuItem } from '@mui/material';
@@ -6,6 +7,14 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AddTaskModal from '../TaskModal/AddTaskModal';
 import EditTaskModal from '../TaskModal/EditTaskModal';
 import ConfirmationModal from '../ConfirmationModal/ConfirmationModal';
+import AnnouncementIcon from '@mui/icons-material/Announcement';
+import HistoryIcon from '@mui/icons-material/History';
+import ArticleIcon from '@mui/icons-material/Article';
+import PersonIcon from '@mui/icons-material/Person';
+import ApartmentIcon from '@mui/icons-material/Apartment';
+import PersonPinIcon from '@mui/icons-material/PersonPin';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import TuneIcon from '@mui/icons-material/Tune';
 
 // --- Tipagem dos Dados ---
 // No futuro, esta tipagem pode ser movida para um arquivo central de tipos
@@ -25,6 +34,7 @@ interface Comentario {
 interface Contato {
     id_contato: number;
     nom_recurso: string;
+    telefone?: string;
 }
 
 interface Task {
@@ -73,9 +83,18 @@ const statusConfig: { [key: string]: { backgroundColor: string, color?: string }
 };
 
 const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
+    // Controle de Tema
+    const { theme, setTheme } = useTheme();
+
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+    // Estado para controlar a ordenação da tabela
+    const [sortConfig, setSortConfig] = useState<{ key: keyof Task | null; direction: 'ascending' | 'descending' }>({
+        key: 'ind_prioridade', // Coluna de ordenação padrão
+        direction: 'descending', // Direção padrão (Urgente primeiro)
+    });
 
     const [selectedTask, setSelectedTask] = useState<Task | null>(null); // Para edição e exclusão
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -89,6 +108,56 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
         };
         onAddTask(newTask);
         setIsAddModalOpen(false); // Fecha o modal após salvar
+    };
+
+    // Memoiza as tarefas ordenadas para evitar recálculos desnecessários
+    const sortedTasks = useMemo(() => {
+        let sortableItems = [...tasks];
+        if (sortConfig.key !== null) {
+            const sortKey = sortConfig.key; // Captura a chave de ordenação em uma constante
+
+            sortableItems.sort((a, b) => {
+                // Função auxiliar para extrair o valor de forma segura
+                const getValue = (task: Task, key: keyof Task) => {
+                    if (key === 'recursos') {
+                        // Ordena pelo nome do primeiro recurso, se existir
+                        return task.recursos && task.recursos.length > 0 ? task.recursos[0].nom_recurso : '';
+                    }
+                    return task[key];
+                };
+
+                const aValue = getValue(a, sortKey);
+                const bValue = getValue(b, sortKey);
+
+                // Trata valores nulos ou indefinidos, colocando-os no final
+                if (aValue == null) return 1;
+                if (bValue == null) return -1;
+
+                if (aValue < bValue) {
+                    return sortConfig.direction === 'ascending' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return sortConfig.direction === 'ascending' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [tasks, sortConfig]);
+
+    // Função para solicitar a ordenação ao clicar no cabeçalho
+    const requestSort = (key: keyof Task) => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        // Se clicar na mesma coluna, inverte a direção
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    // Função para obter a classe CSS para o cabeçalho da coluna de ordenação
+    const getSortClassName = (name: keyof Task) => {
+        return sortConfig.key === name ? `sortable active ${sortConfig.direction}` : 'sortable';
     };
 
     // Funções para o menu de ações
@@ -126,30 +195,37 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
     };
 
     return (
-        <main className="task-list-container">
+        // Adiciona a classe do tema ao container principal
+        <main className={`task-list-container ${theme}`}>
             <div className="task-list-header">
                 <h1 className="task-list-title">{title}</h1>
+                {/* Botão de adicionar e botão de trocar tema */}
+                <div className="header-actions">
                 <button className="add-task-button" onClick={() => setIsAddModalOpen(true)}>Adicionar Chamado</button>
+                    <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="theme-toggle-button">
+                        {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+                    </button>
+                </div>
             </div>
             <div className="task-table-wrapper">
                 <table className="task-table">
                     <thead>
                         <tr>
-                            <th>Prioridade</th>
-                            <th>Status</th>
-                            <th>Chamado</th>
-                            <th>Solicitante</th>
-                            <th>Unidade</th>
-                            <th>Analista</th>
-                            <th>Criação</th>
-                            <th>Ações</th>
+                            <th onClick={() => requestSort('ind_prioridade')} className={getSortClassName('ind_prioridade')}><div className="th-content"><AnnouncementIcon /> Prioridade</div></th>
+                            <th onClick={() => requestSort('ind_sit_tarefa')} className={getSortClassName('ind_sit_tarefa')}><div className="th-content"><HistoryIcon/> Status</div></th>
+                            <th onClick={() => requestSort('titulo_tarefa')} className={getSortClassName('titulo_tarefa')}><div className="th-content"><ArticleIcon /> Chamado</div></th>
+                            <th onClick={() => requestSort('criado_por')} className={getSortClassName('criado_por')}><div className="th-content"><PersonIcon /> Solicitante</div></th>
+                            <th onClick={() => requestSort('nom_unid_oper')} className={getSortClassName('nom_unid_oper')}><div className="th-content"><ApartmentIcon /> Unidade</div></th>
+                            <th onClick={() => requestSort('recursos')} className={getSortClassName('recursos')}><div className="th-content"><PersonPinIcon /> Analista</div></th>
+                            <th onClick={() => requestSort('dth_inclusao')} className={getSortClassName('dth_inclusao')}><div className="th-content"><CalendarTodayIcon /> Criação</div></th>
+                            <th><div className="th-content"><TuneIcon /> Ações</div></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {tasks.map(task => (
+                        {sortedTasks.map(task => (
                             <tr key={task.id} className={`task-row status-${task.ind_sit_tarefa.toLowerCase()}`}>
                                 <td className="cell-priority">
-                                    <FlagIcon style={{ color: priorityConfig[task.ind_prioridade]?.color || '#ccc' }} />
+                                    <FlagIcon style={{ color: priorityConfig[task.ind_prioridade]?.color || '#ccc'}} />
                                     <span>{priorityConfig[task.ind_prioridade]?.label || 'N/D'}</span>
                                 </td>
                                 <td className="cell-status">
@@ -179,7 +255,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                 </table>
             </div>
             <Menu anchorEl={anchorEl} open={isMenuOpen} onClose={handleMenuClose}>
-                <MenuItem onClick={handleEditOptionClick}>Editar</MenuItem>
+                <MenuItem onClick={handleEditOptionClick}>Detalhes</MenuItem>
                 <MenuItem onClick={handleDeleteOptionClick} sx={{ color: 'error.main' }}>Remover</MenuItem>
             </Menu>
             <AddTaskModal

@@ -260,14 +260,14 @@
 }
 
 .ds-theme-toggle-button {
-    background: none;
+    background-color: var(--bg-color); 
+    color: var(--metric-color); 
+    border: 1px solid var(--sub-metric-color); 
+    padding: 10px 20px;
+    border-radius: 8px;
     cursor: pointer;
-    border: 1px solid var(--theme-button-border);
-    border-radius: 5px;
-    background-color: var(--theme-button-bgcolor);
-    color: var(--theme-button-textcolor);
-    padding: 8px 12px;
     font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .ds-widget-footer {

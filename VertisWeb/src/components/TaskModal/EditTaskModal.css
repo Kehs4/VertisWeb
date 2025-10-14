@@ -25,16 +25,24 @@
     flex-direction: column;
 }
 
-.form-column-comments h4 {
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 5px;
+}
+
+.section-header h4 {
     margin-top: 0;
-    margin-bottom: 15px;
+    margin-bottom: 0;
     color: #333;
     font-size: 1.1rem;
 }
 
 .comments-list {
     flex-grow: 1;
-    overflow-y: auto;
     max-height: 300px; /* Altura máxima para a lista de comentários */
     padding-right: 10px;
     margin-bottom: 15px;
@@ -109,4 +117,115 @@
 
 .add-comment-section button svg {
     font-size: 1rem;
+}
+
+.edit-btn {
+    padding: 10px 25px;
+    background-color: #3498db; /* Cor azul para diferenciar */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Garante que o botão de salvar no modo de edição tenha a mesma aparência do botão de adicionar */
+.edit-modal .save-btn {
+    background-color: #ff6600;
+    color: white;
+}
+
+/* --- Estilos para campos bloqueados (modo de visualização) --- */
+.form-column-main input[readOnly],
+.form-column-main textarea[readOnly],
+.form-column-main select:disabled {
+    background-color: #f1f3f5; /* Fundo acinzentado */
+    cursor: not-allowed;       /* Cursor de bloqueio */
+    color: #868e96;            /* Cor do texto mais suave */
+    border-color: #dee2e6;
+}
+
+/* Remove o efeito de foco nos campos bloqueados para não confundir o usuário */
+.form-column-main input[readOnly]:focus,
+.form-column-main textarea[readOnly]:focus {
+    box-shadow: none;
+}
+
+/* Garante que campos sempre bloqueados (como data de encerramento) tenham a aparência correta */
+.form-column-main input[style*="cursor: default"] {
+    cursor: default !important;
+}
+
+/* --- Estilos para Contatos (Edit Modal) --- */
+.add-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #868e96;
+    display: flex;
+    align-items: center;
+}
+.add-icon-btn:hover {
+    color: #3498db;
+}
+
+.contacts-list {
+    max-height: 150px;
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-bottom: 20px;
+}
+
+.contact-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.contact-name {
+    font-weight: 500;
+    color: #495057;
+}
+
+.contact-phone {
+    color: #868e96;
+}
+
+.add-contact-form {
+    padding: 10px;
+    background-color: #f1f3f5;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.contact-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.contact-input-group svg {
+    color: #868e96;
+}
+.contact-input-group input {
+    flex-grow: 1;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px;
+}
+.save-contact-btn {
+    align-self: flex-end;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
 }

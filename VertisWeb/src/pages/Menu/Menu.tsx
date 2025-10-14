@@ -29,6 +29,10 @@ import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import InsightsIcon from '@mui/icons-material/Insights';
+import FeedbackIcon from '@mui/icons-material/Feedback';
+import LaptopWindowsIcon from '@mui/icons-material/LaptopWindows';
+import PaymentsIcon from '@mui/icons-material/Payments';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 
 // Tipagem para os itens do menu para garantir a consistência dos dados
 interface MenuItem {
@@ -104,24 +108,27 @@ const menuItems: MenuItem[] = [
     { id: 'pesquisa', icon: <SearchIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Pesquisa', path: '#' },
     { id: 'suprimentos', icon: <InventoryIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Suprimentos', path: '#' },
     { id: 'interface', icon: <TerminalIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Interface', path: '#' },
-    { id: 'crm', icon: <SupportAgentIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'CRM', path: '#' },
+    { id: 'crm', icon: <ManageAccountsIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />,  label: 'CRM', path: '#' },
     { id: 'ajuda', icon: <HelpIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Ajuda', path: '#' },
     
     { id: 'suporte', 
         label: 'Suporte Vertis', 
+        icon: <SupportAgentIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />,
         items: [
             { id: 'suporte-dashboard', icon: <InsightsIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Dashboard', path: '/suporte/dashboard' },
-            { id: 'suporte-tarefas', label: 'Tarefas', path: '/suporte/tarefas'},
+            { id: 'suporte-tarefas', icon: <FeedbackIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Tarefas', path: '/suporte/tarefas'},
             { id: 'suporte-notificacoes', label: 'Notificações', path: '#' },
         ] },
     { id: 'desenvolvimento', 
-        label: 'Desenvolvimento', 
+        label: 'Desenvolvimento',
+        icon: <LaptopWindowsIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />,
         items: [
             { id: 'desenvolvimento-tarefas', label: 'Tarefas', path: '/desenvolvimento/tarefas'},
             { id: 'desenvolvimento-notificacoes', label: 'Notificações', path: '#' },
         ] },
         { id: 'comercial-vertis', 
             label: 'Comercial Vertis', 
+            icon: <PaymentsIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />,
             items: [
                 { id: 'comercial-tarefas', label: 'Tarefas', path: '/comercial/tarefas'},
                 { id: 'comercial-notificacoes', label: 'Notificações', path: '#' },
@@ -159,7 +166,7 @@ function Menu({ isOpen, onClose }: MenuProps) {
             <nav className={`sidebar-container ${isOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
                 <div className="sidebar-header">
                     <Link to={'/dashboard'} className='sidebar-logo-link' onClick={onClose}>
-                        <img src="logo-white.png" alt="Vertis Logo" className="sidebar-logo" />
+                        <img src="/public/logo-white.png" alt="Vertis Logo" className="sidebar-logo" />
                     </Link>
                 </div>
                 <ul className='sidebar-menu'>

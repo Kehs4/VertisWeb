@@ -101,7 +101,7 @@ function Dashboard() {
             <main className="dashboard-container">
                 <div className="dashboard-header-toolbar">
                     <h1 className="dashboard-title">Dashboard</h1>
-                    <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="theme-toggle-button">
+                    <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="db-theme-toggle-button">
                         {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
                     </button>
                 </div>
