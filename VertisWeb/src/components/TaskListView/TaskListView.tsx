@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useTheme } from '../ThemeContext'; // Importando o hook do tema
 import './TaskListView.css';
-import FlagIcon from '@mui/icons-material/Flag';
 import { IconButton, Menu, MenuItem } from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert'; 
 import AddTaskModal from '../TaskModal/AddTaskModal';
 import EditTaskModal from '../TaskModal/EditTaskModal';
 import ConfirmationModal from '../ConfirmationModal/ConfirmationModal';
+
+// Ícones para os cabeçalhos da tabela
+import FlagIcon from '@mui/icons-material/Flag';
+import MoreVertIcon from '@mui/icons-material/MoreVert'; 
 import AnnouncementIcon from '@mui/icons-material/Announcement';
 import HistoryIcon from '@mui/icons-material/History';
 import ArticleIcon from '@mui/icons-material/Article';
@@ -15,6 +17,14 @@ import ApartmentIcon from '@mui/icons-material/Apartment';
 import PersonPinIcon from '@mui/icons-material/PersonPin';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import TuneIcon from '@mui/icons-material/Tune';
+
+// Ícones para os cards de análise
+import AllInboxIcon from '@mui/icons-material/AllInbox';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import StarRateIcon from '@mui/icons-material/StarRate';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 
 // --- Tipagem dos Dados ---
 // No futuro, esta tipagem pode ser movida para um arquivo central de tipos
@@ -55,6 +65,7 @@ interface Task {
     dth_prev_entrega?: string;
     dth_encerramento?: string;
     dth_inclusao: string;
+    satisfaction_rating?: number;
     dth_exclusao?: string;
 }
 
@@ -65,6 +76,8 @@ interface TaskListViewProps {
     onDeleteTask: (taskId: number) => void;
     onAddTask: (newTask: Task) => void;
 }
+
+
 
 const priorityConfig: { [key: number]: { color: string, label: string } } = {
     1: { color: '#7dcea0', label: 'Baixa' },
@@ -109,6 +122,57 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
         onAddTask(newTask);
         setIsAddModalOpen(false); // Fecha o modal após salvar
     };
+
+    // --- Lógica para os Cards de Análise ---
+    const analytics = useMemo(() => {
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        const totalTasks = tasks.length;
+        const openTasks = tasks.filter(t => t.ind_sit_tarefa === 'AB').length;
+        const finishedTasks = tasks.filter(t => t.ind_sit_tarefa === 'FN').length;
+        const waitingTasks = tasks.filter(t => t.ind_sit_tarefa === 'AG').length;
+
+        const createdToday = tasks.filter(t => t.dth_inclusao.startsWith(todayStr)).length;
+        const resolvedToday = tasks.filter(t => t.dth_encerramento?.startsWith(todayStr)).length;
+        const successRateToday = createdToday > 0 ? (resolvedToday / createdToday) * 100 : 0;
+
+        const finishedWithDates = tasks.filter(t => t.ind_sit_tarefa === 'FN' && t.dth_encerramento && t.dth_inclusao);
+        const totalResolutionTime = finishedWithDates.reduce((acc, task) => {
+            const startTime = new Date(task.dth_inclusao).getTime();
+            const endTime = new Date(task.dth_encerramento!).getTime();
+            return acc + (endTime - startTime);
+        }, 0);
+        const avgResolutionTimeMs = finishedWithDates.length > 0 ? totalResolutionTime / finishedWithDates.length : 0;
+        
+        // Converte milissegundos para um formato legível
+        const formatAvgTime = (ms: number) => {
+            if (ms <= 0) return 'N/A';
+            const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+            if (days > 0) return `${days}d ${hours}h`;
+            if (hours > 0) return `${hours}h ${minutes}m`;
+            return `${minutes}m`;
+        };
+
+        const ratedTasks = tasks.filter(t => typeof t.satisfaction_rating === 'number');
+        const avgSatisfaction = ratedTasks.length > 0 
+            ? ratedTasks.reduce((acc, task) => acc + task.satisfaction_rating!, 0) / ratedTasks.length
+            : 0;
+
+        return {
+            totalTasks,
+            openTasks,
+            finishedTasks,
+            waitingTasks,
+            createdToday,
+            resolvedToday,
+            successRateToday,
+            avgResolutionTime: formatAvgTime(avgResolutionTimeMs),
+            avgSatisfaction,
+        };
+    }, [tasks]);
+
 
     // Memoiza as tarefas ordenadas para evitar recálculos desnecessários
     const sortedTasks = useMemo(() => {
@@ -205,6 +269,69 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                     <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="theme-toggle-button">
                         {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
                     </button>
+                </div>
+            </div>
+
+            {/* --- Seção de Cards de Análise --- */}
+            <div className="analytics-cards-container">
+                {/* Card 1: Total de Chamados */}
+                <div className="analytics-card">
+                    <div className="card-main-metric">
+                        <AllInboxIcon className="card-icon" />
+                        <div className="metric-value">{analytics.totalTasks}</div>
+                        <div className="metric-label">Total de Chamados</div>
+                    </div>
+                    <div className="card-sub-metrics">
+                        <div className="sub-metric-item"><RadioButtonUncheckedIcon className="sub-icon open" /> Abertos: <strong>{analytics.openTasks}</strong></div>
+                        <div className="sub-metric-item"><CheckCircleOutlineIcon className="sub-icon finished" /> Finalizados: <strong>{analytics.finishedTasks}</strong></div>
+                        <div className="sub-metric-item"><HourglassEmptyIcon className="sub-icon waiting" /> Aguardando: <strong>{analytics.waitingTasks}</strong></div>
+                    </div>
+                </div>
+
+                {/* Card 2: Insights de Hoje */}
+                <div className="analytics-card">
+                    <div className="card-header">
+                        <SupportAgentIcon className="card-icon" />
+                        <h3>Chamados <span style={{color: '#999999', fontSize: '0.8rem', fontWeight: '400'}}>(últimas 24hrs)</span></h3>
+                    </div>
+                    <div className="card-content-row">
+                        <div className="metric-item">
+                            <div className="metric-title">
+                                <span className="status-dot yellow"></span>
+                                <span>Solicitados</span>
+                            </div>
+                            <strong>{analytics.createdToday}</strong>
+                        </div>
+                        <div className="metric-item">
+                            <div className="metric-title">
+                                <span className="status-dot green"></span>
+                                <span>Resolvidos</span>
+                            </div>
+                            <strong>{analytics.resolvedToday}</strong>
+                        </div>
+                        <div className="metric-item">
+                            <div className="metric-title">
+                                <CheckCircleOutlineIcon className="status-icon success" />
+                                <span>Success Rate</span>
+                            </div>
+                            <strong>{analytics.successRateToday.toFixed(0)}%</strong>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Card 3: Insights do Cliente */}
+                <div className="analytics-card">
+                    <div className="card-header">
+                        <StarRateIcon className="card-icon" />
+                        <h3>Insights dos Clientes</h3>
+                    </div>
+                    <div className="card-content-row">
+                        <div className="metric-item">
+                            <span>Tempo Médio Resolução</span>
+                            <strong>{analytics.avgResolutionTime}</strong>
+                        </div>
+                        <div className="metric-item"><span>Satisfação Média</span><strong>{analytics.avgSatisfaction.toFixed(1)}/10</strong></div>
+                    </div>
                 </div>
             </div>
             <div className="task-table-wrapper">
