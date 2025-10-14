@@ -6,6 +6,7 @@ import SendIcon from '@mui/icons-material/Send';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PhoneIcon from '@mui/icons-material/Phone';
+import StarIcon from '@mui/icons-material/Star';
 
 interface EditTaskModalProps {
     isOpen: boolean;
@@ -67,7 +68,9 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         } else {
             setFormData({
                 ...formData,
-                [name]: name === 'ind_prioridade' || name === 'qtd_pontos' ? parseInt(value, 10) : value,
+                [name]: ['ind_prioridade', 'qtd_pontos', 'satisfaction_rating'].includes(name)
+                    ? parseInt(value, 10) || 0 // Converte para número, com fallback para 0
+                    : value,
             });
         }
     };
@@ -196,8 +199,16 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                         readOnly style={{ cursor: 'default', backgroundColor: '#f1f3f5' }} />
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="qtd_pontos">Pontos</label>
-                                    <input type="number" id="qtd_pontos" name="qtd_pontos" value={formData.qtd_pontos} onChange={handleChange} min="0" readOnly={!isEditing} />
+                                    <label htmlFor="satisfaction_rating">Avaliação</label>
+                                    <div className="satisfaction-input-group">
+                                        <StarIcon />
+                                        <input
+                                            type="number" id="satisfaction_rating" name="satisfaction_rating"
+                                            value={formData.satisfaction_rating || ''} onChange={handleChange}
+                                            min="0" max="10"
+                                            readOnly={!isEditing || formData.ind_sit_tarefa !== 'FN'}
+                                            placeholder="0-10" />
+                                    </div>
                                 </div>
                             </div>
 

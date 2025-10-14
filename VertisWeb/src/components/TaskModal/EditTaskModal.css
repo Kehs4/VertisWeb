@@ -229,3 +229,25 @@
     border-radius: 4px;
     cursor: pointer;
 }
+
+/* --- Estilos para o campo de Avaliação --- */
+.satisfaction-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 0 10px;
+}
+
+.satisfaction-input-group input {
+    border: none;
+    box-shadow: none;
+    padding: 10px 0;
+}
+.satisfaction-input-group input:focus {
+    box-shadow: none;
+}
+.satisfaction-input-group svg {
+    color: #f39c12; /* Cor da estrela */
+}

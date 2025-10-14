@@ -17,6 +17,7 @@ import ApartmentIcon from '@mui/icons-material/Apartment';
 import PersonPinIcon from '@mui/icons-material/PersonPin';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import TuneIcon from '@mui/icons-material/Tune';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
 // Ícones para os cards de análise
 import AllInboxIcon from '@mui/icons-material/AllInbox';
@@ -123,6 +124,67 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
         setIsAddModalOpen(false); // Fecha o modal após salvar
     };
 
+    const handleExportCSV = () => {
+        if (tasks.length === 0) {
+            alert("Não há tarefas para exportar.");
+            return;
+        }
+
+        // Função para escapar vírgulas e aspas no CSV
+        const escapeCSV = (field: any): string => {
+            if (field === null || field === undefined) {
+                return '';
+            }
+            const str = String(field);
+            // Se o campo contém vírgula, aspas ou quebra de linha, envolve com aspas duplas
+            if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+                // Escapa aspas duplas existentes duplicando-as
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        const headers = [
+            'ID', 'Título', 'Status', 'Prioridade', 'Solicitante',
+            'Unidade Operacional', 'Analista(s)', 'Data de Inclusão',
+            'Previsão de Entrega', 'Data de Encerramento', 'Pontos', 'Avaliação'
+        ];
+
+        const rows = sortedTasks.map(task => [
+            task.id,
+            escapeCSV(task.titulo_tarefa),
+            escapeCSV(task.sit_tarefa),
+            escapeCSV(priorityConfig[task.ind_prioridade]?.label || 'N/D'),
+            escapeCSV(task.criado_por),
+            escapeCSV(task.nom_unid_oper),
+            escapeCSV(task.recursos.map(r => r.nom_recurso).join(', ') || 'N/A'),
+            task.dth_inclusao ? new Date(task.dth_inclusao).toLocaleDateString() : '',
+            task.dth_prev_entrega ? new Date(task.dth_prev_entrega).toLocaleDateString() : '',
+            task.dth_encerramento ? new Date(task.dth_encerramento).toLocaleString() : '',
+            task.qtd_pontos,
+            task.satisfaction_rating || ''
+        ].join(';'));
+
+        // Adiciona o BOM para compatibilidade com Excel e junta cabeçalhos e linhas
+        const csvString = [headers.join(';'), ...rows].join('\n');
+        const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+
+        // Cria um link temporário para iniciar o download
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0'); // Mês começa em 0
+        const year = today.getFullYear();
+        const fileName = `chamados_vertis${day}${month}${year}.csv`;
+
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     // --- Lógica para os Cards de Análise ---
     const analytics = useMemo(() => {
         const todayStr = new Date().toISOString().split('T')[0];
@@ -155,10 +217,14 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
             return `${minutes}m`;
         };
 
-        const ratedTasks = tasks.filter(t => typeof t.satisfaction_rating === 'number');
-        const avgSatisfaction = ratedTasks.length > 0 
-            ? ratedTasks.reduce((acc, task) => acc + task.satisfaction_rating!, 0) / ratedTasks.length
-            : 0;
+        // Filtra apenas as tarefas que foram finalizadas e possuem uma avaliação válida (número).
+        const ratedTasks = tasks.filter(
+            (task) => task.ind_sit_tarefa === 'FN' && typeof task.satisfaction_rating === 'number'
+        );
+
+        // Calcula a soma de todas as avaliações.
+        const totalSatisfactionScore = ratedTasks.reduce((sum, task) => sum + task.satisfaction_rating!, 0);
+        const avgSatisfaction = ratedTasks.length > 0 ? totalSatisfactionScore / ratedTasks.length : 0;
 
         return {
             totalTasks,
@@ -265,6 +331,9 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                 <h1 className="task-list-title">{title}</h1>
                 {/* Botão de adicionar e botão de trocar tema */}
                 <div className="header-actions">
+                    <button className="export-csv-button" onClick={handleExportCSV}>
+                        <FileDownloadIcon /> Exportar CSV
+                    </button>
                 <button className="add-task-button" onClick={() => setIsAddModalOpen(true)}>Adicionar Chamado</button>
                     <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="theme-toggle-button">
                         {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}

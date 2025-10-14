@@ -14,7 +14,7 @@ import PartnerPage from './pages/Vertis/Arquivo/Parceiro de Negocio/PartnerPage'
 import OperationalUnitPage from './pages/Vertis/Arquivo/Unidades Operacionais/OperationalUnitPage';
 import ServiceOrderPage from './pages/Vertis/Operacional/Ordem de Serviço/ServiceOrderPage';
 import NotFound from './pages/NotFound/NotFound';
-import DashSupport from './pages/Suporte/Dashboard/DashSupport'
+import DashSupport from './pages/Suporte/Dashboard/DashSupport';
 import TarefasPage from './pages/Suporte/Tarefas/TarefasPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -30,9 +30,6 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   // Rota "Pai" que usa o MainLayout. Todas as rotas filhas aparecerão dentro dele.
-  // Foi realizado a alteração para que o arquivo ProtectedRoute faça a verificação se há
-  // um token valido para o usuario, ou se ele realizou o login, se sim agora o projeto passa para o
-  // MainLayout.tsx e entrega as páginas normalmente, caso contrário envia o usuario para o /login.
   {
     element: <ProtectedRoute />,
     children: [
@@ -42,7 +39,6 @@ const router = createBrowserRouter([
       { path: '/ordem-de-servico', element: <ServiceOrderPage /> },
       { path: '/suporte/dashboard', element: <DashSupport /> },
       { path: '/suporte/tarefas', element: <TarefasPage /> },
-      // Adicione outras rotas protegidas aqui
     ],
   },
   // Rota "catch-all" para páginas não encontradas

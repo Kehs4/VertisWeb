@@ -35,6 +35,7 @@ const initialFormState: Task = {
     contatos: [],    // Deve começar como um array vazio
     dth_encerramento: '',
     dth_inclusao: '', // Será definido na criação
+    satisfaction_rating: undefined,
 };
 
 const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave }) => {

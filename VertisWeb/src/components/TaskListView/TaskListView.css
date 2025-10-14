@@ -75,6 +75,26 @@
     transition: background-color 0.3s ease;
 }
 
+.export-csv-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--table-bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--table-border-color);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.export-csv-button:hover {
+    background-color: var(--row-hover-bg);
+    color: var(--text-primary);
+}
+
 .add-task-button:hover {
     background-color: #e65c00;
 }
@@ -95,12 +115,20 @@
     display: flex;
     flex-direction: column;
     gap: 15px;
+    transition: all 0.2s ease-in-out;
 }
 
 /* Estilo para o primeiro card (layout especial) */
 .analytics-card:first-child {
     flex-direction: row;
     gap: 20px;
+}
+
+.analytics-card:hover {
+    transform: translateY(-5px);
+    transition: all 0.2s ease-in;
+    background-color: var(--sort-active-bg);
+    box-shadow: 0 2px 12px var(--row-hover-bg);
 }
 
 .card-main-metric {
