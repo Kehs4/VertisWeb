@@ -7,9 +7,11 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 interface AddTaskModalProps {
+    title: string;
     isOpen: boolean;
     onClose: () => void;
     onSave: (newTask: Task) => void;
+    contextType?: 'support' | 'development';
 }
 
 // Mova initialFormState para fora do componente para evitar recriação em cada renderização
@@ -38,7 +40,14 @@ const initialFormState: Task = {
     satisfaction_rating: undefined,
 };
 
-const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave }) => {
+const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onSave, contextType = 'support' }) => {
+    const labels = {
+        taskDescription: contextType === 'development' ? 'Descrição da Tarefa' : 'Descrição do Chamado',
+        analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista',
+        saveBtn: contextType === 'development' ? 'Salvar Tarefa' : 'Salvar Chamado',
+    };
+
+
     const [formData, setFormData] = useState(initialFormState);
     const [showAddContactForm, setShowAddContactForm] = useState(false);
     const [newContactName, setNewContactName] = useState('');
@@ -107,14 +116,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave }) 
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Adicionar Novo Chamado</h2>
+                    <h2>{title}</h2>
                     <button onClick={onClose} className="close-button">
                         <CloseIcon />
                     </button>
                 </div>
                 <form onSubmit={handleSubmit} className="modal-form">
                     <div className="form-group">
-                        <label htmlFor="titulo_tarefa">Descrição do Chamado</label>
+                        <label htmlFor="titulo_tarefa">{labels.taskDescription}</label>
                         <textarea
                             id="titulo_tarefa"
                             name="titulo_tarefa"
@@ -138,17 +147,19 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave }) 
                                 required
                             />
                         </div>
-                        <div className="form-group">
-                            <label htmlFor="nom_unid_oper">Nome Unidade Operacional</label>
-                            <input
-                                type="text"
-                                id="nom_unid_oper"
-                                name="nom_unid_oper"
-                                value={formData.nom_unid_oper}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
+                        {contextType === 'support' && (
+                            <div className="form-group">
+                                <label htmlFor="nom_unid_oper">Nome Unidade Operacional</label>
+                                <input
+                                    type="text"
+                                    id="nom_unid_oper"
+                                    name="nom_unid_oper"
+                                    value={formData.nom_unid_oper}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className="form-group">
@@ -180,19 +191,21 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave }) 
                     </div>
 
                     <div className="form-row">
+                        {contextType === 'support' && (
+                            <div className="form-group">
+                                <label htmlFor="id_unid_negoc">Unidade de Negócio</label>
+                                <input
+                                    type="text"
+                                    id="id_unid_negoc"
+                                    name="id_unid_negoc"
+                                    value={formData.id_unid_negoc}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                        )}
                         <div className="form-group">
-                            <label htmlFor="id_unid_negoc">Unidade de Negócio</label>
-                            <input
-                                type="text"
-                                id="id_unid_negoc"
-                                name="id_unid_negoc"
-                                value={formData.id_unid_negoc}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor='nom_recurso'>Analista</label>
+                            <label htmlFor='nom_recurso'>{labels.analyst}</label>
                             <input
                                 type="text"
                                 id="nom_recurso"
@@ -247,7 +260,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, onSave }) 
                             Cancelar
                         </button>
                         <button type="submit" className="save-btn">
-                            Salvar Chamado
+                            {labels.saveBtn}
                         </button>
                     </div>
                 </form>

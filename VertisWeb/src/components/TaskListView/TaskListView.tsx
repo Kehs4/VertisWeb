@@ -21,6 +21,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
 // Ícones para os cards de análise
 import AllInboxIcon from '@mui/icons-material/AllInbox';
+import CodeIcon from '@mui/icons-material/Code';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import StarRateIcon from '@mui/icons-material/StarRate';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -76,6 +77,7 @@ interface TaskListViewProps {
     onUpdateTask: (updatedTask: Task) => void;
     onDeleteTask: (taskId: number) => void;
     onAddTask: (newTask: Task) => void;
+    contextType?: 'support' | 'development'; // Nova prop para definir o contexto
 }
 
 
@@ -96,7 +98,20 @@ const statusConfig: { [key: string]: { backgroundColor: string, color?: string }
     'AB': { backgroundColor: '#85c1e9' },       // Aberto
 };
 
-const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
+const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, onUpdateTask, onDeleteTask, contextType }) => {
+    // Define os textos e ícones com base no contexto
+    const labels = {
+        task: contextType === 'development' ? 'Tarefa' : 'Chamado', // Singular
+        tasks: contextType === 'development' ? 'Tarefas' : 'Chamados', // Plural
+        analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista', // Papel
+        taskDescription: contextType === 'development' ? 'Descrição da Tarefa' : 'Descrição do Chamado',
+        saveBtn: contextType === 'development' ? 'Salvar Tarefa' : 'Salvar Chamado',
+        // Labels para os cards de análise
+        clientInsights: contextType === 'development' ? 'Métricas de Entrega' : 'Insights dos Clientes',
+        satisfaction: contextType === 'development' ? 'Qualidade do Código' : 'Satisfação Média',
+        dailyCardIcon: contextType === 'development' ? <CodeIcon className="card-icon" /> : <SupportAgentIcon className="card-icon" />,
+    };
+
     // Controle de Tema
     const { theme, setTheme } = useTheme();
 
@@ -144,11 +159,20 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
             return str;
         };
 
-        const headers = [
-            'ID', 'Título', 'Status', 'Prioridade', 'Solicitante',
-            'Unidade Operacional', 'Analista(s)', 'Data de Inclusão',
-            'Previsão de Entrega', 'Data de Encerramento', 'Pontos', 'Avaliação'
-        ];
+        const headers = {
+            id: 'ID',
+            title: contextType === 'development' ? 'Tarefa' : 'Chamado',
+            status: 'Status',
+            priority: 'Prioridade', 
+            user: 'Solicitante',
+            customer: contextType === 'development' ? 'Cliente' : 'Unidade Operacional', 
+            analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista(s)', 
+            includeDate: 'Data de Inclusão',
+            prevDate: 'Previsão de Entrega', 
+            finishDate: 'Data de Encerramento', 
+            points: 'Pontos', 
+            rating: 'Avaliação'
+        };
 
         const rows = sortedTasks.map(task => [
             task.id,
@@ -166,15 +190,17 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
         ].join(';'));
 
         // Adiciona o BOM para compatibilidade com Excel e junta cabeçalhos e linhas
-        const csvString = [headers.join(';'), ...rows].join('\n');
+        const csvHeaders = Object.values(headers).join(';'); // Corrigido para usar apenas os valores do objeto headers
+        const csvString = [csvHeaders, ...rows].join('\n');
         const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
 
         // Cria um link temporário para iniciar o download
         const today = new Date();
+
         const day = String(today.getDate()).padStart(2, '0');
         const month = String(today.getMonth() + 1).padStart(2, '0'); // Mês começa em 0
         const year = today.getFullYear();
-        const fileName = `chamados_vertis${day}${month}${year}.csv`;
+        const fileName = `Tasklist_vertis${day}${month}${year}.csv`;
 
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
@@ -334,7 +360,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                     <button className="export-csv-button" onClick={handleExportCSV}>
                         <FileDownloadIcon /> Exportar CSV
                     </button>
-                <button className="add-task-button" onClick={() => setIsAddModalOpen(true)}>Adicionar Chamado</button>
+                <button className="add-task-button" onClick={() => setIsAddModalOpen(true)}>Adicionar {labels.task}</button>
                     <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="theme-toggle-button">
                         {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
                     </button>
@@ -348,7 +374,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                     <div className="card-main-metric">
                         <AllInboxIcon className="card-icon" />
                         <div className="metric-value">{analytics.totalTasks}</div>
-                        <div className="metric-label">Total de Chamados</div>
+                        <div className="metric-label">Total de {labels.tasks}</div>
                     </div>
                     <div className="card-sub-metrics">
                         <div className="sub-metric-item"><RadioButtonUncheckedIcon className="sub-icon open" /> Abertos: <strong>{analytics.openTasks}</strong></div>
@@ -360,8 +386,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                 {/* Card 2: Insights de Hoje */}
                 <div className="analytics-card">
                     <div className="card-header">
-                        <SupportAgentIcon className="card-icon" />
-                        <h3>Chamados <span style={{color: '#999999', fontSize: '0.8rem', fontWeight: '400'}}>(últimas 24hrs)</span></h3>
+                        {labels.dailyCardIcon}
+                        <h3>{labels.tasks} <span style={{color: '#999999', fontSize: '0.8rem', fontWeight: '400'}}>(últimas 24hrs)</span></h3>
                     </div>
                     <div className="card-content-row">
                         <div className="metric-item">
@@ -392,14 +418,14 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                 <div className="analytics-card">
                     <div className="card-header">
                         <StarRateIcon className="card-icon" />
-                        <h3>Insights dos Clientes</h3>
+                        <h3>{labels.clientInsights}</h3>
                     </div>
                     <div className="card-content-row">
                         <div className="metric-item">
                             <span>Tempo Médio Resolução</span>
                             <strong>{analytics.avgResolutionTime}</strong>
                         </div>
-                        <div className="metric-item"><span>Satisfação Média</span><strong>{analytics.avgSatisfaction.toFixed(1)}/10</strong></div>
+                        <div className="metric-item"><span>{labels.satisfaction}</span><strong>{analytics.avgSatisfaction.toFixed(1)}/10</strong></div>
                     </div>
                 </div>
             </div>
@@ -408,13 +434,15 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                     <thead>
                         <tr>
                             <th onClick={() => requestSort('ind_prioridade')} className={getSortClassName('ind_prioridade')}><div className="th-content"><AnnouncementIcon /> Prioridade</div></th>
-                            <th onClick={() => requestSort('ind_sit_tarefa')} className={getSortClassName('ind_sit_tarefa')}><div className="th-content"><HistoryIcon/> Status</div></th>
-                            <th onClick={() => requestSort('titulo_tarefa')} className={getSortClassName('titulo_tarefa')}><div className="th-content"><ArticleIcon /> Chamado</div></th>
+                            <th onClick={() => requestSort('ind_sit_tarefa')} className={getSortClassName('ind_sit_tarefa')}><div className="th-content"><HistoryIcon /> Status</div></th>
+                            <th onClick={() => requestSort('titulo_tarefa')} className={getSortClassName('titulo_tarefa')}><div className="th-content"><ArticleIcon /> {labels.task}</div></th>
                             <th onClick={() => requestSort('criado_por')} className={getSortClassName('criado_por')}><div className="th-content"><PersonIcon /> Solicitante</div></th>
-                            <th onClick={() => requestSort('nom_unid_oper')} className={getSortClassName('nom_unid_oper')}><div className="th-content"><ApartmentIcon /> Unidade</div></th>
-                            <th onClick={() => requestSort('recursos')} className={getSortClassName('recursos')}><div className="th-content"><PersonPinIcon /> Analista</div></th>
+                            {contextType === 'support' && (
+                                <th onClick={() => requestSort('nom_unid_oper')} className={getSortClassName('nom_unid_oper')}><div className="th-content"><ApartmentIcon /> Unidade</div></th>
+                            )}
+                            <th onClick={() => requestSort('recursos')} className={getSortClassName('recursos')}><div className="th-content"><PersonPinIcon /> {labels.analyst}</div></th>
                             <th onClick={() => requestSort('dth_inclusao')} className={getSortClassName('dth_inclusao')}><div className="th-content"><CalendarTodayIcon /> Criação</div></th>
-                            <th><div className="th-content"><TuneIcon /> Ações</div></th>
+                            <th><div className="th-content"><TuneIcon /> Ações</div></th> 
                         </tr>
                     </thead>
                     <tbody>
@@ -433,7 +461,9 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                                     <p className="task-description">{task.titulo_tarefa}</p>
                                 </td>
                                 <td>{task.criado_por}</td>
-                                <td>{task.nom_unid_oper}</td>
+                                {contextType === 'support' && (
+                                    <td>{task.nom_unid_oper}</td>
+                                )}
                                 <td>{task.recursos.map(r => r.nom_recurso).join(', ') || 'N/A'}</td>
                                 <td>{new Date(task.dth_inclusao).toLocaleDateString()}</td>
                                 <td className="cell-actions">
@@ -455,11 +485,14 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                 <MenuItem onClick={handleDeleteOptionClick} sx={{ color: 'error.main' }}>Remover</MenuItem>
             </Menu>
             <AddTaskModal
+                title={`Adicionar ${labels.task}`}
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
                 onSave={handleSaveTask}
+                contextType={contextType}
             />
             <EditTaskModal
+                contextType={contextType}
                 isOpen={isEditModalOpen}
                 onClose={() => setIsEditModalOpen(false)}
                 task={selectedTask}
@@ -469,8 +502,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={confirmDelete}
-                title="Confirmar Exclusão"
-                message={`Você tem certeza que deseja remover o chamado #${selectedTask?.id}? Esta ação não pode ser desfeita.`}
+                title={`Confirmar Exclusão de ${labels.task}`}
+                message={`Você tem certeza que deseja remover a ${labels.task.toLowerCase()} #${selectedTask?.id}? Esta ação não pode ser desfeita.`}
             />
         </main>
     );

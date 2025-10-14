@@ -13,10 +13,18 @@ interface EditTaskModalProps {
     onClose: () => void;
     onSave: (updatedTask: Task) => void;
     task: Task | null;
+    contextType?: 'support' | 'development';
 }
 
-const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, task }) => {
+const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, task, contextType = 'support' }) => {
     const [formData, setFormData] = useState<Task | null>(null);
+    const labels = {
+        taskDescription: contextType === 'development' ? 'Descrição da Tarefa' : 'Descrição do Chamado',
+        analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista',
+        saveBtn: contextType === 'development' ? 'Salvar Tarefa' : 'Salvar Alterações',
+    };
+
+
     const [newComment, setNewComment] = useState('');
     const [isEditing, setIsEditing] = useState(false); // Novo estado para controlar o modo de edição
 
@@ -142,7 +150,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content edit-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Chamado #{task?.id} - {task?.criado_por} / {task?.nom_unid_oper} / {task?.dth_inclusao}</h2>
+                    <h2>Detalhes da Tarefa #{task?.id}</h2>
                     <button onClick={onClose} className="close-button"><CloseIcon /></button>
                 </div>
                 <form onSubmit={handleSubmit} className="modal-form">
@@ -150,7 +158,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                         {/* Coluna da Esquerda: Formulário de Edição */}
                         <div className="form-column-main">
                             <div className="form-group">
-                                <label htmlFor="titulo_tarefa">Descrição do Chamado</label>
+                                <label htmlFor="titulo_tarefa">{labels.taskDescription}</label>
                                 <textarea id="titulo_tarefa" name="titulo_tarefa" value={formData.titulo_tarefa} onChange={handleChange} required rows={3} readOnly={!isEditing} style={{resize : 'none'}} />
                             </div>
                             <div className="form-row">
@@ -158,10 +166,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                     <label htmlFor="criado_por">Usuário Solicitante</label>
                                     <input type="text" id="criado_por" name="criado_por" value={formData.criado_por} onChange={handleChange} required readOnly={!isEditing} />
                                 </div>
-                                <div className="form-group">
-                                    <label htmlFor="nom_unid_oper">Unidade Operacional</label>
-                                    <input type="text" id="nom_unid_oper" name="nom_unid_oper" value={formData.nom_unid_oper} onChange={handleChange} required readOnly={!isEditing} />
-                                </div>
+                                {contextType === 'support' && (
+                                    <div className="form-group">
+                                        <label htmlFor="nom_unid_oper">Unidade Operacional</label>
+                                        <input type="text" id="nom_unid_oper" name="nom_unid_oper" value={formData.nom_unid_oper} onChange={handleChange} required readOnly={!isEditing} />
+                                    </div>
+                                )}
                             </div>
                             <div className="form-row">
                                 <div className="form-group">
@@ -182,7 +192,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor='nom_recurso'>Analista</label>
+                                    <label htmlFor='nom_recurso'>{labels.analyst}</label>
                                     <input type="text" id="nom_recurso" name="nom_recurso" value={formData.recursos[0]?.nom_recurso || ''} onChange={handleChange} required readOnly={!isEditing} />
                                 </div>
                             </div>
@@ -293,7 +303,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                         </button>
 
                         {/* Botões de Ação Condicionais */}
-                        <button type="button" className="edit-btn" onClick={() => setIsEditing(true)} hidden={isEditing}>Editar</button>
+                        <button type="button" className="edit-btn" onClick={() => setIsEditing(true)} hidden={isEditing}>Editar</button> 
                         <button type="submit" className="save-btn" hidden={!isEditing}>Salvar Alterações</button>
                     </div>
                 </form>

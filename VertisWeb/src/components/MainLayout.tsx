@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Menu from '../pages/Menu/Menu.tsx';
 import { Outlet } from 'react-router-dom';
-import Header from './Header.tsx'; // Import the new Header component
-import './MainLayout.css'; // We'll create this CSS file
+import Header from './Header.tsx';
+import './MainLayout.css';
 import { ThemeContext, Theme } from '../components/ThemeContext.tsx';
 
 function MainLayout() {

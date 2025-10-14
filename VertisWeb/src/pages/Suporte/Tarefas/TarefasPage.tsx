@@ -108,6 +108,7 @@ function TarefasPage() {
             onAddTask={handleAddTask}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
+            contextType='support'
         />
     );
 }

@@ -16,6 +16,7 @@ import ServiceOrderPage from './pages/Vertis/Operacional/Ordem de Serviço/Servi
 import NotFound from './pages/NotFound/NotFound';
 import DashSupport from './pages/Suporte/Dashboard/DashSupport';
 import TarefasPage from './pages/Suporte/Tarefas/TarefasPage';
+import DesenvolvimentoTarefasPage from './pages/Desenvolvimento/Tarefas/DesenvolvimentoTarefasPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
       { path: '/ordem-de-servico', element: <ServiceOrderPage /> },
       { path: '/suporte/dashboard', element: <DashSupport /> },
       { path: '/suporte/tarefas', element: <TarefasPage /> },
+      { path: '/desenvolvimento/tarefas', element: <DesenvolvimentoTarefasPage /> },
     ],
   },
   // Rota "catch-all" para páginas não encontradas
