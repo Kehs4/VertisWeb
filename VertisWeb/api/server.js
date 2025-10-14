@@ -2,12 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import fetch from 'node-fetch';
 import { serialize } from 'cookie';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const port = 9000;
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(cookieParser()); // Adiciona o middleware para processar cookies
 app.use(cors());
  
 app.post('/login', async (req, res) => {
@@ -81,6 +83,55 @@ app.post('/logout', (req, res) => {
     }));
     res.status(200).json({ message: 'Logout bem-sucedido' });
   });
+
+app.get('/tasks', async (req, res) => {
+    try {
+        console.log('[API /tasks] Recebida requisição para buscar tarefas.');
+        const apiResponse = await fetch('http://177.11.209.38:80/constellation/IISConstellationAPI.dll/constellation-api/V1.1/unid_oper_tarefa', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + req.cookies.authToken, // Usa o token do cookie
+            },
+        });
+
+        if (apiResponse.ok) {
+            const tasks = await apiResponse.json();
+            res.status(200).json(tasks);
+        } else {
+            res.status(apiResponse.status).send('Erro ao buscar tarefas da API externa.');
+        }
+    } catch (error) {
+        console.error('Ocorreu um erro ao buscar as listas de tarefas:', error);
+        res.status(500).send('Erro interno do servidor');
+    }
+});
+
+app.get('/task/:id', async (req, res) => {
+    try {
+        const taskId = req.params.id;
+        console.log(`[API /task/${taskId}] Recebida requisição para buscar detalhes da tarefa.`);
+        const apiResponse = await fetch(`http://177.11.209.38:80/constellation/IISConstellationAPI.dll/constellation-api/V1.1/unid_oper_tarefa/${taskId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + req.cookies.authToken, // Usa o token do cookie
+        },
+        });
+        
+        if (apiResponse.ok) {
+            const task = await apiResponse.json();
+            res.status(200).json(task);
+        } else {
+            res.status(apiResponse.status).send('Erro ao buscar detalhes da tarefa da API externa.');
+        }
+        
+    } catch (error) {
+        console.error(`[API /task/${taskId}] Ocorreu um erro ao buscar detalhes da tarefa:`, error);
+        res.status(500).send('Erro interno do servidor');
+    }
+
+})
   
 
 app.listen(port, () => {

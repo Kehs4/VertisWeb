@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './AddTaskModal.css';
 import { Task } from '../../pages/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
-import CloseIcon from '@mui/icons-material/Close';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import CloseIcon from '@mui/icons-material/Close.js';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle.js';
+import CancelIcon from '@mui/icons-material/Cancel.js';
+import PersonAddIcon from '@mui/icons-material/PersonAdd.js';
 
 interface AddTaskModalProps {
     title: string;
@@ -29,12 +29,9 @@ const initialFormState: Task = {
     id_unid_oper: 0,
     qtd_pontos: 0,
     dth_prev_entrega: '',
-    recursos: [{
-        id_recurso: 0,
-        nom_recurso: '',
-    }],
-    comentarios: [], // Deve começar como um array vazio
-    contatos: [],    // Deve começar como um array vazio
+    recursos: [],
+    comentarios: [],
+    contatos: [],
     dth_encerramento: '',
     dth_inclusao: '', // Será definido na criação
     satisfaction_rating: undefined,
@@ -67,7 +64,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
             // Lógica especial para atualizar o nome do analista dentro do array
             setFormData(prev => ({
                 ...prev,
-                recursos: [{ ...prev.recursos[0], nom_recurso: value }]
+                recursos: Array.isArray(prev.recursos) && prev.recursos.length > 0
+                    ? [{ ...prev.recursos[0], nom_recurso: value }]
+                    : [{ id_recurso: 0, nom_recurso: value }]
             }));
         } else {
             // Lógica padrão para os outros campos
@@ -88,7 +87,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         };
         setFormData(prev => ({
             ...prev,
-            contatos: [...(prev.contatos || []), newContact]
+            contatos: [...(Array.isArray(prev.contatos) ? prev.contatos : []), newContact]
         }));
 
         // Limpa os campos e esconde o formulário
@@ -98,7 +97,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     };
 
     const handleRemoveContact = (id_contato: number) => {
-        const updatedContacts = [...(formData.contatos || [])];
+        const updatedContacts = Array.isArray(formData.contatos) ? [...formData.contatos] : [];
         const filteredContacts = updatedContacts.filter(c => c.id_contato !== id_contato);
         setFormData(prev => ({ ...prev, contatos: filteredContacts }));
     };
@@ -210,7 +209,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                                 type="text"
                                 id="nom_recurso"
                                 name="nom_recurso"
-                                value={formData.recursos[0]?.nom_recurso || ''}
+                                value={Array.isArray(formData.recursos) && formData.recursos[0] ? formData.recursos[0].nom_recurso : ''}
                                 onChange={handleChange}
                                 required
                             />
@@ -241,7 +240,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                             </div>
                         )}
 
-                        {formData.contatos && formData.contatos.length > 0 && (
+                        {Array.isArray(formData.contatos) && formData.contatos.length > 0 && (
                             <div className="contact-list-add">
                                 {formData.contatos.map((contact) => (
                                     <div key={contact.id_contato} className="contact-item-add">

@@ -1,12 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { useTheme } from '../ThemeContext'; // Importando o hook do tema
 import './TaskListView.css';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { IconButton, Menu, MenuItem } from '@mui/material';
-import AddTaskModal from '../TaskModal/AddTaskModal';
-import EditTaskModal from '../TaskModal/EditTaskModal';
-import ConfirmationModal from '../ConfirmationModal/ConfirmationModal';
+const AddTaskModal = lazy(() => import('../TaskModal/AddTaskModal.tsx'));
+const EditTaskModal = lazy(() => import('../TaskModal/EditTaskModal.tsx'));
+const ConfirmationModal = lazy(() => import('../ConfirmationModal/ConfirmationModal.tsx'));
 
 // Ícones para os cabeçalhos da tabela
 import FlagIcon from '@mui/icons-material/Flag';
@@ -64,9 +64,9 @@ interface Task {
     sit_tarefa: string;
     qtd_pontos: number;
     titulo_tarefa: string;
-    recursos: Recurso[];
-    comentarios?: Comentario[];
-    contatos?: Contato[];
+    recursos: Recurso[] | number;
+    comentarios?: Comentario[] | number;
+    contatos?: Contato[] | number;
     dth_prev_entrega?: string;
     dth_encerramento?: string;
     dth_inclusao: string;
@@ -192,9 +192,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
             escapeCSV(task.sit_tarefa),
             escapeCSV(priorityConfig[task.ind_prioridade]?.label || 'N/D'),
             escapeCSV(task.criado_por),
-            escapeCSV(task.nom_unid_oper),
-            escapeCSV(task.recursos.map(r => r.nom_recurso).join(', ') || 'N/A'),
-            task.dth_inclusao ? new Date(task.dth_inclusao).toLocaleDateString() : '',
+            escapeCSV(contextType === 'support' ? task.nom_unid_oper : 'N/A'),
+            escapeCSV(Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso).join(', ') : task.recursos),
             task.dth_prev_entrega ? new Date(task.dth_prev_entrega).toLocaleDateString() : '',
             task.dth_encerramento ? new Date(task.dth_encerramento).toLocaleString() : '',
             task.qtd_pontos,
@@ -259,9 +258,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                     task.sit_tarefa,
                     priorityConfig[task.ind_prioridade]?.label || 'N/D',
                     task.criado_por,
-                    contextType === 'support' ? task.nom_unid_oper : 'N/A', // Oculta a coluna se não for suporte
-                    task.recursos.map(r => r.nom_recurso).join(', ') || 'N/A',
-                    task.dth_inclusao ? new Date(task.dth_inclusao).toLocaleDateString() : '',
+                    contextType === 'support' ? task.nom_unid_oper : 'N/A',
+                    Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso).join(', ') : task.recursos,
                     task.dth_prev_entrega ? new Date(task.dth_prev_entrega).toLocaleDateString() : '',
                     task.dth_encerramento ? new Date(task.dth_encerramento).toLocaleString() : '',
                     task.qtd_pontos,
@@ -371,10 +369,12 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
             // 2. Filtro de Texto
             if (searchTerm) {
                 const lowerCaseSearchTerm = searchTerm.toLowerCase();
+                // Constrói uma string única com todos os campos pesquisáveis para cada tarefa
                 const searchIn = [
-                    task.titulo_tarefa,
-                    task.criado_por,
-                    ...task.recursos.map(r => r.nom_recurso)
+                    task.titulo_tarefa || '',
+                    task.criado_por || '',
+                    // Inclui os nomes dos recursos na busca, se for um array
+                    ...(Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso) : [])
                 ].join(' ').toLowerCase();
 
                 if (!searchIn.includes(lowerCaseSearchTerm)) {
@@ -393,7 +393,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                 const getValue = (task: Task, key: keyof Task) => {
                     if (key === 'recursos') {
                         // Ordena pelo nome do primeiro recurso, se existir
-                        return task.recursos && task.recursos.length > 0 ? task.recursos[0].nom_recurso : '';
+                        return Array.isArray(task.recursos) && task.recursos.length > 0 ? task.recursos[0].nom_recurso : '';
                     }
                     return task[key];
                 };
@@ -624,7 +624,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                                 {contextType === 'support' && (
                                     <td>{task.nom_unid_oper}</td>
                                 )}
-                                <td>{task.recursos.map(r => r.nom_recurso).join(', ') || 'N/A'}</td>
+                                <td>{Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso).join(', ') : task.recursos}</td>
                                 <td>{new Date(task.dth_inclusao).toLocaleDateString()}</td>
                                 <td className="cell-actions">
                                     <IconButton
@@ -644,27 +644,29 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                 <MenuItem onClick={handleEditOptionClick}>Detalhes</MenuItem>
                 <MenuItem onClick={handleDeleteOptionClick} sx={{ color: 'error.main' }}>Remover</MenuItem>
             </Menu>
-            <AddTaskModal
-                title={`Adicionar ${labels.task}`}
-                isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-                onSave={handleSaveTask}
-                contextType={contextType}
-            />
-            <EditTaskModal
-                contextType={contextType}
-                isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
-                task={selectedTask}
-                onSave={handleUpdateTask}
-            />
-            <ConfirmationModal
-                isOpen={isConfirmModalOpen}
-                onClose={() => setIsConfirmModalOpen(false)}
-                onConfirm={confirmDelete}
-                title={`Confirmar Exclusão de ${labels.task}`}
-                message={`Você tem certeza que deseja remover a ${labels.task.toLowerCase()} #${selectedTask?.id}? Esta ação não pode ser desfeita.`}
-            />
+            <Suspense fallback={<div>Carregando Modal...</div>}>
+                {isAddModalOpen && <AddTaskModal
+                    title={`Adicionar ${labels.task}`}
+                    isOpen={isAddModalOpen}
+                    onClose={() => setIsAddModalOpen(false)}
+                    onSave={handleSaveTask}
+                    contextType={contextType}
+                />}
+                {isEditModalOpen && <EditTaskModal
+                    contextType={contextType}
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    task={selectedTask}
+                    onSave={handleUpdateTask}
+                />}
+                {isConfirmModalOpen && <ConfirmationModal
+                    isOpen={isConfirmModalOpen}
+                    onClose={() => setIsConfirmModalOpen(false)}
+                    onConfirm={confirmDelete}
+                    title={`Confirmar Exclusão de ${labels.task}`}
+                    message={`Você tem certeza que deseja remover a ${labels.task.toLowerCase()} #${selectedTask?.id}? Esta ação não pode ser desfeita.`}
+                />}
+            </Suspense>
         </main>
     );
 };

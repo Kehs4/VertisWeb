@@ -1,12 +1,12 @@
 import React, { useState, useEffect, KeyboardEvent } from 'react';
 import './EditTaskModal.css';
 import { Task, Comentario } from '../../pages/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
-import CloseIcon from '@mui/icons-material/Close';
-import SendIcon from '@mui/icons-material/Send';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import PhoneIcon from '@mui/icons-material/Phone';
-import StarIcon from '@mui/icons-material/Star';
+import CloseIcon from '@mui/icons-material/Close.js';
+import SendIcon from '@mui/icons-material/Send.js';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline.js';
+import PersonAddIcon from '@mui/icons-material/PersonAdd.js';
+import PhoneIcon from '@mui/icons-material/Phone.js';
+import StarIcon from '@mui/icons-material/Star.js';
 
 interface EditTaskModalProps {
     isOpen: boolean;
@@ -18,6 +18,7 @@ interface EditTaskModalProps {
 
 const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, task, contextType = 'support' }) => {
     const [formData, setFormData] = useState<Task | null>(null);
+    const [isFetchingDetails, setIsFetchingDetails] = useState(false);
     const labels = {
         taskDescription: contextType === 'development' ? 'Descrição da Tarefa' : 'Descrição do Chamado',
         analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista',
@@ -43,9 +44,30 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         'CA': 'Cancelado',
     };
     useEffect(() => {
-        // Carrega os dados da tarefa no formulário quando o modal é aberto
-        if (task) {
-            setFormData({ ...task });
+        if (isOpen && task) {
+            const fetchTaskDetails = async () => {
+                setIsFetchingDetails(true);
+                try {
+                    const response = await fetch(`/api/task/${task.id}`);
+
+                    if (response.ok) {
+                        const detailedTask = await response.json();
+                        setFormData(detailedTask);
+                        console.log(detailedTask)
+                    } else {
+                        console.error("Falha ao buscar detalhes da tarefa:", response.statusText);
+                        // Em caso de erro, carrega os dados resumidos para não quebrar o modal
+                        setFormData(task);
+                    }
+                } catch (error) {
+                    console.error("Erro de rede ao buscar detalhes da tarefa:", error);
+                    setFormData(task);
+                } finally {
+                    setIsFetchingDetails(false);
+                }
+            };
+
+            fetchTaskDetails();
         }
         setIsEditing(false); // Reseta para o modo de visualização sempre que o modal/task muda
     }, [task, isOpen]);
@@ -71,7 +93,9 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         if (name === 'nom_recurso') {
             setFormData({
                 ...formData,
-                recursos: [{ ...formData.recursos[0], nom_recurso: value }]
+                recursos: Array.isArray(formData.recursos) && formData.recursos.length > 0
+                    ? [{ ...formData.recursos[0], nom_recurso: value }]
+                    : [{ id_recurso: 0, nom_recurso: value }]
             });
         } else {
             setFormData({
@@ -95,7 +119,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
 
         setFormData({
             ...formData,
-            comentarios: [...(formData.comentarios || []), comment],
+            // Garante que `comentarios` seja sempre um array antes de adicionar o novo comentário
+            comentarios: [...(Array.isArray(formData.comentarios) ? formData.comentarios : []), comment],
         });
         setNewComment(''); // Limpa o campo de comentário
     };
@@ -119,7 +144,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
 
         setFormData({
             ...formData,
-            contatos: [...(formData.contatos || []), newContact],
+            contatos: [...(Array.isArray(formData.contatos) ? formData.contatos : []), newContact],
         });
 
         // Limpa os campos e esconde o formulário
@@ -142,13 +167,20 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         }
         setIsEditing(false);
     };
-    if (!isOpen || !formData) {
+    if (!isOpen) {
         return null;
     }
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content edit-modal" onClick={(e) => e.stopPropagation()}>
+                {isFetchingDetails ? (
+                    <div className="modal-loading-state">
+                        <div className="loading-spinner-modal"></div>
+                        <p>Carregando detalhes...</p>
+                    </div>
+                ) : formData ? (
+                <>
                 <div className="modal-header">
                     <h2>Detalhes da Tarefa #{task?.id}</h2>
                     <button onClick={onClose} className="close-button"><CloseIcon /></button>
@@ -193,7 +225,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor='nom_recurso'>{labels.analyst}</label>
-                                    <input type="text" id="nom_recurso" name="nom_recurso" value={formData.recursos[0]?.nom_recurso || ''} onChange={handleChange} required readOnly={!isEditing} />
+                                    <input type="text" id="nom_recurso" name="nom_recurso" value={Array.isArray(formData.recursos) && formData.recursos[0] ? formData.recursos[0].nom_recurso : ''} onChange={handleChange} required readOnly={!isEditing} />
                                 </div>
                             </div>
                              <div className="form-row">
@@ -246,7 +278,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                             <button type="button" className="save-contact-btn" onClick={handleAddContact}>Salvar</button>
                                         </div>
                                     )}
-                                    {formData.contatos && formData.contatos.length > 0 ? (
+                                    {Array.isArray(formData.contatos) && formData.contatos.length > 0 ? (
                                         formData.contatos.map((contact) => (
                                             <div key={contact.id_contato} className="contact-item">
                                                 <span className="contact-name">{contact.nom_recurso}</span>
@@ -267,8 +299,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                 <h4>Comentários</h4>
                             </div>
                             <div className="comments-list">
-                                {formData.comentarios && formData.comentarios.length > 0 ? (
-                                    formData.comentarios.map((comment, index) => (
+                                {Array.isArray(formData.comentarios) && formData.comentarios.length > 0 ? (
+                                    (formData.comentarios as Comentario[]).map((comment, index) => (
                                         <div key={index} className="comment-item">
                                             <p className="comment-text">{comment.comentario}</p>
                                             <div className="comment-footer">
@@ -307,6 +339,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                         <button type="submit" className="save-btn" hidden={!isEditing}>Salvar Alterações</button>
                     </div>
                 </form>
+                </>
+                ) : null}
             </div>
         </div>
     );

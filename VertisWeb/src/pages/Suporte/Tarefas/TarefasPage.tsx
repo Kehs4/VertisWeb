@@ -34,9 +34,9 @@ export interface Task { // Exportando para ser usado no Modal
     sit_tarefa: string;
     qtd_pontos: number;
     titulo_tarefa: string;
-    recursos: Recurso[];
-    comentarios?: Comentario[];
-    contatos?: Contato[];
+    recursos: Recurso[] | number;
+    comentarios?: Comentario[] | number;
+    contatos?: Contato[] | number;
     dth_prev_entrega?: string;
     dth_encerramento?: string;
     dth_inclusao: string;
@@ -46,44 +46,34 @@ export interface Task { // Exportando para ser usado no Modal
 
 // --- Dados de Exemplo (Mock Data) ---
 // No futuro, esses dados virão de uma API
-const initialTasks: Task[] = [
-    {
-        id: 1, id_unid_negoc: 118, nom_unid_negoc: 'VETEX', id_unid_oper: 1, nom_unid_oper: 'VETEX BLUMENAU',
-        criado_por: 'Ana Silva', ind_prioridade: 4, ind_sit_tarefa: 'ER', sit_tarefa: 'Em resolução', qtd_pontos: 8, 
-        titulo_tarefa: 'Problema na tela do Caixa.',
-        recursos: [{ id_recurso: 10, nom_recurso: 'Martins' }], dth_inclusao: '2025-10-13', dth_prev_entrega: '2025-10-15'
-    },
-    {
-        id: 2, id_unid_negoc: 119, nom_unid_negoc: 'Hormonalle', id_unid_oper: 2, nom_unid_oper: 'Hormonalle SP',
-        criado_por: 'Mariana Costa', ind_prioridade: 2, ind_sit_tarefa: 'AG', sit_tarefa: 'Aguardando', qtd_pontos: 3,
-        titulo_tarefa: 'Ajudar cliente com dúvida sobre faturamento.',
-        recursos: [{ id_recurso: 12, nom_recurso: 'Jéssica' }], dth_inclusao: '2025-10-14',
-    },
-    {
-        id: 3, id_unid_negoc: 118, nom_unid_negoc: 'VETEX', id_unid_oper: 1, nom_unid_oper: 'VETEX BLUMENAU',
-        criado_por: 'Luiza Lima', ind_prioridade: 4, ind_sit_tarefa: 'AT', sit_tarefa: 'Em atraso', qtd_pontos: 13,
-        titulo_tarefa: 'Verificar lentidão na API de laudos ao gerar PDF.',
-        recursos: [{ id_recurso: 10, nom_recurso: 'Martins' }], dth_inclusao: '2025-10-10', dth_prev_entrega: '2025-10-12'
-    },
-    {
-        id: 4, id_unid_negoc: 120, nom_unid_negoc: 'Vet Vision', id_unid_oper: 3, nom_unid_oper: 'Vet Vision RJ',
-        criado_por: 'Carlos Pereira', ind_prioridade: 1, ind_sit_tarefa: 'FN', sit_tarefa: 'Finalizado', qtd_pontos: 5,
-        titulo_tarefa: 'Instalação de impressora fiscal.',
-        recursos: [{ id_recurso: 15, nom_recurso: 'Siuah' }], dth_inclusao: '2025-10-11', dth_encerramento: '2025-10-12T10:00:00Z', satisfaction_rating: 9
-    },
-    {
-        id: 5, id_unid_negoc: 118, nom_unid_negoc: 'VETEX', id_unid_oper: 1, nom_unid_oper: 'VETEX BLUMENAU',
-        criado_por: 'Juliana Alves', ind_prioridade: 3, ind_sit_tarefa: 'AB', sit_tarefa: 'Aberto', qtd_pontos: 0,
-        titulo_tarefa: 'Novo usuário precisa de acesso ao sistema financeiro.',
-        recursos: [], dth_inclusao: new Date().toISOString().split('T')[0] // Criado hoje
-    },
-];
 
 function TarefasPage() {
-    const [tasks, setTasks] = useState<Task[]>(initialTasks);
+    const [tasks, setTasks] = useState<Task[]>([]);
 
     useEffect(() => {
         document.title = "Vertis | Chamados - Suporte";
+
+        // Função para buscar os dados da API
+        const fetchTasks = async () => {
+            try {
+                // A configuração de proxy no Vite redireciona /api para o seu backend
+                const response = await fetch('/api/tasks');
+                if (response.ok) {
+                    const data = await response.json();
+
+                    console.log(data)
+                    // Filtra as tarefas para exibir apenas as que NÃO são de Desenvolvimento
+                    const supportTasks = data.filter((task: Task) => task.id_unid_negoc !== 200);
+                    setTasks(supportTasks);
+                } else {
+                    console.error("Falha ao buscar tarefas:", response.statusText);
+                }
+            } catch (error) {
+                console.error("Erro de rede ao buscar tarefas:", error);
+            }
+        };
+
+        fetchTasks();
     }, []);
 
     const handleAddTask = (newTask: Task) => {
