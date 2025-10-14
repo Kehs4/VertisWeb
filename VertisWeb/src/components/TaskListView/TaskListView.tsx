@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useTheme } from '../ThemeContext'; // Importando o hook do tema
 import './TaskListView.css';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { IconButton, Menu, MenuItem } from '@mui/material';
 import AddTaskModal from '../TaskModal/AddTaskModal';
 import EditTaskModal from '../TaskModal/EditTaskModal';
@@ -17,6 +19,7 @@ import ApartmentIcon from '@mui/icons-material/Apartment';
 import PersonPinIcon from '@mui/icons-material/PersonPin';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import TuneIcon from '@mui/icons-material/Tune';
+import SearchIcon from '@mui/icons-material/Search';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
 // Ícones para os cards de análise
@@ -115,6 +118,11 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
     // Controle de Tema
     const { theme, setTheme } = useTheme();
 
+    // --- Estados para os Filtros ---
+    const [searchTerm, setSearchTerm] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -129,6 +137,10 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const isMenuOpen = Boolean(anchorEl);
 
+    // Estado para o menu de exportação
+    const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState<null | HTMLElement>(null);
+    const isExportMenuOpen = Boolean(exportMenuAnchorEl);
+
     const handleSaveTask = (newTaskData: Omit<Task, 'id' | 'dth_inclusao'>) => {
         const newTask: Task = {
             ...newTaskData,
@@ -139,8 +151,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
         setIsAddModalOpen(false); // Fecha o modal após salvar
     };
 
-    const handleExportCSV = () => {
-        if (tasks.length === 0) {
+    const handleExport = async (format: 'csv' | 'pdf') => {
+        if (filteredAndSortedTasks.length === 0) {
             alert("Não há tarefas para exportar.");
             return;
         }
@@ -174,7 +186,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
             rating: 'Avaliação'
         };
 
-        const rows = sortedTasks.map(task => [
+        const rows = filteredAndSortedTasks.map(task => [
             task.id,
             escapeCSV(task.titulo_tarefa),
             escapeCSV(task.sit_tarefa),
@@ -189,7 +201,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
             task.satisfaction_rating || ''
         ].join(';'));
 
-        // Adiciona o BOM para compatibilidade com Excel e junta cabeçalhos e linhas
+        // CSV Logic
         const csvHeaders = Object.values(headers).join(';'); // Corrigido para usar apenas os valores do objeto headers
         const csvString = [csvHeaders, ...rows].join('\n');
         const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
@@ -200,15 +212,93 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
         const day = String(today.getDate()).padStart(2, '0');
         const month = String(today.getMonth() + 1).padStart(2, '0'); // Mês começa em 0
         const year = today.getFullYear();
-        const fileName = `Tasklist_vertis${day}${month}${year}.csv`;
+        const fileName = `TaskList_Vertis_${day}${month}${year}`;
 
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", fileName);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        if (format === 'csv') {
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${fileName}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else if (format === 'pdf') {
+            // Cria um novo documento PDF em modo paisagem
+            const doc = new jsPDF({
+                orientation: 'landscape',
+            });
+            
+            // Função para carregar a imagem como Base64
+            const getBase64Image = (url: string): Promise<string> => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx?.drawImage(img, 0, 0);
+                        const dataURL = canvas.toDataURL('image/png');
+                        resolve(dataURL);
+                    };
+                    img.onerror = reject;
+                    img.src = url;
+                });
+            };
+
+            const logoBase64 = await getBase64Image('/logo-white.png');
+            doc.addImage(logoBase64, 'PNG', 14, 8, 25, 16);
+
+            // Gera a tabela com estilo moderno
+            autoTable(doc, {
+                head: [Object.values(headers)],
+                body: filteredAndSortedTasks.map(task => [
+                    task.id,
+                    task.titulo_tarefa,
+                    task.sit_tarefa,
+                    priorityConfig[task.ind_prioridade]?.label || 'N/D',
+                    task.criado_por,
+                    contextType === 'support' ? task.nom_unid_oper : 'N/A', // Oculta a coluna se não for suporte
+                    task.recursos.map(r => r.nom_recurso).join(', ') || 'N/A',
+                    task.dth_inclusao ? new Date(task.dth_inclusao).toLocaleDateString() : '',
+                    task.dth_prev_entrega ? new Date(task.dth_prev_entrega).toLocaleDateString() : '',
+                    task.dth_encerramento ? new Date(task.dth_encerramento).toLocaleString() : '',
+                    task.qtd_pontos,
+                    task.satisfaction_rating || ''
+                ].filter((_, index) => contextType === 'support' || index !== 5)), // Remove a coluna de unidade
+                startY: 30, // Posição inicial da tabela, abaixo do cabeçalho
+                theme: 'striped', // Tema listrado para melhor legibilidade
+                headStyles: {
+                    fillColor: [45, 55, 72], // Cor de fundo do cabeçalho (#2d3748)
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                },
+                alternateRowStyles: {
+                    fillColor: [248, 249, 250], // Cor de fundo para linhas alternadas
+                },
+                styles: { fontSize: 8, cellPadding: 2 },
+                didDrawPage: (data) => {
+                    // Adiciona um rodapé com número da página e data de geração
+                    doc.setFontSize(8);
+                    doc.setTextColor(150);
+                    // Usa um placeholder para o número total de páginas
+                    doc.text(`Página ${data.pageNumber} de {totalPages}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+                    doc.text(`Relatório gerado em: ${new Date().toLocaleString()}`, doc.internal.pageSize.width - data.settings.margin.right, doc.internal.pageSize.height - 10, { align: 'right' });
+                },
+            });
+            // Substitui o placeholder pelo número total de páginas real
+            const totalPages = (doc as any).internal.getNumberOfPages();
+            if (typeof doc.putTotalPages === 'function') {
+                doc.putTotalPages(`{totalPages}`);
+            } else { // Fallback para o caso de o plugin não estar carregado
+                 for (let i = 1; i <= totalPages; i++) {
+                    doc.setPage(i);
+                    doc.text(`Página ${i} de ${totalPages}`, doc.internal.pageSize.width - 185, doc.internal.pageSize.height - 10);
+                }
+            }
+            doc.save(`${fileName}.pdf`);
+        }
     };
 
     // --- Lógica para os Cards de Análise ---
@@ -267,8 +357,34 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
 
 
     // Memoiza as tarefas ordenadas para evitar recálculos desnecessários
-    const sortedTasks = useMemo(() => {
-        let sortableItems = [...tasks];
+    const filteredAndSortedTasks = useMemo(() => {
+        let filteredItems = tasks.filter(task => {
+            // 1. Filtro de Data
+            const taskDate = task.dth_inclusao.split('T')[0]; // Formato YYYY-MM-DD
+            if (startDate && taskDate < startDate) {
+                return false;
+            }
+            if (endDate && taskDate > endDate) {
+                return false;
+            }
+
+            // 2. Filtro de Texto
+            if (searchTerm) {
+                const lowerCaseSearchTerm = searchTerm.toLowerCase();
+                const searchIn = [
+                    task.titulo_tarefa,
+                    task.criado_por,
+                    ...task.recursos.map(r => r.nom_recurso)
+                ].join(' ').toLowerCase();
+
+                if (!searchIn.includes(lowerCaseSearchTerm)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        let sortableItems = [...filteredItems];
         if (sortConfig.key !== null) {
             const sortKey = sortConfig.key; // Captura a chave de ordenação em uma constante
 
@@ -299,7 +415,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
             });
         }
         return sortableItems;
-    }, [tasks, sortConfig]);
+    }, [tasks, sortConfig, searchTerm, startDate, endDate]);
 
     // Função para solicitar a ordenação ao clicar no cabeçalho
     const requestSort = (key: keyof Task) => {
@@ -325,6 +441,16 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
     const handleMenuClose = () => {
         setAnchorEl(null);
     };
+
+    // Funções para o menu de exportação
+    const handleExportMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setExportMenuAnchorEl(event.currentTarget);
+    };
+
+    const handleExportMenuClose = () => {
+        setExportMenuAnchorEl(null);
+    };
+
 
     // Funções para as opções do menu
     const handleEditOptionClick = () => {
@@ -357,15 +483,23 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                 <h1 className="task-list-title">{title}</h1>
                 {/* Botão de adicionar e botão de trocar tema */}
                 <div className="header-actions">
-                    <button className="export-csv-button" onClick={handleExportCSV}>
-                        <FileDownloadIcon /> Exportar CSV
+                    <button className="export-csv-button" onClick={handleExportMenuOpen}>
+                        <FileDownloadIcon /> Exportar
                     </button>
+                    <Menu anchorEl={exportMenuAnchorEl} open={isExportMenuOpen} onClose={handleExportMenuClose}>
+                        <MenuItem onClick={() => { handleExport('csv'); handleExportMenuClose(); }}>
+                            Exportar para CSV
+                        </MenuItem>
+                        <MenuItem onClick={() => { handleExport('pdf'); handleExportMenuClose(); }}>Exportar para PDF</MenuItem>
+                    </Menu>
                 <button className="add-task-button" onClick={() => setIsAddModalOpen(true)}>Adicionar {labels.task}</button>
                     <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="theme-toggle-button">
                         {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
                     </button>
                 </div>
             </div>
+
+            
 
             {/* --- Seção de Cards de Análise --- */}
             <div className="analytics-cards-container">
@@ -429,6 +563,32 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                     </div>
                 </div>
             </div>
+
+            {/* --- Seção de Filtros --- */}
+            <div className="filter-container">
+                <div className="search-input-wrapper">
+                    <SearchIcon className="search-icon" />
+                    <input
+                        type="text"
+                        placeholder={`Pesquisar em ${labels.tasks.toLowerCase()}...`}
+                        className="filter-search-input"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <div className="date-filter-group">
+                    <label>De:</label>
+                    <input type="date" className="filter-date-input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                </div>
+                <div className="date-filter-group">
+                    <label>Até:</label>
+                    <input type="date" className="filter-date-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                </div>
+                <button className="clear-filters-btn" onClick={() => { setSearchTerm(''); setStartDate(''); setEndDate(''); }}>
+                    Limpar Filtros
+                </button>
+            </div>
+
             <div className="task-table-wrapper">
                 <table className="task-table">
                     <thead>
@@ -446,7 +606,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                         </tr>
                     </thead>
                     <tbody>
-                        {sortedTasks.map(task => (
+                        {filteredAndSortedTasks.map(task => (
                             <tr key={task.id} className={`task-row status-${task.ind_sit_tarefa.toLowerCase()}`}>
                                 <td className="cell-priority">
                                     <FlagIcon style={{ color: priorityConfig[task.ind_prioridade]?.color || '#ccc'}} />

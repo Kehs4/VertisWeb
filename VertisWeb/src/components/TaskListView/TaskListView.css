@@ -99,6 +99,77 @@
     background-color: #e65c00;
 }
 
+/* --- Estilos para Filtros --- */
+.filter-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 15px;
+    background-color: var(--table-bg);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px var(--box-shadow-color);
+    flex-wrap: wrap; /* Permite que os filtros quebrem a linha em telas menores */
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Ocupa o máximo de espaço possível */
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-secondary);
+}
+
+.filter-search-input {
+    width: 100%;
+    padding: 10px 10px 10px 40px; /* Espaço para o ícone */
+    border: 1px solid var(--table-border-color);
+    border-radius: 8px;
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.date-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.filter-date-input {
+    padding: 9px;
+    border: 1px solid var(--table-border-color);
+    border-radius: 8px;
+    background-color: var(--background-color);
+    color: var(--text-primary);
+}
+
+.clear-filters-btn {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--table-border-color);
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+    background-color: #e74c3c;
+    color: white;
+    border-color: #e74c3c;
+}
+
+
 /* --- Estilos para os Cards de Análise --- */
 .analytics-cards-container {
     display: grid;

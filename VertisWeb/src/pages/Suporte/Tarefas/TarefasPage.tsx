@@ -83,7 +83,7 @@ function TarefasPage() {
     const [tasks, setTasks] = useState<Task[]>(initialTasks);
 
     useEffect(() => {
-        document.title = "Vertis | Tarefas";
+        document.title = "Vertis | Chamados - Suporte";
     }, []);
 
     const handleAddTask = (newTask: Task) => {

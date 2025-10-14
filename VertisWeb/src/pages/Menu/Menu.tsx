@@ -123,7 +123,7 @@ const menuItems: MenuItem[] = [
         label: 'Desenvolvimento',
         icon: <LaptopWindowsIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />,
         items: [
-            { id: 'desenvolvimento-tarefas', label: 'Tarefas', path: '/desenvolvimento/tarefas'},
+            { id: 'desenvolvimento-tarefas', icon: <FeedbackIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Tarefas', path: '/desenvolvimento/tarefas'},
             { id: 'desenvolvimento-notificacoes', label: 'Notificações', path: '#' },
         ] },
         { id: 'comercial-vertis', 
