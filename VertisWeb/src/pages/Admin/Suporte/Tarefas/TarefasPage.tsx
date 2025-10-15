@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import TaskListView from '../../../../components/TaskListView/TaskListView';
+import { useTasks } from '../../../../hooks/useTasks';
 
 // --- Tipagem dos Dados ---
 // Esta tipagem pode ser movida para um arquivo central de tipos no futuro
@@ -48,49 +49,13 @@ export interface Task { // Exportando para ser usado no Modal
 // No futuro, esses dados virão de uma API
 
 function TarefasPage() {
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [isLoading, setIsLoading] = useState(true); // Novo estado de loading
+    // Utiliza o hook customizado para buscar e gerenciar as tarefas de suporte
+    const { tasks, isLoading, setStartDate, setEndDate, addTask, updateTask, deleteTask } = useTasks('support');
 
-    useEffect(() => {
-        document.title = "Vertis | Chamados - Suporte";
-
-        // Função para buscar os dados da API
-        const fetchTasks = async () => {
-            setIsLoading(true); // Ativa o loading antes da busca
-            try {
-                // A configuração de proxy no Vite redireciona /api para o seu backend
-                const response = await fetch('/api/tasks');
-                if (response.ok) {
-                    const data = await response.json();
-                    // Filtra as tarefas para exibir apenas as que NÃO são de Desenvolvimento
-                    const supportTasks = data.filter((task: Task) => task.id_unid_negoc !== 200);
-                    setTasks(supportTasks);
-                } else {
-                    console.error("Falha ao buscar tarefas:", response.statusText);
-                }
-            } catch (error) {
-                console.error("Erro de rede ao buscar tarefas:", error);
-            } finally {
-                setIsLoading(false); // Desativa o loading ao final (sucesso ou erro)
-            }
-        };
-
-        fetchTasks();
-    }, []);
-
-    const handleAddTask = (newTask: Task) => {
-        setTasks(prevTasks => [newTask, ...prevTasks]);
-    };
-
-    const handleDeleteTask = (taskId: number) => {
-        // Adicionar um alerta de confirmação antes de remover
-        setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-    };
-
-    const handleUpdateTask = (updatedTask: Task) => {
-        setTasks(prevTasks => 
-            prevTasks.map(task => (task.id === updatedTask.id ? updatedTask : task))
-        );
+    // Função que será passada para o TaskListView para atualizar as datas
+    const handleDateChange = (newStartDate: string, newEndDate: string) => {
+        setStartDate(newStartDate);
+        setEndDate(newEndDate);
     };
 
     return (
@@ -98,9 +63,10 @@ function TarefasPage() {
             title="Planilha de Chamados - Suporte"
             tasks={tasks}
             isLoading={isLoading} // Passa o estado de loading para o componente
-            onAddTask={handleAddTask}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
+            onAddTask={addTask}
+            onUpdateTask={updateTask}
+            onDeleteTask={deleteTask}
+            onDateChange={handleDateChange} // Passa a função de callback para o filho
             contextType='support'
         />
     );

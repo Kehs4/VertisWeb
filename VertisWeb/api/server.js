@@ -84,10 +84,24 @@ app.post('/logout', (req, res) => {
     res.status(200).json({ message: 'Logout bem-sucedido' });
   });
 
+// Função para formatar a data como YYYY-MM-DD
+const getFormattedDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 app.get('/tasks', async (req, res) => {
     try {
-        console.log('[API /tasks] Recebida requisição para buscar tarefas.');
-        const apiResponse = await fetch('http://177.11.209.38:80/constellation/IISConstellationAPI.dll/constellation-api/V1.1/unid_oper_tarefa', {
+        // Pega as datas da query string ou usa a data atual como padrão
+        const today = getFormattedDate(new Date());
+        const { dat_inicial = today, dat_final = today } = req.query;
+
+        console.log(`[API /tasks] Buscando tarefas de ${dat_inicial} até ${dat_final}.`);
+        const apiUrl = `http://177.11.209.38:80/constellation/IISConstellationAPI.dll/constellation-api/V1.1/unid_oper_tarefa?dat_inicial=${dat_inicial}&dat_final=${dat_final}`;
+
+        const apiResponse = await fetch(apiUrl, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

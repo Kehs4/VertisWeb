@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './AddTaskModal.css';
-import { Task } from '../../pages/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
+import { Task } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -11,7 +11,7 @@ interface AddTaskModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (newTask: Task) => void;
-    contextType?: 'support' | 'development';
+    contextType?: 'support' | 'development' | 'commercial';
 }
 
 // Mova initialFormState para fora do componente para evitar recriação em cada renderização

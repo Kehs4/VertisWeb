@@ -1,8 +1,7 @@
 import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { useTheme } from '../ThemeContext'; // Importando o hook do tema
 import './TaskListView.css';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { useTaskExporter } from '../../hooks/useTaskExporter'; // Importa o novo hook
 import { IconButton, Menu, MenuItem } from '@mui/material';
 const AddTaskModal = lazy(() => import('../TaskModal/AddTaskModal.tsx'));
 const EditTaskModal = lazy(() => import('../TaskModal/EditTaskModal.tsx'));
@@ -81,7 +80,8 @@ interface TaskListViewProps {
     onUpdateTask: (updatedTask: Task) => void;
     onDeleteTask: (taskId: number) => void;
     onAddTask: (newTask: Task) => void;
-    contextType?: 'support' | 'development'; // Nova prop para definir o contexto
+    onDateChange: (startDate: string, endDate: string) => void; // Prop para notificar mudança de data
+    contextType?: 'support' | 'development' | 'commercial'; // Nova prop para definir o contexto
 }
 
 
@@ -102,7 +102,7 @@ const statusConfig: { [key: string]: { backgroundColor: string, color?: string }
     'AB': { backgroundColor: '#85c1e9' },       // Aberto
 };
 
-const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, onAddTask, onUpdateTask, onDeleteTask, contextType }) => {
+const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, onAddTask, onUpdateTask, onDeleteTask, onDateChange, contextType }) => {
     // Define os textos e ícones com base no contexto
     const labels = {
         task: contextType === 'development' ? 'Tarefa' : 'Chamado', // Singular
@@ -119,10 +119,22 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
     // Controle de Tema
     const { theme, setTheme } = useTheme();
 
+    // Função para formatar a data para o input (YYYY-MM-DD)
+    const getFormattedDate = (date: Date) => date.toISOString().split('T')[0];
+
     // --- Estados para os Filtros ---
     const [searchTerm, setSearchTerm] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    // Estados locais para os inputs de data
+    // Inicializa com a data atual para garantir que o primeiro fetch seja correto
+    const [localStartDate, setLocalStartDate] = useState(getFormattedDate(new Date()));
+    const [localEndDate, setLocalEndDate] = useState(getFormattedDate(new Date()));
+
+    // Efeito para notificar o componente pai quando as datas locais mudam
+    React.useEffect(() => {
+        if (onDateChange) {
+            onDateChange(localStartDate, localEndDate);
+        }
+    }, [localStartDate, localEndDate, onDateChange]);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -141,164 +153,6 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
     // Estado para o menu de exportação
     const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState<null | HTMLElement>(null);
     const isExportMenuOpen = Boolean(exportMenuAnchorEl);
-
-    const handleSaveTask = (newTaskData: Omit<Task, 'id' | 'dth_inclusao'>) => {
-        const newTask: Task = {
-            ...newTaskData,
-            id: Date.now(), // Gerando um ID simples para o exemplo
-            dth_inclusao: new Date().toISOString().split('T')[0], // Data atual
-        };
-        onAddTask(newTask);
-        setIsAddModalOpen(false); // Fecha o modal após salvar
-    };
-
-    const handleExport = async (format: 'csv' | 'pdf') => {
-        if (filteredAndSortedTasks.length === 0) {
-            alert("Não há tarefas para exportar.");
-            return;
-        }
-
-        // Função para escapar vírgulas e aspas no CSV
-        const escapeCSV = (field: any): string => {
-            if (field === null || field === undefined) {
-                return '';
-            }
-            const str = String(field);
-            // Se o campo contém vírgula, aspas ou quebra de linha, envolve com aspas duplas
-            if (str.includes(';') || str.includes('"') || str.includes('\n')) {
-                // Escapa aspas duplas existentes duplicando-as
-                return `"${str.replace(/"/g, '""')}"`;
-            }
-            return str;
-        };
-
-        const headers = {
-            id: 'ID',
-            title: contextType === 'development' ? 'Tarefa' : 'Chamado',
-            status: 'Status',
-            priority: 'Prioridade', 
-            user: 'Solicitante',
-            customer: contextType === 'development' ? 'Cliente' : 'Unidade Operacional', 
-            analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista(s)', 
-            includeDate: 'Data de Inclusão',
-            prevDate: 'Previsão de Entrega', 
-            finishDate: 'Data de Encerramento', 
-            points: 'Pontos', 
-            rating: 'Avaliação'
-        };
-
-        const rows = filteredAndSortedTasks.map(task => [
-            task.id,
-            escapeCSV(task.titulo_tarefa),
-            escapeCSV(task.sit_tarefa),
-            escapeCSV(priorityConfig[task.ind_prioridade]?.label || 'N/D'),
-            escapeCSV(task.criado_por),
-            escapeCSV(contextType === 'support' ? task.nom_unid_oper : 'N/A'),
-            escapeCSV(Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso).join(', ') : task.recursos),
-            task.dth_prev_entrega ? new Date(task.dth_prev_entrega).toLocaleDateString() : '',
-            task.dth_encerramento ? new Date(task.dth_encerramento).toLocaleString() : '',
-            task.qtd_pontos,
-            task.satisfaction_rating || ''
-        ].join(';'));
-
-        // CSV Logic
-        const csvHeaders = Object.values(headers).join(';'); // Corrigido para usar apenas os valores do objeto headers
-        const csvString = [csvHeaders, ...rows].join('\n');
-        const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
-
-        // Cria um link temporário para iniciar o download
-        const today = new Date();
-
-        const day = String(today.getDate()).padStart(2, '0');
-        const month = String(today.getMonth() + 1).padStart(2, '0'); // Mês começa em 0
-        const year = today.getFullYear();
-        const fileName = `TaskList_Vertis_${day}${month}${year}`;
-
-        if (format === 'csv') {
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `${fileName}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } else if (format === 'pdf') {
-            // Cria um novo documento PDF em modo paisagem
-            const doc = new jsPDF({
-                orientation: 'landscape',
-            });
-            
-            // Função para carregar a imagem como Base64
-            const getBase64Image = (url: string): Promise<string> => {
-                return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.crossOrigin = 'Anonymous';
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx?.drawImage(img, 0, 0);
-                        const dataURL = canvas.toDataURL('image/png');
-                        resolve(dataURL);
-                    };
-                    img.onerror = reject;
-                    img.src = url;
-                });
-            };
-
-            const logoBase64 = await getBase64Image('/logo-white.png');
-            doc.addImage(logoBase64, 'PNG', 14, 8, 25, 16);
-
-            // Gera a tabela com estilo moderno
-            autoTable(doc, {
-                head: [Object.values(headers)],
-                body: filteredAndSortedTasks.map(task => [
-                    task.id,
-                    task.titulo_tarefa,
-                    task.sit_tarefa,
-                    priorityConfig[task.ind_prioridade]?.label || 'N/D',
-                    task.criado_por,
-                    contextType === 'support' ? task.nom_unid_oper : 'N/A',
-                    Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso).join(', ') : task.recursos,
-                    task.dth_prev_entrega ? new Date(task.dth_prev_entrega).toLocaleDateString() : '',
-                    task.dth_encerramento ? new Date(task.dth_encerramento).toLocaleString() : '',
-                    task.qtd_pontos,
-                    task.satisfaction_rating || ''
-                ].filter((_, index) => contextType === 'support' || index !== 5)), // Remove a coluna de unidade
-                startY: 30, // Posição inicial da tabela, abaixo do cabeçalho
-                theme: 'striped', // Tema listrado para melhor legibilidade
-                headStyles: {
-                    fillColor: [45, 55, 72], // Cor de fundo do cabeçalho (#2d3748)
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold',
-                },
-                alternateRowStyles: {
-                    fillColor: [248, 249, 250], // Cor de fundo para linhas alternadas
-                },
-                styles: { fontSize: 8, cellPadding: 2 },
-                didDrawPage: (data) => {
-                    // Adiciona um rodapé com número da página e data de geração
-                    doc.setFontSize(8);
-                    doc.setTextColor(150);
-                    // Usa um placeholder para o número total de páginas
-                    doc.text(`Página ${data.pageNumber} de {totalPages}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
-                    doc.text(`Relatório gerado em: ${new Date().toLocaleString()}`, doc.internal.pageSize.width - data.settings.margin.right, doc.internal.pageSize.height - 10, { align: 'right' });
-                },
-            });
-            // Substitui o placeholder pelo número total de páginas real
-            const totalPages = (doc as any).internal.getNumberOfPages();
-            if (typeof doc.putTotalPages === 'function') {
-                doc.putTotalPages(`{totalPages}`);
-            } else { // Fallback para o caso de o plugin não estar carregado
-                 for (let i = 1; i <= totalPages; i++) {
-                    doc.setPage(i);
-                    doc.text(`Página ${i} de ${totalPages}`, doc.internal.pageSize.width - 185, doc.internal.pageSize.height - 10);
-                }
-            }
-            doc.save(`${fileName}.pdf`);
-        }
-    };
 
     // --- Lógica para os Cards de Análise ---
     const analytics = useMemo(() => {
@@ -354,16 +208,15 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
         };
     }, [tasks]);
 
-
     // Memoiza as tarefas ordenadas para evitar recálculos desnecessários
     const filteredAndSortedTasks = useMemo(() => {
         let filteredItems = tasks.filter(task => {
             // 1. Filtro de Data
-            const taskDate = task.dth_inclusao.split('T')[0]; // Formato YYYY-MM-DD
-            if (startDate && taskDate < startDate) {
+            const taskDate = task.dth_inclusao.split('T')[0];
+            if (localStartDate && taskDate < localStartDate) {
                 return false;
             }
-            if (endDate && taskDate > endDate) {
+            if (localEndDate && taskDate > localEndDate) {
                 return false;
             }
 
@@ -416,7 +269,20 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
             });
         }
         return sortableItems;
-    }, [tasks, sortConfig, searchTerm, startDate, endDate]);
+    }, [tasks, sortConfig, searchTerm, localStartDate, localEndDate]);
+
+    // Utiliza o hook de exportação, agora que filteredAndSortedTasks já foi declarada.
+    const { handleExport } = useTaskExporter(filteredAndSortedTasks, contextType);
+
+    const handleSaveTask = (newTaskData: Omit<Task, 'id' | 'dth_inclusao'>) => {
+        const newTask: Task = {
+            ...newTaskData,
+            id: Date.now(), // Gerando um ID simples para o exemplo
+            dth_inclusao: new Date().toISOString().split('T')[0], // Data atual
+        };
+        onAddTask(newTask);
+        setIsAddModalOpen(false); // Fecha o modal após salvar
+    };
 
     // Função para solicitar a ordenação ao clicar no cabeçalho
     const requestSort = (key: keyof Task) => {
@@ -579,13 +445,13 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                 </div>
                 <div className="date-filter-group">
                     <label>De:</label>
-                    <input type="date" className="filter-date-input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                    <input type="date" className="filter-date-input" value={localStartDate} onChange={(e) => setLocalStartDate(e.target.value)} />
                 </div>
                 <div className="date-filter-group">
                     <label>Até:</label>
-                    <input type="date" className="filter-date-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    <input type="date" className="filter-date-input" value={localEndDate} onChange={(e) => setLocalEndDate(e.target.value)} />
                 </div>
-                <button className="clear-filters-btn" onClick={() => { setSearchTerm(''); setStartDate(''); setEndDate(''); }}>
+                <button className="clear-filters-btn" onClick={() => { setSearchTerm(''); setLocalStartDate(''); setLocalEndDate(''); }}>
                     Limpar Filtros
                 </button>
             </div>
@@ -633,8 +499,12 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                     {contextType === 'support' && (
                                         <td>{task.nom_unid_oper}</td>
                                     )}
-                                    <td>{Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso).join(', ') : task.recursos}</td>
-                                    <td>{new Date(task.dth_inclusao).toLocaleDateString()}</td>
+                                    <td>
+                                        {Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso).join(', ') : task.recursos}
+                                    </td>
+                                    <td>
+                                        {new Date(task.dth_inclusao.replace(/-/g, '\/')).toLocaleDateString()}
+                                    </td>
                                     <td className="cell-actions">
                                         <IconButton aria-label="mais opções" className="action-button" onClick={(e) => handleMenuOpen(e, task)}>
                                             <MoreVertIcon />
