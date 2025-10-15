@@ -1,76 +1,97 @@
+/* --- Estilos para a página de Status dos Serviços --- */
 .service-status-container {
     padding: 20px;
-    background-color: var(--bg-color);
+    background-color: var(--background-color);
+    color: var(--text-primary);
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
 }
 
 .service-status-header {
-    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.service-status-title-group {
+    flex-grow: 1;
 }
 
 .service-status-title {
     font-size: 1.8rem;
     font-weight: 600;
-    color: var(--title-color);
-    margin-bottom: 5px;
+    color: var(--text-primary);
+    margin: 0;
 }
 
 .service-status-subtitle {
     font-size: 1rem;
     color: var(--text-secondary);
+    margin-top: 5px;
 }
 
 .service-status-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 20px;
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
 .status-card {
-    background-color: var(--widget-bg-color);
+    background-color: var(--table-bg);
     border-radius: 12px;
     padding: 20px;
+    box-shadow: 0 4px 12px var(--box-shadow-color);
     display: flex;
+    flex-grow: 1; /* Permite que o card cresça para preencher o espaço */
+    flex-basis: 30%; /* Base inicial, garante no máximo 3 por linha */
     flex-direction: column;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease-in-out;
 }
 
 .status-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 20px var(--bg-color);
+    box-shadow: 0 6px 16px var(--box-shadow-color);
 }
 
 .status-card-header {
     display: flex;
     align-items: center;
     gap: 15px;
-    border-bottom: 1px solid var(--table-border-color);
-    padding-bottom: 15px;
     margin-bottom: 15px;
 }
 
 .status-card-icon {
-    background-color: rgba(255, 102, 0, 0.1);
-    color: #ff7b00;
+    background-color: var(--background-color);
+    color: var(--primary-color);
+    padding: 12px;
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.status-card-icon .MuiSvgIcon-root {
+    font-size: 2rem;
 }
 
 .status-card-title h3 {
     margin: 0;
     font-size: 1.2rem;
     font-weight: 600;
-    color: var(--title-color);
+    color: var(--text-primary);
 }
 
 .status-card-title p {
     margin: 0;
     font-size: 0.9rem;
-    color: var(--sub-metric-color);
+    color: var(--text-secondary);
 }
 
 .status-card-chart {
@@ -78,13 +99,4 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-/* Ajustes para os gráficos da MUI X Charts */
-.status-card .MuiChartsAxis-root text {
-    font-size: 0.7rem;
-}
-
-.status-card .MuiChartsLegend-series text {
-    font-size: 0.8rem;
 }

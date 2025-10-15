@@ -64,6 +64,38 @@ const serviceCardsConfig = [
             }],
         },
     },
+    {
+        id: 'publ-laudos-hora',
+        title: 'Publicação de Laudos (Hora)',
+        description: 'Publicações de laudos nas últimas 24 horas.',
+        icon: <ApiIcon />,
+        chartType: 'line',
+        chartData: {
+            series: [{
+                data: [34, 25, 34, 64, 147, 192, 379, 692, 846, 1127, 1345, 842, 743, 920, 1260, 1576, 982, 723, 418, 215, 127, 75, 40, 27],
+                area: true,
+                curve: 'linear',
+                xAxisKey: 'hour',
+            }],
+            xAxis: [{ data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24], scaleType: 'point', id: 'hour' }],
+        },
+    },
+    {
+        id: 'svc-fat-hora',
+        title: 'Serviço de Faturamento (Hora)',
+        description: 'Serviços de faturamento nas últimas 24 horas.',
+        icon: <ApiIcon />,
+        chartType: 'line',
+        chartData: {
+            series: [{
+                data: [7, 4, 8, 7, 15, 42, 79, 124, 258, 421, 512, 326, 278, 341, 412, 365, 437, 612, 543, 215, 128, 79, 45, 27],
+                area: true,
+                curve: 'linear',
+                xAxisKey: 'hour',
+            }],
+            xAxis: [{ data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24], scaleType: 'point', id: 'hour' }],
+        },
+    },
     // Adicione um novo card aqui!
     // {
     //     id: 'new-service',
@@ -76,7 +108,7 @@ const serviceCardsConfig = [
 ];
 
 const ServiceStatusPage: React.FC = () => {
-    const { theme } = useTheme();
+    const { theme, setTheme } = useTheme();
 
     useEffect(() => {
         document.title = "Vertis | Status dos Serviços";
@@ -85,40 +117,43 @@ const ServiceStatusPage: React.FC = () => {
     const chartThemeColors = {
         dark: {
             line: 'rgb(183, 0, 255)',
-            gradientStart: 'rgba(224, 68, 255, 0.8)',
+            gradientStart: 'rgba(183, 0, 255, 0.6)',
             gradientEnd: 'rgba(0, 119, 255, 0)',
-            axisLabel: 'rgba(255, 255, 255, 0.26)',
-            axisLine: 'rgba(255, 255, 255, 0.26)',
-            axisTick: 'rgba(255, 255, 255, 0.12)',
-            marker: 'rgba(100, 66, 179, 0.36)',
+            axis: 'rgba(255, 255, 255, 0.3)',
+            legendText: '#fff',
+            circlePointer: 'rgba(92, 89, 129, 0.34)',
+            circleBorder: 'rgba(190, 188, 211, 0.66)'
         },
         light: {
-            line: 'rgb(183, 0, 255)',
-            gradientStart: 'rgba(224, 68, 255, 0.8)',
+            line: 'rgba(122, 38, 201, 0.49)',
+            gradientStart: 'rgba(183, 0, 255, 0.6)',
             gradientEnd: 'rgba(0, 119, 255, 0)',
-            axisLabel: 'rgba(0, 0, 0, 0.5)',
-            axisLine: 'rgba(58, 58, 58, 0.2)',
-            axisTick: 'rgba(0, 0, 0, 0.1)',
-            marker: 'rgba(0, 119, 255, 0.2)',
+            axis: 'rgba(0, 0, 0, 0.3)',
+            legendText: '#000',
+            circlePointer: 'rgba(190, 188, 211, 0.66)',
+            circleBorder: 'rgba(140, 132, 212, 0.85)'
         }
     };
 
     const currentChartColors = chartThemeColors[theme];
 
-
-
     return (
-        <main className="service-status-container">
+        <main className={`service-status-container ${theme}`}>
             <div className="service-status-header">
-                <h1 className="service-status-title">Status dos Serviços</h1>
-                <p className="service-status-subtitle">Monitoramento em tempo real dos serviços internos da Vertis.</p>
+                <div className="service-status-title-group">
+                    <h1 className="service-status-title">Status dos Serviços</h1>
+                    <p className="service-status-subtitle">Monitoramento em tempo real dos serviços internos da Vertis.</p>
+                </div>
+                <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="theme-toggle-button">
+                    {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+                </button>
             </div>
 
             <div className="service-status-grid">
                 {serviceCardsConfig.map((card) => (
                     <div key={card.id} className="status-card">
                         <div className="status-card-header">
-                            <div className="status-card-icon">{card.icon}</div>
+                            <div className="status-card-icon" style={{ color: currentChartColors.line }}>{card.icon}</div>
                             <div className="status-card-title">
                                 <h3>{card.title}</h3>
                                 <p>{card.description}</p>
@@ -129,7 +164,6 @@ const ServiceStatusPage: React.FC = () => {
                                 <LineChart
                                     {...card.chartData}
                                     height={200}
-                                    grid={{ vertical: true, horizontal: true }}
                                     margin={{ top: 20, right: 20, bottom: 30, left: 30 }}
                                     sx={{
                                         // Aplica o preenchimento com gradiente na área do gráfico
@@ -142,11 +176,17 @@ const ServiceStatusPage: React.FC = () => {
                                             strokeWidth: 2,
                                         },
                                         // Estiliza os eixos e os textos
-                                        '.MuiChartsAxis-line, .MuiChartsAxis-tick': {
-                                            stroke: chartThemeColors[theme].axisLabel,
+                                        '.MuiChartsAxis-line, .MuiChartsAxis-tick, .MuiChartsGrid-line': {
+                                            stroke: currentChartColors.axis,
                                         },
                                         '.MuiChartsAxis-tickLabel': {
-                                            fill: chartThemeColors[theme].axisLabel,
+                                            fill: currentChartColors.axis,
+                                        },
+                                        // Estiliza os pontos (marcadores) no gráfico
+                                        '.MuiMarkElement-root': {
+                                            fill: currentChartColors.circlePointer,
+                                            stroke: currentChartColors.circleBorder,
+                                            strokeWidth: 2,
                                         },
                                     }}
                                 >
@@ -167,7 +207,7 @@ const ServiceStatusPage: React.FC = () => {
                                     sx={{
                                         // Alvo: o texto dentro de cada item da legenda
                                         '.MuiChartsLegend-label text': {
-                                            fill: theme === 'dark' ? '#fff' : '#000'
+                                            fill: currentChartColors.legendText
                                         }
                                     }}
                                 />
