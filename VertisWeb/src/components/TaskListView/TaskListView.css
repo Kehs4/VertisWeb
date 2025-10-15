@@ -469,3 +469,27 @@
     background-color: var(--row-hover-bg);
     color: var(--text-primary);
 }
+
+/* --- Estilos para o estado de loading da tabela --- */
+.table-loading-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-style: italic;
+}
+
+.loading-spinner-table {
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--table-border-color);
+    border-top: 3px solid #ff6600;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

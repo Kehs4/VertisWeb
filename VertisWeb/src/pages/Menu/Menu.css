@@ -140,6 +140,17 @@
   max-height: 500px; /* Valor grande o suficiente para mostrar todo o conteúdo */
 }
 
+.sidebar-menu-divider {
+    padding: 15px 20px 5px 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 10px;
+    border-top: 1px solid #3a3a3a;
+}
+
 
 /* Ícones de expansão */
 .menu-toggle-button svg,

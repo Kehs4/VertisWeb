@@ -5,17 +5,15 @@ import { useTheme } from '../../components/ThemeContext';
 import { LineChart, PieChart } from '@mui/x-charts';
 
 // Ícones do Material-UI
-import {
-    Event as EventIcon,
-    TrendingUp as TrendingUpIcon,
-    TrendingDown as TrendingDownIcon,
-    Receipt as ReceiptIcon,
-    Pets as PetsIcon,
-    Science as ScienceIcon,
-    Assignment as AssignmentIcon,
-    People as PeopleIcon,
-    Summarize as SummarizeIcon,
-} from '@mui/icons-material';
+import Event from '@mui/icons-material/Event';
+import TrendingUp from '@mui/icons-material/TrendingUp';
+import TrendingDown from '@mui/icons-material/TrendingDown';
+import Receipt from '@mui/icons-material/Receipt';
+import Pets from '@mui/icons-material/Pets';
+import Science from '@mui/icons-material/Science';
+import Assignment from '@mui/icons-material/Assignment';
+import People from '@mui/icons-material/People';
+import Summarize from '@mui/icons-material/Summarize';
 
 // --- DADOS DE EXEMPLO (MOCK DATA) ---
 // Você deverá substituir isso por chamadas à sua API
@@ -110,7 +108,7 @@ function Dashboard() {
                     {/* Agendas para hoje */}
                     <div className="widget-card large-widget">
                         <div className="widget-header">
-                            <EventIcon style={{color: 'rgb(0, 140, 255)'}}/>
+                            <Event style={{color: 'rgb(0, 140, 255)'}}/>
                             <h3 style={{fontSize: '1.4rem'}}>Próximos Agendamentos</h3>
                         </div>
                         <div className="widget-content list-content">
@@ -130,7 +128,7 @@ function Dashboard() {
                     {/* Últimas Ordens de Serviço */}
                     <div className="widget-card large-widget">
                         <div className="widget-header">
-                            <AssignmentIcon style={{color: 'rgb(189, 189, 189)'}}/>
+                            <Assignment style={{color: 'rgb(189, 189, 189)'}}/>
                             <h3 style={{fontSize: '1.4rem'}}>Últimas Ordens de Serviço</h3>
                         </div>
                         <div className="widget-content list-content">
@@ -152,13 +150,13 @@ function Dashboard() {
                     {/* Pacientes atendidos no mês */}
                     <div className="widget-card">
                         <div className="widget-header">
-                            <PetsIcon style={{color: 'rgb(183, 0, 255)'}}/>
+                            <Pets style={{color: 'rgb(183, 0, 255)'}}/>
                             <h3>Pacientes Atendidos (Mês)</h3>
                         </div>
                         <div className="widget-content">
                             <p className="main-metric">{mockData.patientsThisMonth.count}</p>
                             <div className={`comparison ${mockData.patientsThisMonth.comparison >= 0 ? 'positive' : 'negative'}`}>
-                                {mockData.patientsThisMonth.comparison >= 0 ? <TrendingUpIcon /> : <TrendingDownIcon />}
+                                {mockData.patientsThisMonth.comparison >= 0 ? <TrendingUp /> : <TrendingDown />}
                                 <span>{Math.abs(mockData.patientsThisMonth.comparison)}% vs. Mês anterior</span>
                             </div>
                         </div>
@@ -229,7 +227,7 @@ function Dashboard() {
                     {/* Laudos emitidos */}
                     <div className="widget-card">
                         <div className="widget-header">
-                            <SummarizeIcon style={{color: 'rgb(253, 79, 117)'}}/>
+                            <Summarize style={{color: 'rgb(253, 79, 117)'}}/>
                             <h3>Laudos Emitidos</h3>
                         </div>
                         <div className="widget-content" style={{display: 'flex', alignItems: 'center'}}>
@@ -259,7 +257,7 @@ function Dashboard() {
                     {/* Faturas de Convênio */}
                     <div className="widget-card">
                         <div className="widget-header">
-                            <ReceiptIcon style={{color: 'rgb(49, 167, 13)'}}/>
+                            <Receipt style={{color: 'rgb(49, 167, 13)'}}/>
                             <h3>Faturas de Convênio</h3>
                         </div>
                         <div className="widget-content">
@@ -274,7 +272,7 @@ function Dashboard() {
                     {/* Animais Internados */}
                     <div className="widget-card">
                         <div className="widget-header">
-                            <PetsIcon style={{color: 'rgb(255, 94, 0)'}}/>
+                            <Pets style={{color: 'rgb(255, 94, 0)'}}/>
                             <h3>Animais Internados</h3>
                         </div>
                         <div className="widget-content">
@@ -291,7 +289,7 @@ function Dashboard() {
                     {/* Exames em Execução */}
                     <div className="widget-card">
                         <div className="widget-header">
-                            <ScienceIcon style={{color: 'rgb(255, 187, 0)'}}/>
+                            <Science style={{color: 'rgb(255, 187, 0)'}}/>
                             <h3>Exames em Execução</h3>
                         </div>
                         <div className="widget-content">
@@ -310,7 +308,7 @@ function Dashboard() {
                     {/* Usuários Ativos */}
                     <div className="widget-card">
                         <div className="widget-header">
-                            <PeopleIcon style={{color: 'rgb(255, 230, 0)'}}/>
+                            <People style={{color: 'rgb(255, 230, 0)'}}/>
                             <h3>Usuários Ativos</h3>
                         </div>
                         <div className="widget-content">

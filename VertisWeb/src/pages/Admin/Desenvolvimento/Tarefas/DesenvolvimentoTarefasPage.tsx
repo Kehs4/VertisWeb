@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import TaskListView from '../../../components/TaskListView/TaskListView';
-import { Task } from '../../Suporte/Tarefas/TarefasPage'; // Reutilizando a interface
+import TaskListView from '../../../../components/TaskListView/TaskListView';
+import { Task } from '../../../Suporte/Tarefas/TarefasPage'; // Reutilizando a interface
 
 function DesenvolvimentoTarefasPage() {
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [isLoading, setIsLoading] = useState(true); // Novo estado de loading
 
     useEffect(() => {
         document.title = "Vertis | Tarefas - Desenvolvimento";
 
         // Função para buscar os dados da API
         const fetchTasks = async () => {
+            setIsLoading(true); // Ativa o loading antes da busca
             try {
                 // A configuração de proxy no Vite redireciona /api para o seu backend
                 const response = await fetch('/api/tasks');
@@ -23,6 +25,8 @@ function DesenvolvimentoTarefasPage() {
                 }
             } catch (error) {
                 console.error("Erro ao buscar tarefas de desenvolvimento:", error);
+            } finally {
+                setIsLoading(false); // Desativa o loading ao final (sucesso ou erro)
             }
         };
 
@@ -47,6 +51,7 @@ function DesenvolvimentoTarefasPage() {
         <TaskListView
             title="Planilha de Tarefas - Desenvolvimento"
             tasks={tasks}
+            isLoading={isLoading} // Passa o estado de loading para o componente
             onAddTask={handleAddTask}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}

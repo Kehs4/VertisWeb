@@ -1,21 +1,18 @@
-import * as React from 'react';
+import React from 'react';
 import { useEffect, useState } from 'react';
 import './DashSupport.css';
-import { useTheme } from '../../../components/ThemeContext';
-import { LineChart, PieChart } from '@mui/x-charts';
+import { useTheme } from '../../../../components/ThemeContext';
+import { LineChart } from '@mui/x-charts';
 
 // Ícones do Material-UI
-import {
-    Public as PublicIcon,
-    FactCheck as FactCheckIcon,
-    TrendingDown as TrendingDownIcon,
-    Dvr as DvrIcon,
-    Webhook as WebhookIcon,
-    Insights as InsightsIcon,
-    People as PeopleIcon,
-    Summarize as SummarizeIcon,
-    EmojiEvents as EmojiEventsIcon, Leaderboard as LeaderboardIcon,
-} from '@mui/icons-material';
+import { Public } from '@mui/icons-material';
+import { FactCheck } from '@mui/icons-material';
+import { Dvr } from '@mui/icons-material';
+import { Webhook } from '@mui/icons-material';
+import { Insights } from '@mui/icons-material';
+import { People } from '@mui/icons-material';
+import { EmojiEvents } from '@mui/icons-material';
+import { Leaderboard } from '@mui/icons-material';
 
 // --- DADOS DE EXEMPLO (MOCK DATA) ---
 // Você deverá substituir isso por chamadas à sua API
@@ -115,7 +112,7 @@ function Dashboard() {
                     {/* Constellation API */}
                     <div className="ds-widget-card">
                         <div className="ds-widget-header">
-                            <PublicIcon className="ds-icon-constellation" />
+                            <Public className="ds-icon-constellation" />
                             <h3>Constellation API - Status</h3>
                         </div>
                         <div className="ds-widget-content">
@@ -132,7 +129,7 @@ function Dashboard() {
                     {/* Laudos Online API */}
                     <div className="ds-widget-card">
                         <div className="ds-widget-header">
-                            <FactCheckIcon className="ds-icon-laudos-api" />
+                            <FactCheck className="ds-icon-laudos-api" />
                             <h3>Laudos Online API - Status</h3>
                         </div>
                         <div className="ds-widget-content">
@@ -149,7 +146,7 @@ function Dashboard() {
                     {/* Vertis API */}
                     <div className="ds-widget-card">
                         <div className="ds-widget-header">
-                            <DvrIcon className="ds-icon-vertis-api" />
+                            <Dvr className="ds-icon-vertis-api" />
                             <h3>Vertis API - Status</h3>
                         </div>
                         <div className="ds-widget-content">
@@ -168,7 +165,7 @@ function Dashboard() {
                     {/* NFSe API */}
                     <div className="ds-widget-card">
                         <div className="ds-widget-header">
-                            <WebhookIcon className="ds-icon-nfse-api" />
+                            <Webhook className="ds-icon-nfse-api" />
                             <h3>NFSe API - Status</h3>
                         </div>
                         <div className="ds-widget-content">
@@ -186,7 +183,7 @@ function Dashboard() {
                     {/* Laudos Publicados por Hora */}
                     <div className="ds-widget-card full-width">
                         <div className="ds-widget-header no-border">
-                            <InsightsIcon className="ds-icon-laudos-hora" />
+                            <Insights className="ds-icon-laudos-hora" />
                             <h3>Laudos Publicados por Hora</h3>
                         </div>
                         <div className="ds-widget-content ds-list-content flex-grow">
@@ -257,7 +254,7 @@ function Dashboard() {
                         {/* Clientes que mais publicam */}
                         <div className="ds-widget-card">
                             <div className="ds-widget-header no-border">
-                                <LeaderboardIcon className="ds-icon-top-publishers" />
+                                <Leaderboard className="ds-icon-top-publishers" />
                                 <h3>Ranking Publicadores de Laudos</h3>
                             </div>
                             <div className="ds-widget-content ds-list-content">
@@ -283,7 +280,7 @@ function Dashboard() {
                         {/* Clientes que mais solicitam chamados */}
                         <div className="ds-widget-card">
                             <div className="ds-widget-header no-border">
-                                <EmojiEventsIcon className="ds-icon-ranking" />
+                                <EmojiEvents className="ds-icon-ranking" />
                                 <h3>Ranking Chamados Solicitados</h3>
                             </div>
                             <div className="ds-widget-content ds-list-content">
@@ -309,7 +306,7 @@ function Dashboard() {
                         {/* Analistas de Suporte */}
                         <div className="ds-widget-card">
                             <div className="ds-widget-header no-border">
-                                <PeopleIcon className="ds-icon-analistas" />
+                                <People className="ds-icon-analistas" />
                                 <h3>Chamados por Analista</h3>
                             </div>
                             <div className="ds-widget-content ds-list-content">
@@ -321,7 +318,7 @@ function Dashboard() {
                                     <div key={analyst.name} className="ds-list-item analyst-item">
                                         <span className="name">
                                             {index < 3 && (
-                                                <EmojiEventsIcon className={`trophy-icon trophy-${['gold', 'silver', 'bronze'][index]}`} />
+                                                <EmojiEvents className={`trophy-icon trophy-${['gold', 'silver', 'bronze'][index]}`} />
                                             )}
                                             {analyst.name}
                                         </span>

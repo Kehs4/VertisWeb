@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import TaskListView from '../../../components/TaskListView/TaskListView';
+import TaskListView from '../../../../components/TaskListView/TaskListView';
 
 // --- Tipagem dos Dados ---
 // Esta tipagem pode ser movida para um arquivo central de tipos no futuro
@@ -49,19 +49,19 @@ export interface Task { // Exportando para ser usado no Modal
 
 function TarefasPage() {
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [isLoading, setIsLoading] = useState(true); // Novo estado de loading
 
     useEffect(() => {
         document.title = "Vertis | Chamados - Suporte";
 
         // Função para buscar os dados da API
         const fetchTasks = async () => {
+            setIsLoading(true); // Ativa o loading antes da busca
             try {
                 // A configuração de proxy no Vite redireciona /api para o seu backend
                 const response = await fetch('/api/tasks');
                 if (response.ok) {
                     const data = await response.json();
-
-                    console.log(data)
                     // Filtra as tarefas para exibir apenas as que NÃO são de Desenvolvimento
                     const supportTasks = data.filter((task: Task) => task.id_unid_negoc !== 200);
                     setTasks(supportTasks);
@@ -70,6 +70,8 @@ function TarefasPage() {
                 }
             } catch (error) {
                 console.error("Erro de rede ao buscar tarefas:", error);
+            } finally {
+                setIsLoading(false); // Desativa o loading ao final (sucesso ou erro)
             }
         };
 
@@ -95,6 +97,7 @@ function TarefasPage() {
         <TaskListView
             title="Planilha de Chamados - Suporte"
             tasks={tasks}
+            isLoading={isLoading} // Passa o estado de loading para o componente
             onAddTask={handleAddTask}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}

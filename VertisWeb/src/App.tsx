@@ -14,9 +14,10 @@ import PartnerPage from './pages/Vertis/Arquivo/Parceiro de Negocio/PartnerPage'
 import OperationalUnitPage from './pages/Vertis/Arquivo/Unidades Operacionais/OperationalUnitPage';
 import ServiceOrderPage from './pages/Vertis/Operacional/Ordem de Serviço/ServiceOrderPage';
 import NotFound from './pages/NotFound/NotFound';
-import DashSupport from './pages/Suporte/Dashboard/DashSupport';
-import TarefasPage from './pages/Suporte/Tarefas/TarefasPage';
-import DesenvolvimentoTarefasPage from './pages/Desenvolvimento/Tarefas/DesenvolvimentoTarefasPage';
+import DashSupport from './pages/Admin/Suporte/Dashboard/DashSupport';
+import TarefasPage from './pages/Admin/Suporte/Tarefas/TarefasPage';
+import DesenvolvimentoTarefasPage from './pages/Admin/Desenvolvimento/Tarefas/DesenvolvimentoTarefasPage';
+import ServiceStatusPage from './pages/Admin/Services Status/ServiceStatusPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -41,6 +42,7 @@ const router = createBrowserRouter([
       { path: '/suporte/dashboard', element: <DashSupport /> },
       { path: '/suporte/tarefas', element: <TarefasPage /> },
       { path: '/desenvolvimento/tarefas', element: <DesenvolvimentoTarefasPage /> },
+      { path: '/service-status', element: <ServiceStatusPage /> },
     ],
   },
   // Rota "catch-all" para páginas não encontradas

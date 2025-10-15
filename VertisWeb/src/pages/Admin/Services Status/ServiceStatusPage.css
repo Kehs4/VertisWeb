@@ -1,0 +1,90 @@
+.service-status-container {
+    padding: 20px;
+    background-color: var(--bg-color);
+    height: 100%;
+}
+
+.service-status-header {
+    margin-bottom: 30px;
+}
+
+.service-status-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--title-color);
+    margin-bottom: 5px;
+}
+
+.service-status-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.service-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+.status-card {
+    background-color: var(--widget-bg-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.status-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px var(--bg-color);
+}
+
+.status-card-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid var(--table-border-color);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.status-card-icon {
+    background-color: rgba(255, 102, 0, 0.1);
+    color: #ff7b00;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-card-title h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--title-color);
+}
+
+.status-card-title p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--sub-metric-color);
+}
+
+.status-card-chart {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ajustes para os gráficos da MUI X Charts */
+.status-card .MuiChartsAxis-root text {
+    font-size: 0.7rem;
+}
+
+.status-card .MuiChartsLegend-series text {
+    font-size: 0.8rem;
+}

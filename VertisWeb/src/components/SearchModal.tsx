@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import './SearchModal.css';
-import { Search as SearchIcon, Close as CloseIcon } from '@mui/icons-material';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Tipagem para os dados de exemplo. Em um projeto real, viria da sua API.
 export interface SearchResult {

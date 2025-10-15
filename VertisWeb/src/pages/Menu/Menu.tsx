@@ -33,6 +33,7 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import LaptopWindowsIcon from '@mui/icons-material/LaptopWindows';
 import PaymentsIcon from '@mui/icons-material/Payments';
+import DnsIcon from '@mui/icons-material/Dns';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 
 // Tipagem para os itens do menu para garantir a consistência dos dados
@@ -112,7 +113,15 @@ const menuItems: MenuItem[] = [
     { id: 'crm', icon: <ManageAccountsIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />,  label: 'CRM', path: '#' },
     { id: 'ajuda', icon: <HelpIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />, label: 'Ajuda', path: '#' },
     
-    { id: 'suporte', 
+    
+];
+
+const adminMenuItems: MenuItem[] = [
+    { id: 'service-status', 
+      label: 'Status dos Serviços', 
+      icon: <DnsIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />,
+      path: '/service-status' },
+      { id: 'suporte', 
         label: 'Suporte Vertis', 
         icon: <SupportAgentIcon style={{ width: '20px', height: '20px' }} className='menu-icon' />,
         items: [
@@ -227,6 +236,51 @@ function Menu({ isOpen, onClose }: MenuProps) {
                         </li>
                     ))}
 
+                    {/* Separador e Menu de Admin */}
+                    <li className="sidebar-menu-divider">
+                        <span>Administração</span>
+                    </li>
+                    {adminMenuItems.map((item) => (
+                         <li key={item.id} className='sidebar-menu-item'>
+                            {item.items ? (
+                                <div
+                                    className={`menu-toggle-button ${openMainMenuId === item.id ? 'active' : ''}`}
+                                    onClick={() => setOpenMainMenuId(openMainMenuId === item.id ? null : item.id)}
+                                >
+                                    {item.icon}
+                                    <span>{item.label}</span>
+                                    {openMainMenuId === item.id ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+                                </div>
+                            ) : (
+                                <Link to={item.path || '#'} className='menu-link' onClick={onClose}>
+                                    {item.icon}
+                                    {item.label}
+                                </Link>
+                            )}
+
+                            {/* Submenu para admin */}
+                            {item.items && (
+                                <ul className={`sidebar-submenu ${openMainMenuId === item.id ? 'open' : ''}`}>
+                                    {item.items.map((subItem) => (
+                                        <li key={subItem.id} className='sidebar-submenu-item'>
+                                            {/* Este trecho não precisa de sub-submenu por enquanto, mas a lógica está aqui para o futuro */}
+                                            {subItem.items ? (
+                                                <div className={`submenu-toggle-button`}>
+                                                    {subItem.icon}
+                                                    {subItem.label}
+                                                </div>
+                                            ) : (
+                                                <Link to={subItem.path || '#'} className='submenu-link' onClick={onClose}>
+                                                    {subItem.icon}
+                                                    {subItem.label}
+                                                </Link>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </li>
+                    ))}
                 </ul>
                 <div className='user-logged-container'>
                     <div className='user-logged'>

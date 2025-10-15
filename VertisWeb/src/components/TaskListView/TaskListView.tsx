@@ -77,6 +77,7 @@ interface Task {
 interface TaskListViewProps {
     title: string;
     tasks: Task[];
+    isLoading: boolean;
     onUpdateTask: (updatedTask: Task) => void;
     onDeleteTask: (taskId: number) => void;
     onAddTask: (newTask: Task) => void;
@@ -101,7 +102,7 @@ const statusConfig: { [key: string]: { backgroundColor: string, color?: string }
     'AB': { backgroundColor: '#85c1e9' },       // Aberto
 };
 
-const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, onUpdateTask, onDeleteTask, contextType }) => {
+const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, onAddTask, onUpdateTask, onDeleteTask, contextType }) => {
     // Define os textos e ícones com base no contexto
     const labels = {
         task: contextType === 'development' ? 'Tarefa' : 'Chamado', // Singular
@@ -606,37 +607,46 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, onAddTask, on
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredAndSortedTasks.map(task => (
-                            <tr key={task.id} className={`task-row status-${task.ind_sit_tarefa.toLowerCase()}`}>
-                                <td className="cell-priority">
-                                    <FlagIcon style={{ color: priorityConfig[task.ind_prioridade]?.color || '#ccc'}} />
-                                    <span>{priorityConfig[task.ind_prioridade]?.label || 'N/D'}</span>
-                                </td>
-                                <td className="cell-status">
-                                    <span className="status-badge" style={statusConfig[task.ind_sit_tarefa] || {}}>
-                                        {task.sit_tarefa}
-                                    </span>
-                                </td>
-                                <td className="cell-content">
-                                    <p className="task-description">{task.titulo_tarefa}</p>
-                                </td>
-                                <td>{task.criado_por}</td>
-                                {contextType === 'support' && (
-                                    <td>{task.nom_unid_oper}</td>
-                                )}
-                                <td>{Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso).join(', ') : task.recursos}</td>
-                                <td>{new Date(task.dth_inclusao).toLocaleDateString()}</td>
-                                <td className="cell-actions">
-                                    <IconButton
-                                        aria-label="mais opções"
-                                        className="action-button"
-                                        onClick={(e) => handleMenuOpen(e, task)}
-                                    >
-                                        <MoreVertIcon />
-                                    </IconButton>
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan={contextType === 'support' ? 8 : 7} className="table-loading-state">
+                                    <div className="loading-spinner-table"></div>
+                                    Carregando {labels.tasks.toLowerCase()}...
                                 </td>
                             </tr>
-                        ))}
+                        ) : filteredAndSortedTasks.length > 0 ? (
+                            filteredAndSortedTasks.map(task => (
+                                <tr key={task.id} className={`task-row status-${task.ind_sit_tarefa.toLowerCase()}`}>
+                                    <td className="cell-priority">
+                                        <FlagIcon style={{ color: priorityConfig[task.ind_prioridade]?.color || '#ccc'}} />
+                                        <span>{priorityConfig[task.ind_prioridade]?.label || 'N/D'}</span>
+                                    </td>
+                                    <td className="cell-status">
+                                        <span className="status-badge" style={statusConfig[task.ind_sit_tarefa] || {}}>
+                                            {task.sit_tarefa}
+                                        </span>
+                                    </td>
+                                    <td className="cell-content">
+                                        <p className="task-description">{task.titulo_tarefa}</p>
+                                    </td>
+                                    <td>{task.criado_por}</td>
+                                    {contextType === 'support' && (
+                                        <td>{task.nom_unid_oper}</td>
+                                    )}
+                                    <td>{Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso).join(', ') : task.recursos}</td>
+                                    <td>{new Date(task.dth_inclusao).toLocaleDateString()}</td>
+                                    <td className="cell-actions">
+                                        <IconButton aria-label="mais opções" className="action-button" onClick={(e) => handleMenuOpen(e, task)}>
+                                            <MoreVertIcon />
+                                        </IconButton>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={contextType === 'support' ? 8 : 7} className="table-loading-state">Nenhuma {labels.task.toLowerCase()} encontrada.</td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
