@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import TaskListView from '../../../../components/TaskListView/TaskListView';
 import { Task } from '../../../Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a interface
 import { useTasks } from '../../../../hooks/useTasks';
@@ -6,6 +6,11 @@ import { useTasks } from '../../../../hooks/useTasks';
 function DesenvolvimentoTarefasPage() {
     // Utiliza o hook customizado para buscar e gerenciar as tarefas de desenvolvimento
     const { tasks, isLoading, setStartDate, setEndDate, addTask, updateTask, deleteTask } = useTasks('development');
+
+    // Efeito para atualizar o título da página no navegador
+    useEffect(() => {
+        document.title = "Vertis | Tarefas - Desenvolvimento";
+    }, []);
 
     // Função que será passada para o TaskListView para atualizar as datas
     const handleDateChange = (newStartDate: string, newEndDate: string) => {

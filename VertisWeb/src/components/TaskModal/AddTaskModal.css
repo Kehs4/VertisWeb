@@ -261,3 +261,90 @@
 .input-with-button .icon-button:hover {
     background-color: #f0f0f0;
 }
+
+/* --- Novos Estilos para Seleção de Flags --- */
+.flag-section-container {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.flag-section-container.disabled {
+    background-color: #f1f3f5;
+    cursor: not-allowed;
+}
+
+.selected-flags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 4px 8px;
+    align-items: center;
+}
+
+.no-flags-text {
+    font-style: italic;
+    color: #888;
+    font-size: 0.75rem;
+}
+
+.add-flag-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #888;
+}
+
+.add-flag-button svg {
+    max-width: 18px;
+    max-height: 18px;
+}
+
+
+.add-flag-button:hover {
+    color: #0099ff;
+    transition: all 0.5s;
+}
+
+.available-flags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 8px;
+    border-top: 1px dashed #ddd;
+    margin-top: 2px;
+}
+
+.flag-item {
+    padding: 5px 8px;
+    border-radius: 16px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.flag-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.flag-item.available {
+    opacity: 0.8;
+}
+
+.flag-item.available:hover {
+    opacity: 1;
+}
+
+.flag-section-container.disabled .flag-item,
+.flag-section-container.disabled .add-flag-button {
+    cursor: not-allowed;
+}
+
+.flag-section-container.disabled .flag-item:hover {
+    transform: none;
+    box-shadow: none;
+}

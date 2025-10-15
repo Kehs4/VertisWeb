@@ -1,5 +1,5 @@
-import React from 'react';
-import TaskListView from '../../../../components/TaskListView/TaskListView';
+import React, { useEffect } from 'react';
+import TaskListView from '../../../../components/TaskListView/TaskListView'; // Corrigido para importação correta
 import { useTasks } from '../../../../hooks/useTasks';
 
 // --- Tipagem dos Dados ---
@@ -34,6 +34,7 @@ export interface Task { // Exportando para ser usado no Modal
     dth_prev_entrega?: string;
     dth_encerramento?: string;
     dth_inclusao: string;
+    tipo_chamado?: string[]; // Alterado para array de strings
     satisfaction_rating?: number; // Novo campo para satisfação do cliente
     dth_exclusao?: string;
 }
@@ -44,6 +45,11 @@ export interface Task { // Exportando para ser usado no Modal
 function TarefasPage() {
     // Utiliza o hook customizado para buscar e gerenciar as tarefas de suporte
     const { tasks, isLoading, setStartDate, setEndDate, addTask, updateTask, deleteTask } = useTasks('support');
+
+    // Efeito para atualizar o título da página no navegador
+    useEffect(() => {
+        document.title = "Vertis | Chamados - Suporte";
+    }, []);
 
     // Função que será passada para o TaskListView para atualizar as datas
     const handleDateChange = (newStartDate: string, newEndDate: string) => {

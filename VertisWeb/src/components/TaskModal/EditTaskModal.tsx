@@ -1,4 +1,4 @@
-import React, { useState, useEffect, KeyboardEvent } from 'react';
+import React, { useState, useEffect, KeyboardEvent, useMemo } from 'react';
 import './EditTaskModal.css';
 import { Task, Comentario } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
 import CloseIcon from '@mui/icons-material/Close';
@@ -7,6 +7,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PhoneIcon from '@mui/icons-material/Phone';
 import StarIcon from '@mui/icons-material/Star';
+import { flags, flagsMap, FlagConfig } from '../TaskListView/taskFlags';
 
 interface EditTaskModalProps {
     isOpen: boolean;
@@ -28,6 +29,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
 
     const [newComment, setNewComment] = useState('');
     const [isEditing, setIsEditing] = useState(false); // Novo estado para controlar o modo de edição
+    const [isAddingFlags, setIsAddingFlags] = useState(false); // Estado para mostrar/esconder flags disponíveis
 
     // Mapeamento de status para ser usado no select e na lógica
     const statusOptions: { [key: string]: string } = {
@@ -65,6 +67,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
             fetchTaskDetails();
         }
         setIsEditing(false); // Reseta para o modo de visualização sempre que o modal/task muda
+        setIsAddingFlags(false); // Esconde a lista de flags disponíveis
     }, [task, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -100,6 +103,18 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                     : value,
             });
         }
+    };
+
+    const handleFlagClick = (flagId: string) => {
+        if (!isEditing || !formData) return; // Permite clicar apenas em modo de edição
+        setFormData(prev => {
+            if (!prev) return null;
+            const currentFlags = prev.tipo_chamado || [];
+            const newFlags = currentFlags.includes(flagId)
+                ? currentFlags.filter(f => f !== flagId) // Deseleciona
+                : [...currentFlags, flagId]; // Seleciona
+            return { ...prev, tipo_chamado: newFlags };
+        });
     };
 
     const handleAddComment = () => {
@@ -142,6 +157,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         }
         setIsEditing(false);
     };
+
+    // Memoiza as listas de flags para otimização
+    const selectedFlagIds = formData?.tipo_chamado || [];
+    const availableFlags = useMemo(() => flags.filter(flag => !selectedFlagIds.includes(flag.id)), [selectedFlagIds]);
+    const selectedFlags = useMemo(() => selectedFlagIds.map(id => flagsMap.get(id)).filter(Boolean) as FlagConfig[], [selectedFlagIds]);
+
     if (!isOpen) {
         return null;
     }
@@ -166,7 +187,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                         <div className="form-column-main">
                             <div className="form-group">
                                 <label htmlFor="titulo_tarefa">{labels.taskDescription}</label>
-                                <textarea id="titulo_tarefa" name="titulo_tarefa" value={formData.titulo_tarefa} onChange={handleChange} required rows={3} readOnly={!isEditing} style={{resize : 'none'}} />
+                                <textarea id="titulo_tarefa" name="titulo_tarefa" value={formData.titulo_tarefa} onChange={handleChange} required rows={6} readOnly={!isEditing} style={{resize : 'none'}} />
                             </div>
                             <div className="form-row">
                                 <div className="form-group">
@@ -232,6 +253,47 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                             readOnly={!isEditing || formData.ind_sit_tarefa !== 'FN'}
                                             placeholder="0-10" />
                                     </div>
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="tipo_chamado">Flags</label>
+                                <div className={`flag-section-container ${!isEditing ? 'disabled' : ''}`}>
+                                    {/* Flags Selecionadas */}
+                                    <div className="selected-flags-container">
+                                        {selectedFlags.length > 0 ? selectedFlags.map(flag => (
+                                            <div
+                                                key={flag.id}
+                                                style={{ backgroundColor: flag.background, color: flag.color }}
+                                                className="flag-item"
+                                                onClick={() => handleFlagClick(flag.id)}
+                                            >
+                                                {flag.label}
+                                            </div>
+                                        )) : <span className="no-flags-text">Nenhuma flag selecionada.</span>}
+
+                                        {isEditing && (
+                                            <button type="button" className="add-flag-button" onClick={() => setIsAddingFlags(!isAddingFlags)} title="Adicionar Flag">
+                                                <AddCircleOutlineIcon />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Flags Disponíveis (condicional) */}
+                                    {isEditing && isAddingFlags && (
+                                        <div className="available-flags-container">
+                                            {availableFlags.map(flag => (
+                                                <div
+                                                    key={flag.id}
+                                                    style={{ backgroundColor: flag.background, color: flag.color }}
+                                                    className="flag-item available"
+                                                    onClick={() => handleFlagClick(flag.id)}
+                                                >
+                                                    {flag.label}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

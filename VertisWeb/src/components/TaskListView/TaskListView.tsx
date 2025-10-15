@@ -2,6 +2,7 @@ import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { useTheme } from '../ThemeContext'; // Importando o hook do tema
 import './TaskListView.css';
 import { useTaskExporter } from '../../hooks/useTaskExporter'; // Importa o novo hook
+import { flagsMap } from './taskFlags.ts'; // Importa o mapa de configurações das flags
 import { IconButton, Menu, MenuItem } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 const AddTaskModal = lazy(() => import('../TaskModal/AddTaskModal.tsx'));
@@ -70,6 +71,7 @@ interface Task {
     dth_prev_entrega?: string;
     dth_encerramento?: string;
     dth_inclusao: string;
+    tipo_chamado?: string[];
     satisfaction_rating?: number;
     dth_exclusao?: string;
 }
@@ -484,9 +486,11 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                         ) : filteredAndSortedTasks.length > 0 ? (
                             filteredAndSortedTasks.map(task => (
                                 <tr key={task.id} className={`task-row status-${task.ind_sit_tarefa.toLowerCase()}`}>
-                                    <td className="cell-priority">
-                                        <FlagIcon style={{ color: priorityConfig[task.ind_prioridade]?.color || '#ccc'}} />
-                                        <span>{priorityConfig[task.ind_prioridade]?.label || 'N/D'}</span>
+                                    <td>
+                                        <div className="priority-content">
+                                            <FlagIcon style={{ color: priorityConfig[task.ind_prioridade]?.color || '#ccc', marginRight: '5px' }} />
+                                            <span>{priorityConfig[task.ind_prioridade]?.label || 'N/D'}</span>
+                                        </div>
                                     </td>
                                     <td className="cell-status">
                                         <span className="status-badge" style={statusConfig[task.ind_sit_tarefa] || {}}>
@@ -494,7 +498,24 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                         </span>
                                     </td>
                                     <td className="cell-content">
-                                        <p className="task-description">{task.titulo_tarefa}</p>
+                                        <p className="task-description" title={task.titulo_tarefa}>
+                                            {task.titulo_tarefa.length > 80
+                                                ? `${task.titulo_tarefa.substring(0, 70)}...`
+                                                : task.titulo_tarefa
+                                            }
+                                        </p>
+                                        {Array.isArray(task.tipo_chamado) && task.tipo_chamado.length > 0 && (
+                                            <div className="task-flags">
+                                                {task.tipo_chamado.map(flagId => {
+                                                    const flagConfig = flagsMap.get(flagId) || flagsMap.get('default');
+                                                    return (
+                                                        <span key={flagId} className="flag-item" style={{ backgroundColor: flagConfig?.background, color: flagConfig?.color }}>
+                                                            {flagConfig?.label}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </td>
                                     <td>{task.criado_por}</td>
                                     {contextType === 'support' && (

@@ -1,12 +1,11 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import './AddTaskModal.css';
 import { Task } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
 import CloseIcon from '@mui/icons-material/Close';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import SearchIcon from '@mui/icons-material/Search';
 import { Contact } from '../ContactSearchModal/ContactSearchModal.tsx';
+import { flags, flagsMap, FlagConfig } from '../TaskListView/taskFlags.ts';
 const ContactSearchModal = lazy(() => import('../ContactSearchModal/ContactSearchModal.tsx'));
 
 interface AddTaskModalProps {
@@ -35,6 +34,7 @@ const initialFormState: Task = {
     recursos: [],
     comentarios: [],
     dth_encerramento: '',
+    tipo_chamado: [], // Agora é um array vazio
     dth_inclusao: '', // Será definido na criação
     satisfaction_rating: undefined,
 };
@@ -49,6 +49,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
 
     const [formData, setFormData] = useState(initialFormState);
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+    const [isAddingFlags, setIsAddingFlags] = useState(false); // Estado para mostrar/esconder flags disponíveis
 
     useEffect(() => {
         // Reset form when modal is opened
@@ -58,6 +59,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                 ...initialFormState,
                 dth_prev_entrega: today, // Preenche a previsão de entrega com a data atual
             });
+            setIsAddingFlags(false); // Garante que a lista de flags esteja fechada
         }
     }, [isOpen]);
 
@@ -81,6 +83,19 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         }
     };
 
+    const handleFlagClick = (flagId: string) => {
+        setFormData(prev => {
+            const currentFlags = prev.tipo_chamado || [];
+            const newFlags = currentFlags.includes(flagId)
+                ? currentFlags.filter(f => f !== flagId) // Deseleciona
+                : [...currentFlags, flagId]; // Seleciona
+            return {
+                ...prev,
+                tipo_chamado: newFlags,
+            };
+        });
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSave(formData);
@@ -97,6 +112,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         }));
         setIsContactModalOpen(false);
     };
+
+    // Memoiza as listas de flags para otimização
+    const selectedFlagIds = formData.tipo_chamado || [];
+    const availableFlags = useMemo(() => flags.filter(flag => !selectedFlagIds.includes(flag.id)), [selectedFlagIds]);
+    const selectedFlags = useMemo(() => selectedFlagIds.map(id => flagsMap.get(id)).filter(Boolean) as FlagConfig[], [selectedFlagIds]);
 
     if (!isOpen) {
         return null;
@@ -211,6 +231,45 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                             />
                         </div>
 
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="tipo_chamado">Flags</label>
+                        <div className="flag-section-container">
+                            {/* Flags Selecionadas */}
+                            <div className="selected-flags-container">
+                                {selectedFlags.length > 0 ? selectedFlags.map(flag => (
+                                    <div
+                                        key={flag.id}
+                                        style={{ backgroundColor: flag.background, color: flag.color }}
+                                        className="flag-item"
+                                        onClick={() => handleFlagClick(flag.id)}
+                                    >
+                                        {flag.label}
+                                    </div>
+                                )) : <span className="no-flags-text">Nenhuma flag selecionada.</span>}
+
+                                <button type="button" className="add-flag-button" onClick={() => setIsAddingFlags(!isAddingFlags)} title="Adicionar Flag">
+                                    <AddCircleOutlineIcon />
+                                </button>
+                            </div>
+
+                            {/* Flags Disponíveis (condicional) */}
+                            {isAddingFlags && (
+                                <div className="available-flags-container">
+                                    {availableFlags.map(flag => (
+                                        <div
+                                            key={flag.id}
+                                            style={{ backgroundColor: flag.background, color: flag.color }}
+                                            className="flag-item available"
+                                            onClick={() => handleFlagClick(flag.id)}
+                                        >
+                                            {flag.label}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="modal-footer">
