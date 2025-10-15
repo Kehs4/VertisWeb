@@ -3,6 +3,7 @@ import { useTheme } from '../ThemeContext'; // Importando o hook do tema
 import './TaskListView.css';
 import { useTaskExporter } from '../../hooks/useTaskExporter'; // Importa o novo hook
 import { IconButton, Menu, MenuItem } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 const AddTaskModal = lazy(() => import('../TaskModal/AddTaskModal.tsx'));
 const EditTaskModal = lazy(() => import('../TaskModal/EditTaskModal.tsx'));
 const ConfirmationModal = lazy(() => import('../ConfirmationModal/ConfirmationModal.tsx'));
@@ -359,7 +360,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                         </MenuItem>
                         <MenuItem onClick={() => { handleExport('pdf'); handleExportMenuClose(); }}>Exportar para PDF</MenuItem>
                     </Menu>
-                <button className="add-task-button" onClick={() => setIsAddModalOpen(true)}>Adicionar {labels.task}</button>
+                <button className="add-task-button" onClick={() => setIsAddModalOpen(true)}> <AddIcon /> Adicionar {labels.task}</button>
                     <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="theme-toggle-button">
                         {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
                     </button>

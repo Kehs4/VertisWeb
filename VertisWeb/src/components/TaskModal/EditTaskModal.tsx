@@ -1,6 +1,6 @@
 import React, { useState, useEffect, KeyboardEvent } from 'react';
 import './EditTaskModal.css';
-import { Task, Comentario } from '../../pages/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
+import { Task, Comentario } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -13,7 +13,7 @@ interface EditTaskModalProps {
     onClose: () => void;
     onSave: (updatedTask: Task) => void;
     task: Task | null;
-    contextType?: 'support' | 'development';
+    contextType?: 'support' | 'development' | 'commercial';
 }
 
 const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, task, contextType = 'support' }) => {
@@ -182,7 +182,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                 ) : formData ? (
                 <>
                 <div className="modal-header">
-                    <h2>Detalhes da Tarefa #{task?.id}</h2>
+                    <h2>Detalhes da Tarefa #{task?.id} - {task?.criado_por}  {task?.nom_unid_oper}</h2>
                     <button onClick={onClose} className="close-button"><CloseIcon /></button>
                 </div>
                 <form onSubmit={handleSubmit} className="modal-form">

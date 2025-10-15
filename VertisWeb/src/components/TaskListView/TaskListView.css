@@ -10,6 +10,7 @@
     --sort-active-bg: #e9edf1;
     --sort-active-color: #2d3748;
     --box-shadow-color: rgba(0, 0, 0, 0.05);
+    --btn-primary-color: #FF6600;
 }
 
 .dark {
@@ -23,6 +24,7 @@
     --sort-active-bg: #1e2531;
     --sort-active-color: #e2e8f0;
     --box-shadow-color: rgba(0, 0, 0, 0.2);
+    --btn-primary-color: #FF6600;
 }
 
 .task-list-container {
@@ -64,6 +66,9 @@
 }
 
 .add-task-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     background-color: #ff6600;
     color: white;
     border: none;

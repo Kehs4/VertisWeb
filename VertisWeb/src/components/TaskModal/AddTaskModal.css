@@ -79,6 +79,8 @@
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.2s;
+    background-color: #fff;
+    color: #333;
 }
 
 .form-group input:focus,
@@ -115,6 +117,9 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .cancel-btn {
@@ -127,13 +132,14 @@
     background-color: #e0e0e0; 
 }
 
-.save-btn {
+.save-btn, .btn-primary {
     background-color: #ff6600;
     color: white;
+    border: none;
 }
 
-.save-btn:hover {
-    background-color: #e65c00; 
+.save-btn:hover, .btn-primary:hover {
+    background-color: #e65c00;
 }
 
 /* --- Estilos para Contatos (Add Modal) --- */
@@ -224,4 +230,34 @@
 
 .remove-contact-btn:hover {
     color: #a71d2a;
+}
+
+/* Estilos para o botão de pesquisa no input */
+.input-with-button {
+    display: flex;
+    align-items: center;
+}
+
+.input-with-button input {
+    flex-grow: 1;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-with-button .icon-button {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-left: none;
+    background-color: #f8f9fa;
+    color: #868e96;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.input-with-button .icon-button:hover {
+    background-color: #f0f0f0;
 }

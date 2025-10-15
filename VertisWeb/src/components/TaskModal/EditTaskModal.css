@@ -130,19 +130,13 @@
     cursor: pointer;
 }
 
-/* Garante que o botão de salvar no modo de edição tenha a mesma aparência do botão de adicionar */
-.edit-modal .save-btn {
-    background-color: #ff6600;
-    color: white;
-}
-
 /* --- Estilos para campos bloqueados (modo de visualização) --- */
 .form-column-main input[readOnly],
 .form-column-main textarea[readOnly],
 .form-column-main select:disabled {
-    background-color: #f1f3f5; /* Fundo acinzentado */
+    background-color: #f1f3f5;
     cursor: not-allowed;       /* Cursor de bloqueio */
-    color: #868e96;            /* Cor do texto mais suave */
+    color: #868e96;
     border-color: #dee2e6;
 }
 

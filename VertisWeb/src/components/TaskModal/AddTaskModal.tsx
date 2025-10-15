@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import './AddTaskModal.css';
 import { Task } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import SearchIcon from '@mui/icons-material/Search';
+import { Contact } from '../ContactSearchModal/ContactSearchModal.tsx';
+const ContactSearchModal = lazy(() => import('../ContactSearchModal/ContactSearchModal.tsx'));
 
 interface AddTaskModalProps {
     title: string;
@@ -49,11 +52,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     const [showAddContactForm, setShowAddContactForm] = useState(false);
     const [newContactName, setNewContactName] = useState('');
     const [newContactPhone, setNewContactPhone] = useState('');
+    const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
     useEffect(() => {
         // Reset form when modal is opened
         if (isOpen) {
             setFormData(initialFormState);
+            setShowAddContactForm(false);
         }
     }, [isOpen]);
 
@@ -107,6 +112,18 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         onSave(formData);
     };
 
+    const handleContactSelect = (contact: Contact) => {
+        setFormData(prev => ({
+            ...prev,
+            criado_por: contact.nome,
+            nom_unid_oper: contact.nom_unid_oper,
+            id_unid_oper: contact.id_unid_oper,
+            nom_unid_negoc: contact.nom_unid_negoc,
+            id_unid_negoc: contact.id_unid_negoc,
+        }));
+        setIsContactModalOpen(false);
+    };
+
     if (!isOpen) {
         return null;
     }
@@ -137,14 +154,19 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                     <div className="form-row">
                         <div className="form-group">
                             <label htmlFor="criado_por">Usuário Solicitante</label>
-                            <input
-                                type="text"
-                                id="criado_por"
-                                name="criado_por"
-                                value={formData.criado_por}
-                                onChange={handleChange}
-                                required
-                            />
+                            <div className="input-with-button">
+                                <input
+                                    type="text"
+                                    id="criado_por"
+                                    name="criado_por"
+                                    value={formData.criado_por}
+                                    onChange={handleChange}
+                                    required
+                                />
+                                <button type="button" className="icon-button" onClick={() => setIsContactModalOpen(true)} title="Pesquisar Contato">
+                                    <SearchIcon />
+                                </button>
+                            </div>
                         </div>
                         {contextType === 'support' && (
                             <div className="form-group">
@@ -263,6 +285,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                         </button>
                     </div>
                 </form>
+                <Suspense fallback={<div>Carregando...</div>}>
+                    {isContactModalOpen && (
+                        <ContactSearchModal
+                            isOpen={isContactModalOpen}
+                            onClose={() => setIsContactModalOpen(false)}
+                            onSelect={handleContactSelect} />
+                    )}
+                </Suspense>
             </div>
         </div>
     );

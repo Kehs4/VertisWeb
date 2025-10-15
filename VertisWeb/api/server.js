@@ -147,6 +147,71 @@ app.get('/task/:id', async (req, res) => {
 
 })
   
+// --- MOCK DATA E ENDPOINTS PARA CONTATOS ---
+
+let mockContacts = [
+    { id: 1, nome: 'João da Silva', id_unid_negoc: 211, nom_unid_negoc: 'Vertis', id_unid_oper: 1, nom_unid_oper: 'Matriz', telefone: '11987654321' },
+    { id: 2, nome: 'Maria Oliveira', id_unid_negoc: 100, nom_unid_negoc: 'Pet Shop A', id_unid_oper: 2, nom_unid_oper: 'Filial SP', telefone: '11912345678' },
+    { id: 3, nome: 'Carlos Pereira', id_unid_negoc: 101, nom_unid_negoc: 'Clínica Vet B', id_unid_oper: 3, nom_unid_oper: 'Unidade RJ', telefone: '21988887777' },
+    { id: 4, nome: 'Ana Costa', id_unid_negoc: 100, nom_unid_negoc: 'Pet Shop A', id_unid_oper: 2, nom_unid_oper: 'Filial SP', telefone: '11955554444' },
+];
+let nextContactId = 5;
+
+// GET /contacts - Listar contatos com busca
+app.get('/api/contacts', (req, res) => {
+    const { search = '' } = req.query;
+    const lowercasedSearch = search.toLowerCase();
+
+    if (!lowercasedSearch) {
+        return res.status(200).json(mockContacts);
+    }
+
+    const filteredContacts = mockContacts.filter(c => 
+        c.nome.toLowerCase().includes(lowercasedSearch) ||
+        c.nom_unid_negoc.toLowerCase().includes(lowercasedSearch) ||
+        c.nom_unid_oper.toLowerCase().includes(lowercasedSearch) ||
+        c.telefone.toLowerCase().includes(lowercasedSearch)
+    );
+
+    res.status(200).json(filteredContacts);
+});
+
+// POST /contacts - Criar novo contato
+app.post('/api/contacts', (req, res) => {
+    const newContact = { id: nextContactId++, ...req.body };
+    mockContacts.push(newContact);
+    console.log('[API /contacts] Novo contato adicionado:', newContact);
+    res.status(201).json(newContact);
+});
+
+// PUT /contacts/:id - Atualizar contato
+app.put('/api/contacts/:id', (req, res) => {
+    const contactId = parseInt(req.params.id, 10);
+    const contactIndex = mockContacts.findIndex(c => c.id === contactId);
+
+    if (contactIndex === -1) {
+        return res.status(404).send('Contato não encontrado.');
+    }
+
+    mockContacts[contactIndex] = { ...mockContacts[contactIndex], ...req.body };
+    console.log(`[API /contacts] Contato ${contactId} atualizado:`, mockContacts[contactIndex]);
+    res.status(200).json(mockContacts[contactIndex]);
+});
+
+// DELETE /contacts/:id - Excluir contato
+app.delete('/api/contacts/:id', (req, res) => {
+    const contactId = parseInt(req.params.id, 10);
+    const initialLength = mockContacts.length;
+    mockContacts = mockContacts.filter(c => c.id !== contactId);
+
+    if (mockContacts.length === initialLength) {
+        return res.status(404).send('Contato não encontrado.');
+    }
+
+    console.log(`[API /contacts] Contato ${contactId} excluído.`);
+    res.status(204).send(); // No Content
+});
+
 
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
