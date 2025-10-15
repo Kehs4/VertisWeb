@@ -97,13 +97,24 @@ const priorityConfig: { [key: number]: { color: string, label: string } } = {
 };
 
 const statusConfig: { [key: string]: { backgroundColor: string, color?: string } } = {
-    'AG': { backgroundColor: '#aeb6bf' },       // Aguardando
-    'ER': { backgroundColor: '#5dade2' },       // Em resolução
-    'AT': { backgroundColor: '#f39c12' },       // Em atraso
-    'CA': { backgroundColor: '#2c3e50', color: '#bdc3c7' }, // Cancelado
+    'AG': { backgroundColor: 'rgb(177, 167, 140)' },       // Aguardando
+    'AB': { backgroundColor: 'rgb(149, 161, 159)' },       // Aberto
+    'ER': { backgroundColor: 'rgb(53, 146, 158)' },       // Em resolução
+    'AT': { backgroundColor: 'rgb(247, 208, 38)' },       // Em atraso
+    'CA': { backgroundColor: 'rgb(255, 205, 205)', color: 'rgb(153, 48, 48)' }, // Cancelado
     'FN': { backgroundColor: '#2ecc71' },       // Finalizado
-    'AB': { backgroundColor: '#85c1e9' },       // Aberto
+    
 };
+
+const statusOptions: { [key: string]: string } = {
+    'AG': 'Aguardando',
+    'AB': 'Aberto',
+    'ER': 'Em resolução',
+    'AT': 'Em atraso',
+    'CA': 'Cancelado',
+    'FN': 'Finalizado',
+};
+
 
 const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, onAddTask, onUpdateTask, onDeleteTask, onDateChange, contextType }) => {
     // Define os textos e ícones com base no contexto
@@ -156,6 +167,10 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
     // Estado para o menu de exportação
     const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState<null | HTMLElement>(null);
     const isExportMenuOpen = Boolean(exportMenuAnchorEl);
+
+    // Estado para o menu de status
+    const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState<null | HTMLElement>(null);
+    const isStatusMenuOpen = Boolean(statusMenuAnchorEl);
 
     // --- Lógica para os Cards de Análise ---
     const analytics = useMemo(() => {
@@ -321,6 +336,16 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
         setExportMenuAnchorEl(null);
     };
 
+    // Funções para o menu de status
+    const handleStatusMenuOpen = (event: React.MouseEvent<HTMLElement>, task: Task) => {
+        setStatusMenuAnchorEl(event.currentTarget);
+        setSelectedTask(task);
+    };
+
+    const handleStatusMenuClose = () => {
+        setStatusMenuAnchorEl(null);
+    };
+
 
     // Funções para as opções do menu
     const handleEditOptionClick = () => {
@@ -331,6 +356,22 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
     const handleDeleteOptionClick = () => {
         setIsConfirmModalOpen(true);
         handleMenuClose();
+    };
+
+    const handleStatusChange = (newStatusCode: string) => {
+        if (selectedTask) {
+            const wasFinished = selectedTask.ind_sit_tarefa === 'FN';
+            const isNowFinished = newStatusCode === 'FN';
+
+            const updatedTask = {
+                ...selectedTask,
+                ind_sit_tarefa: newStatusCode,
+                sit_tarefa: statusOptions[newStatusCode] || selectedTask.sit_tarefa,
+                dth_encerramento: isNowFinished ? new Date().toISOString() : (wasFinished ? '' : selectedTask.dth_encerramento),
+            };
+            onUpdateTask(updatedTask);
+        }
+        handleStatusMenuClose();
     };
 
     const handleUpdateTask = (updatedTask: Task) => {
@@ -493,7 +534,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                         </div>
                                     </td>
                                     <td className="cell-status">
-                                        <span className="status-badge" style={statusConfig[task.ind_sit_tarefa] || {}}>
+                                        <span className="status-badge" style={statusConfig[task.ind_sit_tarefa] || {}} onClick={(e) => handleStatusMenuOpen(e, task)}>
                                             {task.sit_tarefa}
                                         </span>
                                     </td>
@@ -545,6 +586,14 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
             <Menu anchorEl={anchorEl} open={isMenuOpen} onClose={handleMenuClose}>
                 <MenuItem onClick={handleEditOptionClick}>Detalhes</MenuItem>
                 <MenuItem onClick={handleDeleteOptionClick} sx={{ color: 'error.main' }}>Remover</MenuItem>
+            </Menu>
+            <Menu anchorEl={statusMenuAnchorEl} open={isStatusMenuOpen} onClose={handleStatusMenuClose}>
+                {Object.entries(statusOptions).map(([code, label]) => (
+                    <MenuItem key={code} onClick={() => handleStatusChange(code)} selected={selectedTask?.ind_sit_tarefa === code}>
+                        {/* Renderiza o badge de status diretamente no menu */}
+                        <span className="status-badge" style={statusConfig[code] || {}}>{label}</span>
+                    </MenuItem>
+                ))}
             </Menu>
             <Suspense fallback={<div>Carregando Modal...</div>}>
                 {isAddModalOpen && <AddTaskModal

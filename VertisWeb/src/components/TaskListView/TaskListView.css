@@ -152,7 +152,7 @@
     padding: 9px;
     border: 1px solid var(--table-border-color);
     border-radius: 8px;
-    background-color: var(--background-color);
+    background-color: var(--table-bg);
     color: var(--text-primary);
 }
 
@@ -415,8 +415,7 @@
 }
 
 .task-row.status-ca {
-    background-color: #2d3748;
-    color: var(--text-secondary);
+    color: rgb(160, 160, 160);
 }
 
 .task-row.status-ca .task-description {
@@ -430,12 +429,22 @@
     font-weight: 500;
 }
 
-.cell-status .status-badge {
+.status-badge {
     padding: 4px 12px;
     border-radius: 16px;
     font-weight: 600;
     font-size: 0.8rem;
     color: #fff; /* Manter branco para contraste na maioria dos badges */
+    display: inline-block; /* Garante que o padding seja aplicado corretamente */
+}
+
+.cell-status .status-badge {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cell-status .status-badge:hover {
+    transform: scale(1.05);
 }
 
 .cell-content .task-description {
@@ -452,6 +461,10 @@
     border-radius: 4px;
     margin: 1px;
     display: inline-block;
+}
+
+.cell-actions {
+    width: 80px; /* Define uma largura fixa e menor */
 }
 
 .cell-content .task-ai-flags {
@@ -471,7 +484,7 @@
     border: none;
     cursor: pointer;
     color: var(--text-secondary);
-    padding: 0px;
+    padding: 3px 5px;
     border-radius: 50%;
     display: flex;
     align-items: center;
