@@ -96,6 +96,38 @@ const serviceCardsConfig = [
             xAxis: [{ data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24], scaleType: 'point', id: 'hour' }],
         },
     },
+    {
+        id: 'svc-preparo-hora',
+        title: 'Serviço de Preparo (Hora)',
+        description: 'Serviço de preparo via e-mail nas últimas 24 horas.',
+        icon: <ApiIcon />,
+        chartType: 'line',
+        chartData: {
+            series: [{
+                data: [1, 0, 0, 5, 22, 45, 63, 82, 110, 126, 215, 326, 278, 341, 225, 278, 246, 312, 421, 273, 174, 118, 41, 6],
+                area: true,
+                curve: 'linear',
+                xAxisKey: 'hour',
+            }],
+            xAxis: [{ data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24], scaleType: 'point', id: 'hour' }],
+        },
+    },
+    {
+        id: 'publ-laudos-mes',
+        title: 'Publicação de Laudos (Mês)',
+        description: 'Serviço de publicação de laudos nos últimos 30 dias.',
+        icon: <ApiIcon />,
+        chartType: 'line',
+        chartData: {
+            series: [{
+                data: [6512, 7353, 9412, 7583, 8421, 6893, 1462, 7492, 9834, 11046, 8214, 7803, 9781, 1632, 8439, 7284, 9679, 10284, 9844, 12413, 1518, 7982, 8853, 9751, 10789, 11812, 9879, 1410, 8215, 7849],
+                area: true,
+                curve: 'linear',
+                xAxisKey: 'hour',
+            }],
+            xAxis: [{ data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30], scaleType: 'point', id: 'hour' }],
+        },
+    },
     // Adicione um novo card aqui!
     // {
     //     id: 'new-service',
@@ -177,10 +209,10 @@ const ServiceStatusPage: React.FC = () => {
                                         },
                                         // Estiliza os eixos e os textos
                                         '.MuiChartsAxis-line, .MuiChartsAxis-tick, .MuiChartsGrid-line': {
-                                            stroke: currentChartColors.axis,
+                                            stroke: `${currentChartColors.axis} !important`,
                                         },
                                         '.MuiChartsAxis-tickLabel': {
-                                            fill: currentChartColors.axis,
+                                            fill: `${currentChartColors.axis} !important`,
                                         },
                                         // Estiliza os pontos (marcadores) no gráfico
                                         '.MuiMarkElement-root': {
