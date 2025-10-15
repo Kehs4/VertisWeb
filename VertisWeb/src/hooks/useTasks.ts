@@ -29,12 +29,11 @@ export const useTasks = (context: TaskContext) => {
                     // Filtra os dados com base no contexto recebido
                     const filteredData = data.filter(task => {
                         if (context === 'support') {
-                            return task.id_unid_negoc !== 200; // Exclui Desenvolvimento
+                            return task.id_unid_negoc !== 1000; // Exclui Desenvolvimento
                         }
                         if (context === 'development') {
-                            return task.id_unid_negoc === 200; // Apenas Desenvolvimento
+                            return task.id_unid_negoc === 1000; // Apenas Desenvolvimento
                         }
-                        // Adicione outras lógicas de filtro aqui (ex: para 'commercial')
                         return true; // Retorna tudo se não houver filtro específico
                     });
 

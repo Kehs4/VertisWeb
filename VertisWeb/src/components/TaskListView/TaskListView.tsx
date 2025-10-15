@@ -595,7 +595,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                     </MenuItem>
                 ))}
             </Menu>
-            <Suspense fallback={<div>Carregando Modal...</div>}>
+            <Suspense>
                 {isAddModalOpen && <AddTaskModal
                     title={`Adicionar ${labels.task}`}
                     isOpen={isAddModalOpen}
