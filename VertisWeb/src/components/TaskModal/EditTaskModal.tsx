@@ -29,11 +29,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
     const [newComment, setNewComment] = useState('');
     const [isEditing, setIsEditing] = useState(false); // Novo estado para controlar o modo de edição
 
-    // Estados para adicionar novo contato
-    const [showAddContact, setShowAddContact] = useState(false);
-    const [newContactName, setNewContactName] = useState('');
-    const [newContactPhone, setNewContactPhone] = useState('');
-
     // Mapeamento de status para ser usado no select e na lógica
     const statusOptions: { [key: string]: string } = {
         'AB': 'Aberto',
@@ -133,26 +128,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         }
     };
 
-    const handleAddContact = () => {
-        if (!formData || !newContactName.trim()) return;
-
-        const newContact = {
-            id_contato: Date.now(), // ID temporário
-            nom_recurso: newContactName,
-            telefone: newContactPhone,
-        };
-
-        setFormData({
-            ...formData,
-            contatos: [...(Array.isArray(formData.contatos) ? formData.contatos : []), newContact],
-        });
-
-        // Limpa os campos e esconde o formulário
-        setNewContactName('');
-        setNewContactPhone('');
-        setShowAddContact(false);
-    };
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (formData) {
@@ -199,10 +174,16 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                     <input type="text" id="criado_por" name="criado_por" value={formData.criado_por} onChange={handleChange} required readOnly={!isEditing} />
                                 </div>
                                 {contextType === 'support' && (
-                                    <div className="form-group">
-                                        <label htmlFor="nom_unid_oper">Unidade Operacional</label>
-                                        <input type="text" id="nom_unid_oper" name="nom_unid_oper" value={formData.nom_unid_oper} onChange={handleChange} required readOnly={!isEditing} />
-                                    </div>
+                                    <>
+                                        <div className='form-group'>
+                                            <label htmlFor="nom_unid_negoc">Unidade de Negócio</label>
+                                            <input type="text" id="nom_unid_negoc" name="nom_unid_negoc" value={formData.nom_unid_negoc} onChange={handleChange} required readOnly={!isEditing} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="nom_unid_oper">Unidade Operacional</label>
+                                            <input type="text" id="nom_unid_oper" name="nom_unid_oper" value={formData.nom_unid_oper} onChange={handleChange} required readOnly={!isEditing} />
+                                        </div>
+                                    </>
                                 )}
                             </div>
                             <div className="form-row">
@@ -251,43 +232,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                             readOnly={!isEditing || formData.ind_sit_tarefa !== 'FN'}
                                             placeholder="0-10" />
                                     </div>
-                                </div>
-                            </div>
-
-                            {/* Seção de Contatos movida para a coluna principal */}
-                            <div className="form-section">
-                                <div className="section-header">
-                                    <h4>Contatos</h4>
-                                    {isEditing && (
-                                        <button type="button" className="add-icon-btn" onClick={() => setShowAddContact(!showAddContact)} title="Adicionar Contato">
-                                            <AddCircleOutlineIcon />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="contacts-list">
-                                    {showAddContact && isEditing && (
-                                        <div className="add-contact-form">
-                                            <div className="contact-input-group">
-                                                <PersonAddIcon />
-                                                <input type="text" placeholder="Nome do contato" value={newContactName} onChange={(e) => setNewContactName(e.target.value)} />
-                                            </div>
-                                            <div className="contact-input-group">
-                                                <PhoneIcon />
-                                                <input type="text" placeholder="Telefone" value={newContactPhone} onChange={(e) => setNewContactPhone(e.target.value)} />
-                                            </div>
-                                            <button type="button" className="save-contact-btn" onClick={handleAddContact}>Salvar</button>
-                                        </div>
-                                    )}
-                                    {Array.isArray(formData.contatos) && formData.contatos.length > 0 ? (
-                                        formData.contatos.map((contact) => (
-                                            <div key={contact.id_contato} className="contact-item">
-                                                <span className="contact-name">{contact.nom_recurso}</span>
-                                                <span className="contact-phone">{contact.telefone}</span>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        !showAddContact && <p className="no-comments">Nenhum contato associado.</p>
-                                    )}
                                 </div>
                             </div>
                         </div>

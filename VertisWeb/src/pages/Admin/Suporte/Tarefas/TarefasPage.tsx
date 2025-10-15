@@ -17,12 +17,6 @@ export interface Comentario { // Exportando para utilizar no edit task
     dth_inclusao: string;
 }
 
-export interface Contato { // Exportando para utilizar no edit task
-    id_contato: number;
-    nom_recurso: string;
-    telefone?: string;
-}
-
 export interface Task { // Exportando para ser usado no Modal
     id: number;
     id_unid_negoc: number;
@@ -36,8 +30,7 @@ export interface Task { // Exportando para ser usado no Modal
     qtd_pontos: number;
     titulo_tarefa: string;
     recursos: Recurso[] | number;
-    comentarios?: Comentario[] | number;
-    contatos?: Contato[] | number;
+    comentarios?: Comentario[] | number; 
     dth_prev_entrega?: string;
     dth_encerramento?: string;
     dth_inclusao: string;

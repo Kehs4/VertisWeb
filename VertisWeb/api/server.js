@@ -158,7 +158,7 @@ let mockContacts = [
 let nextContactId = 5;
 
 // GET /contacts - Listar contatos com busca
-app.get('/api/contacts', (req, res) => {
+app.get('/contacts', (req, res) => {
     const { search = '' } = req.query;
     const lowercasedSearch = search.toLowerCase();
 
@@ -177,7 +177,7 @@ app.get('/api/contacts', (req, res) => {
 });
 
 // POST /contacts - Criar novo contato
-app.post('/api/contacts', (req, res) => {
+app.post('/contacts', (req, res) => {
     const newContact = { id: nextContactId++, ...req.body };
     mockContacts.push(newContact);
     console.log('[API /contacts] Novo contato adicionado:', newContact);
@@ -185,7 +185,7 @@ app.post('/api/contacts', (req, res) => {
 });
 
 // PUT /contacts/:id - Atualizar contato
-app.put('/api/contacts/:id', (req, res) => {
+app.put('/contacts/:id', (req, res) => {
     const contactId = parseInt(req.params.id, 10);
     const contactIndex = mockContacts.findIndex(c => c.id === contactId);
 
@@ -199,7 +199,7 @@ app.put('/api/contacts/:id', (req, res) => {
 });
 
 // DELETE /contacts/:id - Excluir contato
-app.delete('/api/contacts/:id', (req, res) => {
+app.delete('/contacts/:id', (req, res) => {
     const contactId = parseInt(req.params.id, 10);
     const initialLength = mockContacts.length;
     mockContacts = mockContacts.filter(c => c.id !== contactId);

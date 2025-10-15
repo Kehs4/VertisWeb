@@ -28,13 +28,12 @@ const initialFormState: Task = {
     sit_tarefa: 'Aberto',
     // --- Valores padrão para campos obrigatórios ---
     id_unid_negoc: 0,
-    nom_unid_negoc: 'N/A',
+    nom_unid_negoc: '',
     id_unid_oper: 0,
     qtd_pontos: 0,
     dth_prev_entrega: '',
     recursos: [],
     comentarios: [],
-    contatos: [],
     dth_encerramento: '',
     dth_inclusao: '', // Será definido na criação
     satisfaction_rating: undefined,
@@ -49,16 +48,16 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
 
 
     const [formData, setFormData] = useState(initialFormState);
-    const [showAddContactForm, setShowAddContactForm] = useState(false);
-    const [newContactName, setNewContactName] = useState('');
-    const [newContactPhone, setNewContactPhone] = useState('');
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
     useEffect(() => {
         // Reset form when modal is opened
         if (isOpen) {
-            setFormData(initialFormState);
-            setShowAddContactForm(false);
+            const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+            setFormData({
+                ...initialFormState,
+                dth_prev_entrega: today, // Preenche a previsão de entrega com a data atual
+            });
         }
     }, [isOpen]);
 
@@ -80,31 +79,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                 [name]: name === 'ind_prioridade' ? parseInt(value, 10) : value,
             }));
         }
-    };
-
-    const handleConfirmAddContact = () => {
-        if (!newContactName.trim()) return;
-
-        const newContact = {
-            id_contato: Date.now(), // ID temporário
-            nom_recurso: newContactName,
-            telefone: newContactPhone,
-        };
-        setFormData(prev => ({
-            ...prev,
-            contatos: [...(Array.isArray(prev.contatos) ? prev.contatos : []), newContact]
-        }));
-
-        // Limpa os campos e esconde o formulário
-        setNewContactName('');
-        setNewContactPhone('');
-        setShowAddContactForm(false);
-    };
-
-    const handleRemoveContact = (id_contato: number) => {
-        const updatedContacts = Array.isArray(formData.contatos) ? [...formData.contatos] : [];
-        const filteredContacts = updatedContacts.filter(c => c.id_contato !== id_contato);
-        setFormData(prev => ({ ...prev, contatos: filteredContacts }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -219,7 +193,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                                     type="text"
                                     id="id_unid_negoc"
                                     name="id_unid_negoc"
-                                    value={formData.id_unid_negoc}
+                                    value={formData.nom_unid_negoc}
                                     onChange={handleChange}
                                     required
                                 />
@@ -237,43 +211,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                             />
                         </div>
 
-                    </div>
-
-                    {/* Seção de Contatos */}
-                    <div className="form-section">
-                        <div className="form-section-header">
-                            <label>Contatos</label> 
-                            {!showAddContactForm && (
-                                <button type="button" className="add-contact-btn" onClick={() => setShowAddContactForm(true)}>Adicionar Contato</button>
-                            )}
-                        </div>
-
-                        {showAddContactForm && (
-                            <div className="add-contact-form-inline">
-                                <PersonAddIcon />
-                                <input type="text" placeholder="Nome do Contato" value={newContactName} onChange={(e) => setNewContactName(e.target.value)} />
-                                <input type="text" placeholder="Telefone" value={newContactPhone} onChange={(e) => setNewContactPhone(e.target.value)} />
-                                <button type="button" className="contact-action-btn confirm" onClick={handleConfirmAddContact} title="Confirmar">
-                                    <CheckCircleIcon />
-                                </button>
-                                <button type="button" className="contact-action-btn cancel" onClick={() => setShowAddContactForm(false)} title="Cancelar">
-                                    <CancelIcon />
-                                </button>
-                            </div>
-                        )}
-
-                        {Array.isArray(formData.contatos) && formData.contatos.length > 0 && (
-                            <div className="contact-list-add">
-                                {formData.contatos.map((contact) => (
-                                    <div key={contact.id_contato} className="contact-item-add">
-                                        <span>{contact.nom_recurso} ({contact.telefone || 'N/A'})</span>
-                                        <button type="button" className="remove-contact-btn" onClick={() => handleRemoveContact(contact.id_contato)} title="Remover Contato">
-                                            &times;
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
                     </div>
 
                     <div className="modal-footer">
