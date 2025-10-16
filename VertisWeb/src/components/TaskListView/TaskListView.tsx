@@ -2,7 +2,7 @@ import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { useTheme } from '../ThemeContext'; // Importando o hook do tema
 import './TaskListView.css';
 import { useTaskExporter } from '../../hooks/useTaskExporter'; // Importa o novo hook
-import { flagsMap } from './taskFlags.ts'; // Importa o mapa de configurações das flags
+import { flagsMap } from './taskFlags'; // Importa o mapa de configurações das flags
 import { IconButton, Menu, MenuItem } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 const AddTaskModal = lazy(() => import('../TaskModal/AddTaskModal.tsx'));
@@ -22,6 +22,10 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import TuneIcon from '@mui/icons-material/Tune';
 import SearchIcon from '@mui/icons-material/Search';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import FilterListIcon from '@mui/icons-material/FilterList';
+
+// Componentes do Material-UI para o novo filtro
+import { TextField, List, ListItem, ListItemIcon, Checkbox, ListItemText, ListSubheader, Button } from '@mui/material';
 
 // Ícones para os cards de análise
 import AllInboxIcon from '@mui/icons-material/AllInbox';
@@ -83,6 +87,8 @@ interface TaskListViewProps {
     onUpdateTask: (updatedTask: Task) => void;
     onDeleteTask: (taskId: number) => void;
     onAddTask: (newTask: Task) => void;
+    startDate: string | null; // Recebe a data inicial do pai
+    endDate: string; // Recebe a data final do pai
     onDateChange: (startDate: string, endDate: string) => void; // Prop para notificar mudança de data
     contextType?: 'support' | 'development' | 'commercial'; // Nova prop para definir o contexto
 }
@@ -116,7 +122,8 @@ const statusOptions: { [key: string]: string } = {
 };
 
 
-const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, onAddTask, onUpdateTask, onDeleteTask, onDateChange, contextType }) => {
+
+const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, onAddTask, onUpdateTask, onDeleteTask, startDate, endDate, onDateChange, contextType }) => {
     // Define os textos e ícones com base no contexto
     const labels = {
         task: contextType === 'development' ? 'Tarefa' : 'Chamado', // Singular
@@ -132,23 +139,6 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
 
     // Controle de Tema
     const { theme, setTheme } = useTheme();
-
-    // Função para formatar a data para o input (YYYY-MM-DD)
-    const getFormattedDate = (date: Date) => date.toISOString().split('T')[0];
-
-    // --- Estados para os Filtros ---
-    const [searchTerm, setSearchTerm] = useState('');
-    // Estados locais para os inputs de data
-    // Inicializa com a data atual para garantir que o primeiro fetch seja correto
-    const [localStartDate, setLocalStartDate] = useState(getFormattedDate(new Date()));
-    const [localEndDate, setLocalEndDate] = useState(getFormattedDate(new Date()));
-
-    // Efeito para notificar o componente pai quando as datas locais mudam
-    React.useEffect(() => {
-        if (onDateChange) {
-            onDateChange(localStartDate, localEndDate);
-        }
-    }, [localStartDate, localEndDate, onDateChange]);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -171,6 +161,21 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
     // Estado para o menu de status
     const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState<null | HTMLElement>(null);
     const isStatusMenuOpen = Boolean(statusMenuAnchorEl);
+
+    // --- Estados para os Filtros ---
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // --- Estados para o novo filtro de Recursos ---
+    const [resourceFilterAnchorEl, setResourceFilterAnchorEl] = useState<null | HTMLElement>(null);
+    const isResourceFilterOpen = Boolean(resourceFilterAnchorEl);
+    const [resourceSearch, setResourceSearch] = useState('');
+    const [selectedResources, setSelectedResources] = useState<string[]>([]);
+
+    // --- Estados para o novo filtro de Solicitantes ---
+    const [solicitanteFilterAnchorEl, setSolicitanteFilterAnchorEl] = useState<null | HTMLElement>(null);
+    const isSolicitanteFilterOpen = Boolean(solicitanteFilterAnchorEl);
+    const [solicitanteSearch, setSolicitanteSearch] = useState('');
+    const [selectedSolicitantes, setSelectedSolicitantes] = useState<string[]>([]);
 
     // --- Lógica para os Cards de Análise ---
     const analytics = useMemo(() => {
@@ -226,15 +231,37 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
         };
     }, [tasks]);
 
+    // Extrai a lista de todos os recursos únicos para o filtro
+    const allResources = useMemo(() => {
+        const resourceSet = new Set<string>();
+        tasks.forEach(task => {
+            if (Array.isArray(task.recursos)) {
+                task.recursos.forEach(r => resourceSet.add(r.nom_recurso));
+            }
+        });
+        return Array.from(resourceSet).sort();
+    }, [tasks]);
+
+    // Extrai a lista de todos os solicitantes únicos para o filtro
+    const allSolicitantes = useMemo(() => {
+        const solicitanteSet = new Set<string>();
+        tasks.forEach(task => {
+            if (task.criado_por) {
+                solicitanteSet.add(task.criado_por);
+            }
+        });
+        return Array.from(solicitanteSet).sort();
+    }, [tasks]);
+
     // Memoiza as tarefas ordenadas para evitar recálculos desnecessários
     const filteredAndSortedTasks = useMemo(() => {
         let filteredItems = tasks.filter(task => {
             // 1. Filtro de Data
             const taskDate = task.dth_inclusao.split('T')[0];
-            if (localStartDate && taskDate < localStartDate) {
+            if (startDate && taskDate < startDate) {
                 return false;
             }
-            if (localEndDate && taskDate > localEndDate) {
+            if (endDate && taskDate > endDate) {
                 return false;
             }
 
@@ -250,6 +277,20 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                 ].join(' ').toLowerCase();
 
                 if (!searchIn.includes(lowerCaseSearchTerm)) {
+                    return false;
+                }
+            }
+
+            // 3. Filtro de Recurso
+            if (selectedResources.length > 0) {
+                if (!Array.isArray(task.recursos) || !task.recursos.some(r => selectedResources.includes(r.nom_recurso))) {
+                    return false;
+                }
+            }
+
+            // 4. Filtro de Solicitante
+            if (selectedSolicitantes.length > 0) {
+                if (!task.criado_por || !selectedSolicitantes.includes(task.criado_por)) {
                     return false;
                 }
             }
@@ -287,7 +328,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
             });
         }
         return sortableItems;
-    }, [tasks, sortConfig, searchTerm, localStartDate, localEndDate]);
+    }, [tasks, sortConfig, searchTerm, startDate, endDate, selectedResources, selectedSolicitantes]);
 
     // Utiliza o hook de exportação, agora que filteredAndSortedTasks já foi declarada.
     const { handleExport } = useTaskExporter(filteredAndSortedTasks, contextType);
@@ -346,6 +387,41 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
         setStatusMenuAnchorEl(null);
     };
 
+    // Funções para o filtro de recursos
+    const handleResourceFilterOpen = (event: React.MouseEvent<HTMLElement>) => {
+        event.stopPropagation(); // Impede que o evento de ordenação seja disparado
+        setResourceFilterAnchorEl(event.currentTarget);
+    };
+
+    const handleResourceFilterClose = () => {
+        setResourceFilterAnchorEl(null);
+        setResourceSearch(''); // Limpa a busca ao fechar
+    };
+
+    const handleResourceToggle = (resourceName: string) => {
+        const currentIndex = selectedResources.indexOf(resourceName);
+        const newSelected = [...selectedResources];
+        currentIndex === -1 ? newSelected.push(resourceName) : newSelected.splice(currentIndex, 1);
+        setSelectedResources(newSelected);
+    };
+
+    // Funções para o filtro de solicitantes
+    const handleSolicitanteFilterOpen = (event: React.MouseEvent<HTMLElement>) => {
+        event.stopPropagation();
+        setSolicitanteFilterAnchorEl(event.currentTarget);
+    };
+
+    const handleSolicitanteFilterClose = () => {
+        setSolicitanteFilterAnchorEl(null);
+        setSolicitanteSearch('');
+    };
+
+    const handleSolicitanteToggle = (solicitanteName: string) => {
+        const currentIndex = selectedSolicitantes.indexOf(solicitanteName);
+        const newSelected = [...selectedSolicitantes];
+        currentIndex === -1 ? newSelected.push(solicitanteName) : newSelected.splice(currentIndex, 1);
+        setSelectedSolicitantes(newSelected);
+    };
 
     // Funções para as opções do menu
     const handleEditOptionClick = () => {
@@ -489,13 +565,13 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                 </div>
                 <div className="date-filter-group">
                     <label>De:</label>
-                    <input type="date" className="filter-date-input" value={localStartDate} onChange={(e) => setLocalStartDate(e.target.value)} />
+                    <input type="date" className="filter-date-input" value={startDate || ''} onChange={(e) => onDateChange(e.target.value, endDate)} />
                 </div>
                 <div className="date-filter-group">
                     <label>Até:</label>
-                    <input type="date" className="filter-date-input" value={localEndDate} onChange={(e) => setLocalEndDate(e.target.value)} />
+                    <input type="date" className="filter-date-input" value={endDate || ''} onChange={(e) => onDateChange(startDate || '', e.target.value)} />
                 </div>
-                <button className="clear-filters-btn" onClick={() => { setSearchTerm(''); setLocalStartDate(''); setLocalEndDate(''); }}>
+                <button className="clear-filters-btn" onClick={() => { setSearchTerm(''); onDateChange('', ''); }}>
                     Limpar Filtros
                 </button>
             </div>
@@ -507,11 +583,21 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                             <th onClick={() => requestSort('ind_prioridade')} className={getSortClassName('ind_prioridade')}><div className="th-content"><AnnouncementIcon /> Prioridade</div></th>
                             <th onClick={() => requestSort('ind_sit_tarefa')} className={getSortClassName('ind_sit_tarefa')}><div className="th-content"><HistoryIcon /> Status</div></th>
                             <th onClick={() => requestSort('titulo_tarefa')} className={getSortClassName('titulo_tarefa')}><div className="th-content"><ArticleIcon /> {labels.task}</div></th>
-                            <th onClick={() => requestSort('criado_por')} className={getSortClassName('criado_por')}><div className="th-content"><PersonIcon /> Solicitante</div></th>
+                            <th onClick={() => requestSort('criado_por')} className={getSortClassName('criado_por')}>
+                                <div className="th-content">
+                                    <PersonIcon /> Solicitante
+                                    <IconButton size="small" onClick={handleSolicitanteFilterOpen} className="th-filter-button" title="Filtrar por solicitante"><FilterListIcon fontSize="inherit" /></IconButton>
+                                </div>
+                            </th>
                             {contextType === 'support' && (
                                 <th onClick={() => requestSort('nom_unid_oper')} className={getSortClassName('nom_unid_oper')}><div className="th-content"><ApartmentIcon /> Unidade</div></th>
                             )}
-                            <th onClick={() => requestSort('recursos')} className={getSortClassName('recursos')}><div className="th-content"><PersonPinIcon /> {labels.analyst}</div></th>
+                            <th onClick={() => requestSort('recursos')} className={getSortClassName('recursos')}>
+                                <div className="th-content">
+                                    <PersonPinIcon /> {labels.analyst}
+                                    <IconButton size="small" onClick={handleResourceFilterOpen} className="th-filter-button" title="Filtrar por recurso"><FilterListIcon fontSize="inherit" /></IconButton>
+                                </div>
+                            </th>
                             <th onClick={() => requestSort('dth_inclusao')} className={getSortClassName('dth_inclusao')}><div className="th-content"><CalendarTodayIcon /> Criação</div></th>
                             <th><div className="th-content"><TuneIcon /> Ações</div></th> 
                         </tr>
@@ -558,7 +644,12 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                             </div>
                                         )}
                                     </td>
-                                    <td>{task.criado_por}</td>
+                                <td>
+                                    <div className="solicitante-info">
+                                        <span>{task.criado_por}</span>
+                                        <span className="solicitante-unidade">{task.nom_unid_negoc}</span>
+                                    </div>
+                                </td>
                                     {contextType === 'support' && (
                                         <td>{task.nom_unid_oper}</td>
                                     )}
@@ -594,6 +685,66 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                         <span className="status-badge" style={statusConfig[code] || {}}>{label}</span>
                     </MenuItem>
                 ))}
+            </Menu>
+            <Menu
+                anchorEl={resourceFilterAnchorEl}
+                open={isResourceFilterOpen}
+                onClose={handleResourceFilterClose}
+                slotProps={{ paper: { sx: { width: 300, maxHeight: 400 } } }}
+            >
+                <ListSubheader>
+                    <TextField
+                        placeholder="Pesquisar recurso..."
+                        value={resourceSearch}
+                        onChange={(e) => setResourceSearch(e.target.value)}
+                        variant="standard"
+                        fullWidth
+                        autoFocus
+                        onKeyDown={(e) => e.stopPropagation()} // Impede que o menu capture eventos de teclado do input
+                    />
+                </ListSubheader>
+                <List dense component="div" role="list" sx={{ overflow: 'auto' }}>
+                    {allResources.filter(r => r.toLowerCase().includes(resourceSearch.toLowerCase())).map(resource => (
+                        <MenuItem key={resource} onClick={() => handleResourceToggle(resource)}>
+                            <ListItemIcon><Checkbox edge="start" checked={selectedResources.indexOf(resource) !== -1} tabIndex={-1} disableRipple /></ListItemIcon>
+                            <ListItemText primary={resource} />
+                        </MenuItem>
+                    ))}
+                </List>
+                <div className="filter-menu-actions">
+                    <Button size="small" onClick={() => setSelectedResources([])}>Limpar</Button>
+                    <Button size="small" variant="contained" onClick={handleResourceFilterClose}>Aplicar</Button>
+                </div>
+            </Menu>
+            <Menu
+                anchorEl={solicitanteFilterAnchorEl}
+                open={isSolicitanteFilterOpen}
+                onClose={handleSolicitanteFilterClose}
+                slotProps={{ paper: { sx: { width: 300, maxHeight: 400 } } }}
+            >
+                <ListSubheader>
+                    <TextField
+                        placeholder="Pesquisar solicitante..."
+                        value={solicitanteSearch}
+                        onChange={(e) => setSolicitanteSearch(e.target.value)}
+                        variant="standard"
+                        fullWidth
+                        autoFocus
+                        onKeyDown={(e) => e.stopPropagation()}
+                    />
+                </ListSubheader>
+                <List dense component="div" role="list" sx={{ overflow: 'auto' }}>
+                    {allSolicitantes.filter(s => s.toLowerCase().includes(solicitanteSearch.toLowerCase())).map(solicitante => (
+                        <MenuItem key={solicitante} onClick={() => handleSolicitanteToggle(solicitante)}>
+                            <ListItemIcon><Checkbox edge="start" checked={selectedSolicitantes.indexOf(solicitante) !== -1} tabIndex={-1} disableRipple /></ListItemIcon>
+                            <ListItemText primary={solicitante} />
+                        </MenuItem>
+                    ))}
+                </List>
+                <div className="filter-menu-actions">
+                    <Button size="small" onClick={() => setSelectedSolicitantes([])}>Limpar</Button>
+                    <Button size="small" variant="contained" onClick={handleSolicitanteFilterClose}>Aplicar</Button>
+                </div>
             </Menu>
             <Suspense>
                 {isAddModalOpen && <AddTaskModal

@@ -15,8 +15,30 @@ export const useTasks = (context: TaskContext) => {
 
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [startDate, setStartDate] = useState(getFormattedDate(new Date()));
+    // Inicializa as datas como null para que a busca inicial aguarde a data correta
+    const [startDate, setStartDate] = useState<string | null>(null);
     const [endDate, setEndDate] = useState(getFormattedDate(new Date()));
+
+    useEffect(() => {
+        // Na montagem inicial, busca a data da tarefa pendente mais antiga
+        const fetchInitialDate = async () => {
+            if (startDate === null) { // Executa apenas uma vez
+                try {
+                    const response = await fetch('/api/oldest-pending-task-date');
+                    if (response.ok) {
+                        const data = await response.json();
+                        setStartDate(data.oldestDate);
+                    } else {
+                        setStartDate(getFormattedDate(new Date()));
+                    }
+                } catch (error) {
+                    console.error("Erro ao buscar data da tarefa mais antiga:", error);
+                    setStartDate(getFormattedDate(new Date()));
+                }
+            }
+        };
+        fetchInitialDate();
+    }, []); // Array de dependência vazio para rodar apenas uma vez
 
     useEffect(() => {
         const fetchTasks = async () => {
@@ -47,8 +69,10 @@ export const useTasks = (context: TaskContext) => {
             setIsLoading(false);
         };
 
-        fetchTasks();
-    }, [startDate, endDate, context]); // Refaz a busca se as datas ou o contexto mudarem
+        if (startDate) { // Só busca as tarefas quando a data inicial estiver definida
+            fetchTasks();
+        }
+    }, [startDate, endDate, context]);
 
     // --- Funções de Manipulação de Estado ---
     // Movidas para o hook para centralizar a lógica
@@ -68,5 +92,5 @@ export const useTasks = (context: TaskContext) => {
     };
 
     // Retorna os estados e as funções para serem usados no componente
-    return { tasks, isLoading, setStartDate, setEndDate, addTask, updateTask, deleteTask };
+    return { tasks, isLoading, startDate, endDate, setStartDate, setEndDate, addTask, updateTask, deleteTask };
 };

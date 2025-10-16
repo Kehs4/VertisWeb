@@ -44,7 +44,7 @@ export interface Task { // Exportando para ser usado no Modal
 
 function TarefasPage() {
     // Utiliza o hook customizado para buscar e gerenciar as tarefas de suporte
-    const { tasks, isLoading, setStartDate, setEndDate, addTask, updateTask, deleteTask } = useTasks('support');
+    const { tasks, isLoading, startDate, endDate, setStartDate, setEndDate, addTask, updateTask, deleteTask } = useTasks('support');
 
     // Efeito para atualizar o título da página no navegador
     useEffect(() => {
@@ -62,6 +62,8 @@ function TarefasPage() {
             title="Planilha de Chamados - Suporte"
             tasks={tasks}
             isLoading={isLoading} // Passa o estado de loading para o componente
+            startDate={startDate}
+            endDate={endDate}
             onAddTask={addTask}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}

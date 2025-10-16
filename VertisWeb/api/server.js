@@ -121,6 +121,44 @@ app.get('/tasks', async (req, res) => {
     }
 });
 
+app.get('/oldest-pending-task-date', async (req, res) => {
+    try {
+        console.log(`[API /oldest-pending-task-date] Buscando data da tarefa pendente mais antiga.`);
+        // Busca todas as tarefas, sem filtro de data inicial, para encontrar a mais antiga
+        const apiUrl = `http://177.11.209.38:80/constellation/IISConstellationAPI.dll/constellation-api/V1.1/unid_oper_tarefa`;
+
+        const apiResponse = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + req.cookies.authToken,
+            },
+        });
+
+        if (apiResponse.ok) {
+            const tasks = await apiResponse.json();
+            // Filtra para encontrar tarefas pendentes (não finalizadas ou canceladas)
+            const pendingTasks = tasks.filter(task => task.ind_sit_tarefa !== 'FN' && task.ind_sit_tarefa !== 'CA');
+
+            if (pendingTasks.length > 0) {
+                // Encontra a data mais antiga (menor) entre as tarefas pendentes
+                const oldestDate = pendingTasks.reduce((oldest, task) => {
+                    return task.dth_inclusao < oldest ? task.dth_inclusao : oldest;
+                }, pendingTasks[0].dth_inclusao);
+                res.status(200).json({ oldestDate: oldestDate.split('T')[0] });
+            } else {
+                // Se não houver tarefas pendentes, retorna a data de hoje
+                res.status(200).json({ oldestDate: getFormattedDate(new Date()) });
+            }
+        } else {
+            res.status(apiResponse.status).send('Erro ao buscar tarefas da API externa.');
+        }
+    } catch (error) {
+        console.error('Ocorreu um erro ao buscar a data da tarefa mais antiga:', error);
+        res.status(500).send('Erro interno do servidor');
+    }
+});
+
 app.get('/task/:id', async (req, res) => {
     try {
         const taskId = req.params.id;

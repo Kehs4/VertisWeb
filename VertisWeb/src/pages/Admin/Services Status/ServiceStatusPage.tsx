@@ -228,8 +228,13 @@ const ServiceStatusPage: React.FC = () => {
                                         },
                                         // Estiliza os pontos (marcadores) no gráfico
                                         '.MuiMarkElement-root': {
-                                            fill: currentChartColors.circlePointer,
                                             stroke: currentChartColors.circleBorder,
+                                            strokeWidth: 2,
+                                        },
+                                        // Estiliza o círculo de DESTAQUE que aparece no hover
+                                        '.MuiMarkElement-highlighted': {
+                                            fill: currentChartColors.circlePointer,
+                                            stroke: `${currentChartColors.line} !important`, // Usa a cor da linha para o destaque
                                             strokeWidth: 2,
                                         },
                                     }}
