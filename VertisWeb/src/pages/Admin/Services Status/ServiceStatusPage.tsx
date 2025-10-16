@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import './ServiceStatusPage.css';
 import { useTheme } from '../../../components/ThemeContext';
 import { LineChart, PieChart } from '@mui/x-charts';
@@ -7,11 +7,21 @@ import { LineChart, PieChart } from '@mui/x-charts';
 import ApiIcon from '@mui/icons-material/Api';
 import StorageIcon from '@mui/icons-material/Storage';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import DnsIcon from '@mui/icons-material/Dns';
+
+const ServiceDetailModal = lazy(() => import('./ServiceDetailModal'));
 
 // --- Configuração dos Cards ---
+interface ServiceCardConfig {
+    id: string;
+    title: string;
+    description: string;
+    icon: React.ReactNode;
+    chartType: 'line' | 'pie';
+    chartData: any;
+}
+
 // Você pode adicionar ou remover cards aqui para atualizar o dashboard
-const serviceCardsConfig = [
+const serviceCardsConfig: ServiceCardConfig[] = [
     {
         id: 'api-login',
         title: 'API de Login',
@@ -141,6 +151,8 @@ const serviceCardsConfig = [
 
 const ServiceStatusPage: React.FC = () => {
     const { theme, setTheme } = useTheme();
+    const [selectedCard, setSelectedCard] = useState<ServiceCardConfig | null>(null);
+
 
     useEffect(() => {
         document.title = "Vertis | Status dos Serviços";
@@ -148,8 +160,8 @@ const ServiceStatusPage: React.FC = () => {
 
     const chartThemeColors = {
         dark: {
-            line: 'rgb(183, 0, 255)',
-            gradientStart: 'rgba(183, 0, 255, 0.6)',
+            line: 'rgb(0, 140, 255)',
+            gradientStart: 'rgba(0, 119, 255, 0.6)',
             gradientEnd: 'rgba(0, 119, 255, 0)',
             axis: 'rgba(255, 255, 255, 0.3)',
             legendText: '#fff',
@@ -157,13 +169,13 @@ const ServiceStatusPage: React.FC = () => {
             circleBorder: 'rgba(190, 188, 211, 0.66)'
         },
         light: {
-            line: 'rgba(122, 38, 201, 0.49)',
-            gradientStart: 'rgba(183, 0, 255, 0.6)',
+            line: 'rgba(94, 255, 0, 0.79)',
+            gradientStart: 'rgba(102, 255, 0, 0.6)',
             gradientEnd: 'rgba(0, 119, 255, 0)',
             axis: 'rgba(0, 0, 0, 0.3)',
             legendText: '#000',
-            circlePointer: 'rgba(190, 188, 211, 0.66)',
-            circleBorder: 'rgba(140, 132, 212, 0.85)'
+            circlePointer: 'rgba(196, 211, 188, 0.66)',
+            circleBorder: 'rgba(106, 212, 80, 0.42)'
         }
     };
 
@@ -183,7 +195,7 @@ const ServiceStatusPage: React.FC = () => {
 
             <div className="service-status-grid">
                 {serviceCardsConfig.map((card) => (
-                    <div key={card.id} className="status-card">
+                    <div key={card.id} className="status-card" onClick={() => setSelectedCard(card)}>
                         <div className="status-card-header">
                             <div className="status-card-icon" style={{ color: currentChartColors.line }}>{card.icon}</div>
                             <div className="status-card-title">
@@ -248,6 +260,16 @@ const ServiceStatusPage: React.FC = () => {
                     </div>
                 ))}
             </div>
+
+            <Suspense fallback={<div>Carregando...</div>}>
+                <ServiceDetailModal
+                    isOpen={!!selectedCard}
+                    onClose={() => setSelectedCard(null)}
+                    serviceData={selectedCard}
+                    theme={theme}
+                    chartColors={currentChartColors}
+                />
+            </Suspense>
         </main>
     );
 };
