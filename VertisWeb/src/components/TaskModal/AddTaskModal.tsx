@@ -1,12 +1,14 @@
 import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import './AddTaskModal.css';
-import { Task } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
+import { Recurso, Task } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
 import CloseIcon from '@mui/icons-material/Close';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import SearchIcon from '@mui/icons-material/Search';
 import { Contact } from '../ContactSearchModal/ContactSearchModal.tsx';
 import { flags, flagsMap, FlagConfig } from '../TaskListView/taskFlags.ts';
 const ContactSearchModal = lazy(() => import('../ContactSearchModal/ContactSearchModal.tsx'));
+const ResourceSearchModal = lazy(() => import('../ResourceSearchModal/ResourceSearchModal.tsx'));
+const TaskSearchModal = lazy(() => import('../LinkedTasksModal/TaskSearchModal.tsx'));
 
 interface AddTaskModalProps {
     title: string;
@@ -25,6 +27,8 @@ const initialFormState: Task = {
     ind_prioridade: 2, // Default to 'Média'
     ind_sit_tarefa: 'AB',
     sit_tarefa: 'Aberto',
+    ind_vinculo: 'N',
+    id_vinculo: undefined,
     // --- Valores padrão para campos obrigatórios ---
     id_unid_negoc: 0,
     nom_unid_negoc: '',
@@ -50,6 +54,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     const [formData, setFormData] = useState(initialFormState);
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
     const [isAddingFlags, setIsAddingFlags] = useState(false); // Estado para mostrar/esconder flags disponíveis
+    const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
+    const [isTaskSearchModalOpen, setIsTaskSearchModalOpen] = useState(false);
+    const [linkedTasksCount, setLinkedTasksCount] = useState(0);
 
     useEffect(() => {
         // Reset form when modal is opened
@@ -60,8 +67,32 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                 dth_prev_entrega: today, // Preenche a previsão de entrega com a data atual
             });
             setIsAddingFlags(false); // Garante que a lista de flags esteja fechada
+            setIsResourceModalOpen(false);
+            setIsTaskSearchModalOpen(false);
+            setLinkedTasksCount(0);
         }
     }, [isOpen]);
+
+    // Efeito para buscar a contagem de tarefas vinculadas quando o ID do vínculo muda
+    useEffect(() => {
+        if (formData.ind_vinculo && formData.ind_vinculo !== 'N') {
+            const fetchLinkedTasksCount = async () => {
+                try {
+                    const response = await fetch(`/api/tasks`);
+                    if (response.ok) {
+                        const allTasks: Task[] = await response.json();
+                        const count = allTasks.filter(t => t.ind_vinculo === formData.ind_vinculo).length;
+                        setLinkedTasksCount(count);
+                    }
+                } catch (error) {
+                    console.error("Erro ao contar tarefas vinculadas:", error);
+                }
+            };
+            fetchLinkedTasksCount();
+        } else {
+            setLinkedTasksCount(0);
+        }
+    }, [formData.ind_vinculo]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -96,6 +127,12 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         });
     };
 
+    const handleResourceConfirm = (newResources: Recurso[]) => {
+        setFormData(prev => {
+            return { ...prev, recursos: newResources };
+        });
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSave(formData);
@@ -113,10 +150,22 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         setIsContactModalOpen(false);
     };
 
+    const handleTaskLinkSelect = (taskId: number) => {
+        setFormData(prev => ({ ...prev, ind_vinculo: 'S', id_vinculo: taskId }));
+        setIsTaskSearchModalOpen(false);
+    };
+
     // Memoiza as listas de flags para otimização
     const selectedFlagIds = formData.tipo_chamado || [];
     const availableFlags = useMemo(() => flags.filter(flag => !selectedFlagIds.includes(flag.id)), [selectedFlagIds]);
     const selectedFlags = useMemo(() => selectedFlagIds.map(id => flagsMap.get(id)).filter(Boolean) as FlagConfig[], [selectedFlagIds]);
+
+    const vinculoPlaceholder = useMemo(() => {
+        if (formData.ind_vinculo !== 'S' || !formData.id_vinculo) {
+            return "Nenhuma tarefa vinculada.";
+        }
+        return `Existe ${linkedTasksCount} tarefa(s) vinculada(s) a esta.`;
+    }, [formData.ind_vinculo, formData.id_vinculo, linkedTasksCount]);
 
     if (!isOpen) {
         return null;
@@ -221,16 +270,38 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                         )}
                         <div className="form-group">
                             <label htmlFor='nom_recurso'>{labels.analyst}</label>
-                            <input
-                                type="text"
-                                id="nom_recurso"
-                                name="nom_recurso"
-                                value={Array.isArray(formData.recursos) && formData.recursos[0] ? formData.recursos[0].nom_recurso : ''}
-                                onChange={handleChange}
-                                required
-                            />
+                            <div className="resource-pills-container">
+                                {Array.isArray(formData.recursos) && formData.recursos.map(resource => (
+                                    <div key={resource.id_recurso} className="resource-pill">
+                                        {resource.nom_recurso}
+                                        <button type="button" onClick={() => {
+                                            handleResourceConfirm( (Array.isArray(formData.recursos) ? formData.recursos : []).filter(r => r.id_recurso !== resource.id_recurso) )
+                                        }}>&times;</button>
+                                    </div>
+                                ))}
+                                <button type="button" className="add-resource-btn" onClick={() => setIsResourceModalOpen(true)}>
+                                    <AddCircleOutlineIcon />
+                                </button>
+                            </div>
                         </div>
 
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="ind_vinculo">Vínculo</label>
+                        <div className="input-with-button">
+                            <input
+                                type="text"
+                                id="ind_vinculo"
+                                name="id_vinculo" // O campo de texto controla o id_vinculo
+                                value={formData.id_vinculo || ''}
+                                onChange={handleChange}
+                                placeholder={vinculoPlaceholder}
+                            />
+                            <button type="button" className="icon-button" onClick={() => setIsTaskSearchModalOpen(true)} title="Pesquisar Tarefa para Vincular">
+                                <SearchIcon />
+                            </button>
+                        </div>
                     </div>
 
                     <div className="form-group">
@@ -287,6 +358,21 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                             isOpen={isContactModalOpen}
                             onClose={() => setIsContactModalOpen(false)}
                             onSelect={handleContactSelect} />
+                    )}
+                    {isResourceModalOpen && (
+                        <ResourceSearchModal
+                            isOpen={isResourceModalOpen}
+                            onClose={() => setIsResourceModalOpen(false)}
+                            onConfirm={handleResourceConfirm}
+                            initialSelectedResources={Array.isArray(formData.recursos) ? formData.recursos : []}
+                        />
+                    )}
+                    {isTaskSearchModalOpen && (
+                        <TaskSearchModal
+                            isOpen={isTaskSearchModalOpen}
+                            onClose={() => setIsTaskSearchModalOpen(false)}
+                            onSelectTask={handleTaskLinkSelect}
+                        />
                     )}
                 </Suspense>
             </div>

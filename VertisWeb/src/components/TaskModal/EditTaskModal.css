@@ -34,6 +34,21 @@
     padding-bottom: 5px;
 }
 
+.modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.link-icon-button {
+    color: #888;
+}
+
+.link-icon-button:hover {
+    color: #3498db;
+    background-color: #f0f0f0;
+}
+
 .section-header h4 {
     margin-top: 0;
     margin-bottom: 0;

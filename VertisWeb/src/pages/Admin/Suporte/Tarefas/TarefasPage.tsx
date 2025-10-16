@@ -8,6 +8,7 @@ import { useTasks } from '../../../../hooks/useTasks';
 export interface Recurso { // Exportando para utilizar no edit task
     id_recurso: number;
     nom_recurso: string;
+    recurso_funcao?: string;
 }
 
 export interface Comentario { // Exportando para utilizar no edit task
@@ -27,6 +28,8 @@ export interface Task { // Exportando para ser usado no Modal
     ind_prioridade: number;
     ind_sit_tarefa: string;
     sit_tarefa: string;
+    ind_vinculo: 'S' | 'N'; // Indica se há um vínculo
+    id_vinculo?: number; // Armazena o ID da tarefa principal do vínculo
     qtd_pontos: number;
     titulo_tarefa: string;
     recursos: Recurso[] | number;

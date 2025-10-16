@@ -341,7 +341,6 @@
     background-color: var(--table-bg);
     border-radius: 12px;
     box-shadow: 0 4px 12px var(--box-shadow-color);
-    overflow: hidden;
     flex-grow: 1;
 }
 
@@ -493,6 +492,49 @@
     font-size: 0.75rem;
     font-weight: 400;
     opacity: 0.8;
+}
+
+.resource-list-cell {
+    display: flex;
+    align-items: center;
+    position: relative; /* Essencial para posicionar o hover card */
+    gap: 8px;
+}
+
+.resource-count-badge {
+    background-color: var(--sort-active-bg);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--table-border-color);
+}
+
+/* --- Estilos para o Hover Card de Recursos --- */
+.resource-hover-list {
+    display: none; /* Oculto por padrão */
+    position: absolute;
+    top: 100%; /* Aparece abaixo do conteúdo da célula */
+    left: 0;
+    background-color: var(--table-bg);
+    border: 1px solid var(--table-border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--box-shadow-color);
+    padding: 8px;
+    z-index: 5; /* Garante que fique sobre outros elementos */
+    min-width: 200px; /* Largura mínima */
+    flex-direction: column;
+    gap: 4px;
+}
+
+.resource-list-cell:hover .resource-hover-list {
+    display: flex; /* Mostra o card no hover */
+}
+
+.resource-hover-item {
+    padding: 4px 8px;
+    border-radius: 4px;
 }
 
 .cell-actions {

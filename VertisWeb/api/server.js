@@ -250,11 +250,75 @@ app.delete('/contacts/:id', (req, res) => {
     res.status(204).send(); // No Content
 });
 
+// --- MOCK DATA E ENDPOINTS PARA RECURSOS (ANALISTAS/DESENVOLVEDORES) ---
+
+let mockResources = [
+    { id_recurso: 1, nom_recurso: 'Kleyton', recurso_funcao: 'Desenvolvedor' },
+    { id_recurso: 2, nom_recurso: 'Lima', recurso_funcao: 'Desenvolvedor' },
+    { id_recurso: 3, nom_recurso: 'Marcelo', recurso_funcao: 'Desenvolvedor' },
+    { id_recurso: 4, nom_recurso: 'David', recurso_funcao: 'Desenvolvedor' },
+    { id_recurso: 5, nom_recurso: 'Martins', recurso_funcao: 'Analista de Suporte' },
+    { id_recurso: 6, nom_recurso: 'Mariana', recurso_funcao: 'Analista de Suporte' },
+    { id_recurso: 7, nom_recurso: 'Luiza', recurso_funcao: 'Analista de Suporte' },
+    { id_recurso: 8, nom_recurso: 'Ivan', recurso_funcao: 'Analista de Suporte' },
+    { id_recurso: 9, nom_recurso: 'Siuah', recurso_funcao: 'Desenvolvedor' },
+];
+let nextResourceId = 10;
+
+// GET /api/resources - Listar recursos com busca
+app.get('/resources', (req, res) => {
+    const { search = '' } = req.query;
+    const lowercasedSearch = search.toLowerCase();
+
+    const filtered = mockResources.filter(r => r.nom_recurso.toLowerCase().includes(lowercasedSearch));
+    res.status(200).json(filtered);
+});
+
+// POST /api/resources - Criar novo recurso
+app.post('/resources', (req, res) => {
+    const { nom_recurso, recurso_funcao } = req.body;
+    if (!nom_recurso) {
+        return res.status(400).send('O nome do recurso é obrigatório.');
+    }
+    const newResource = { id_recurso: nextResourceId++, nom_recurso, recurso_funcao };
+    mockResources.push(newResource);
+    console.log('[API /resources] Novo recurso adicionado:', newResource);
+    res.status(201).json(newResource);
+});
+
+// PUT /api/resources/:id - Atualizar recurso
+app.put('/resources/:id', (req, res) => {
+    const resourceId = parseInt(req.params.id, 10);
+    const { nom_recurso, recurso_funcao } = req.body;
+    const resourceIndex = mockResources.findIndex(r => r.id_recurso === resourceId);
+
+    if (resourceIndex === -1) {
+        return res.status(404).send('Recurso não encontrado.');
+    }
+    // Atualiza os campos, se eles forem fornecidos
+    if (nom_recurso) mockResources[resourceIndex].nom_recurso = nom_recurso;
+    if (recurso_funcao) mockResources[resourceIndex].recurso_funcao = recurso_funcao;
+
+    console.log(`[API /resources] Recurso ${resourceId} atualizado.`);
+    res.status(200).json(mockResources[resourceIndex]);
+});
+
+// DELETE /api/resources/:id - Excluir recurso
+app.delete('/resources/:id', (req, res) => {
+    const resourceId = parseInt(req.params.id, 10);
+    const initialLength = mockResources.length;
+    mockResources = mockResources.filter(r => r.id_recurso !== resourceId);
+
+    if (mockResources.length === initialLength) {
+        return res.status(404).send('Recurso não encontrado.');
+    }
+    console.log(`[API /resources] Recurso ${resourceId} excluído.`);
+    res.status(204).send();
+});
+
 
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
 });
 
-// Adicione esta linha para manter o processo Node.js em execução em ambientes ESM.
-// Isso impede que o processo termine prematuramente após o app.listen() ser chamado.
 process.stdin.resume();

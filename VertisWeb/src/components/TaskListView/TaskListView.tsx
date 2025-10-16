@@ -25,7 +25,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
 // Componentes do Material-UI para o novo filtro
-import { TextField, List, ListItem, ListItemIcon, Checkbox, ListItemText, ListSubheader, Button } from '@mui/material';
+import { TextField, List, ListItemIcon, Checkbox, ListItemText, ListSubheader, Button } from '@mui/material';
 
 // Ícones para os cards de análise
 import AllInboxIcon from '@mui/icons-material/AllInbox';
@@ -654,7 +654,24 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                         <td>{task.nom_unid_oper}</td>
                                     )}
                                     <td>
-                                        {Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso).join(', ') : task.recursos}
+                                        {Array.isArray(task.recursos) && task.recursos.length > 0 ? (
+                                            <div className="resource-list-cell">
+                                                <span>{task.recursos[0].nom_recurso}</span>
+                                                {task.recursos.length > 1 && (
+                                                    <span className="resource-count-badge">
+                                                        +{task.recursos.length - 1}
+                                                    </span>
+                                                )}
+                                                {/* Elemento que aparecerá no hover */}
+                                                <div className="resource-hover-list">
+                                                    {task.recursos.map(r => (
+                                                        <div key={r.id_recurso} className="resource-hover-item">{r.nom_recurso}</div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <span>N/A</span>
+                                        )}
                                     </td>
                                     <td>
                                         {new Date(task.dth_inclusao.replace(/-/g, '\/')).toLocaleDateString()}

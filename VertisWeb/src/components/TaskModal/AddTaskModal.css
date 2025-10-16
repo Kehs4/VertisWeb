@@ -348,3 +348,48 @@
     transform: none;
     box-shadow: none;
 }
+
+/* --- Estilos para Seleção de Recursos --- */
+.resource-pills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 7px 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    min-height: 40px; /* Altura mínima para o container */
+    align-items: center;
+}
+
+.resource-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 4px 8px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+}
+
+.resource-pill button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #868e96;
+    padding: 0;
+    line-height: 1;
+}
+
+.resource-pills-container:hover svg {
+ color: #0099ff;
+ transition: all 0.5s;
+}
+
+.add-resource-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #888;
+}
