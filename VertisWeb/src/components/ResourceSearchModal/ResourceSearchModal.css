@@ -102,7 +102,7 @@
 
 /* Adaptação para o tema escuro */
 .dark .resource-search-modal {
-    background-color: #2d3748;
+    background-color: #11161f;
     color: #e2e8f0;
 }
 .dark .resource-modal-toolbar,
@@ -110,10 +110,10 @@
     border-color: #4a5568;
 }
 .dark .resource-edit-form {
-    background-color: #1a202c;
+    background-color: #cecece;
 }
 .dark .resource-item:hover {
-    background-color: #4a5568;
+    background-color: #4b4d52;
 }
 .dark .resource-item.selected {
     background-color: #1e40af;

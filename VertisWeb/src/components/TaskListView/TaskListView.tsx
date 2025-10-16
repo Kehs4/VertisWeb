@@ -2,6 +2,7 @@ import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { useTheme } from '../ThemeContext'; // Importando o hook do tema
 import './TaskListView.css';
 import { useTaskExporter } from '../../hooks/useTaskExporter'; // Importa o novo hook
+import { Task, Recurso } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Importa a tipagem correta
 import { flagsMap } from './taskFlags'; // Importa o mapa de configurações das flags
 import { IconButton, Menu, MenuItem } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -35,50 +36,6 @@ import StarRateIcon from '@mui/icons-material/StarRate';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-
-// --- Tipagem dos Dados ---
-// No futuro, esta tipagem pode ser movida para um arquivo central de tipos
-
-interface Recurso {
-    id_recurso: number;
-    nom_recurso: string;
-}
-
-interface Comentario {
-    id_recurso: number;
-    nom_recurso: string;
-    comentario: string;
-    dth_inclusao: string;
-}
-
-interface Contato {
-    id_contato: number;
-    nom_recurso: string;
-    telefone?: string;
-}
-
-interface Task {
-    id: number;
-    id_unid_negoc: number;
-    nom_unid_negoc: string;
-    id_unid_oper: number;
-    nom_unid_oper: string;
-    criado_por: string;
-    ind_prioridade: number;
-    ind_sit_tarefa: string;
-    sit_tarefa: string;
-    qtd_pontos: number;
-    titulo_tarefa: string;
-    recursos: Recurso[] | number;
-    comentarios?: Comentario[] | number;
-    contatos?: Contato[] | number;
-    dth_prev_entrega?: string;
-    dth_encerramento?: string;
-    dth_inclusao: string;
-    tipo_chamado?: string[];
-    satisfaction_rating?: number;
-    dth_exclusao?: string;
-}
 
 interface TaskListViewProps {
     title: string;

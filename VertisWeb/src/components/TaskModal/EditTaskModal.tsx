@@ -463,6 +463,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                             isOpen={isTaskSearchModalOpen}
                             onClose={() => setIsTaskSearchModalOpen(false)}
                             onSelectTask={handleTaskLinkSelect}
+                            resourceIds={Array.isArray(formData?.recursos) ? formData.recursos.map(r => r.id_recurso) : []}
                         />
                     )}
                 </Suspense>
