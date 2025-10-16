@@ -380,42 +380,6 @@
     gap: 6px; 
 }
 
-.MuiPaper-root{
-    background-color: rgb(218, 21, 21);
-}
-
-.MuiList-root {
-    background-color: #414141;
-}
-
-.MuiList-root li {
-    background-color: #414141;
-    padding: 2px 10px;
-    color: white;
-}
-
-.MuiList-root li div span {
-    color: white;
-}
-
-.MuiList-root div li:hover {
-    background-color: #616161;
-}
-
-.MuiListSubheader-root {
-    margin-top: 10px;
-}
-
-.MuiFormControl-root {
-    background-color: #252525;
-    border-radius: 15px;
-}
-
-.MuiFormControl-root input {
-    color: white;
-    padding: 8px 10px;
-}
-
 .th-content .th-filter-button {
     color: var(--text-secondary);
     opacity: 0.6;
@@ -435,9 +399,6 @@
     border-top: 1px solid var(--table-border-color);
 }
 
-.filter-menu-actions button{
-    color: white;
-}
 
 /* --- Estilos para Ordenação --- */
 .task-table th.sortable {
