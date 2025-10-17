@@ -1,0 +1,349 @@
+/* --- Variáveis de Tema --- */
+.dark-mode {
+    --bg-color: #06080e;
+    --title-color: #ffffff;
+    --widget-bg-color: #242424;
+    --widget-border-color: rgba(255, 255, 255, 0.103);
+    --widget-hover-border-color: #707070;
+    --header-color: #cecece;
+    --header-border-color: rgba(236, 240, 241, 0.2);
+    --metric-color: #cccccc;
+    --sub-metric-color: #8b8b8b;
+    --list-item-bg-color: #474747;
+    --list-item-text-color: #dddddd;
+    --theme-toggle-color: #000000;
+    --theme-button-textcolor: #ffffff;
+    --theme-button-bgcolor: #000000;
+    --theme-button-border: #ffffff;
+    --pizza-text: #ffffff;
+    --text-shadow: 0 2px 1px rgb(64, 75, 95);
+
+}
+
+.light-mode {
+    --bg-color: #fafafa;
+    --title-color: #3b3b3b;
+    --widget-bg-color: #ffffff;
+    --widget-border-color: #e0e0e0;
+    --widget-hover-border-color: #ff6600;
+    --header-color: #25282b;
+    --header-border-color: #ecf0f1;
+    --sub-metric-color: #5d5e5e;
+    --list-item-bg-color: #f5f5f5;
+    --list-item-text-color: #2b2b2b;
+    --theme-toggle-color: #FFFFFF;
+    --theme-button-textcolor: #000000;
+    --theme-button-bgcolor: #ffffff;
+    --theme-button-border: #000000;
+    --pizza-text: #040d13;
+    --text-shadow: 1px 2px 5px rgba(172, 172, 172, 0.603);
+}
+/* --- Fim das Variáveis --- */
+
+.ds-container {
+    padding: 0.2rem 1.8rem;
+    height: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease;
+}
+
+.ds-header-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem; /* Aumentei o espaçamento para alinhar com o padding dos widgets */
+}
+
+.ds-title {
+    font-size: 1.5rem;
+    color: var(--title-color);
+    text-shadow: var(--text-shadow);
+}
+
+.ds-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto 1fr auto;
+    gap: 25px;
+    flex-grow: 1;
+}
+
+.ds-widget-card {
+    background-color: var(--widget-bg-color);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid var(--widget-border-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.ds-widget-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--widget-hover-border-color);
+}
+
+.ds-widget-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--header-color);
+    margin-bottom: 0.7rem;
+    border-bottom: 1px solid var(--header-border-color);
+    padding-bottom: 0.5rem;
+}
+
+
+.ds-widget-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    text-shadow: var(--text-shadow);
+}
+
+.ds-widget-content {
+    flex-grow: 1;
+}
+
+.ds-widget-content .ds-main-metric {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--metric-color);
+    text-shadow: var(--text-shadow);
+    margin: 0;
+    text-align: center;
+    margin-top: -7px;
+}
+
+.ds-main-metric.ds-status-online {
+    color: #0fbb57; /* Verde para status Online */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.ds-main-metric.ds-status-offline {
+    color: #da1e1e; /* Vermelho para status Offline */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.ds-widget-content .ds-sub-metric {
+    display: block;
+    text-align: center;
+    color: var(--sub-metric-color);
+    text-shadow: var(--text-shadow);
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+
+/* Estilos para widgets de lista */
+.ds-large-widget {
+    grid-column: span 2; /* Faz o widget ocupar 2 colunas */
+}
+
+.ds-list-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ds-list-content {
+    margin-top: -15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ds-list-header {
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--sub-metric-color);
+    margin-top: 15px;
+    padding: 0.10rem 8px;
+    text-transform: uppercase;
+}
+.ds-list-header span:last-child {
+    text-align: right;
+}
+
+.ds-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    padding: 8px 12px;
+    background-color: var(--list-item-bg-color);
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+.top-publisher-item {
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+}
+
+.top-publisher-item .code {
+    color: var(--sub-metric-color);
+}
+
+.top-publisher-item .name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.top-caller-item {
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+}
+
+.top-caller-item .code {
+    color: var(--sub-metric-color);
+}
+
+.analyst-header {
+    grid-template-columns: 1fr auto;
+}
+
+.analyst-item {
+    display: grid;
+    padding: 8px 12px;
+    grid-template-columns: 1fr auto;
+}
+
+.analyst-item .name {
+    display: flex;
+    align-items: center;
+    margin-top: -5px;
+    gap: 8px;
+}
+
+.trophy-icon {
+    font-size: 1rem;
+}
+
+.trophy-gold { color: #FFD700; }
+.trophy-silver { color: #C0C0C0; }
+.trophy-bronze { color: #CD7F32; }
+
+
+.ds-list-item span {
+    color: var(--list-item-text-color);
+    text-shadow: var(--text-shadow);
+
+}
+
+.ds-list-item strong {
+    color: #e6640d;
+    text-shadow: 2px 0 5px rgba(211, 154, 144, 0.562);
+    margin-right: 20px;
+    font-size: 16px;
+}
+
+.MuiChartsLegend-item {
+    color: var(--pizza-text);
+    font-weight: 400;
+    text-shadow: var(--text-shadow);
+}
+
+.css-32sa41-MuiChartsWrapper-root { /* Gráfico de Pizza do Laudos Emitidos */
+    padding: 5px;
+    margin-top: 5px;
+}
+
+.ds-theme-toggle-button {
+    background-color: var(--bg-color); 
+    color: var(--metric-color); 
+    border: 1px solid var(--sub-metric-color); 
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.ds-widget-footer {
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--header-border-color);
+    text-align: center;
+    margin-top: 5px;
+    font-size: 0.75rem;
+    color: var(--sub-metric-color);
+}
+
+.ds-chart-container {
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ds-loading-placeholder {
+    font-size: 0.9rem;
+    color: var(--sub-metric-color);
+    font-style: italic;
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+    .ds-large-widget {
+        grid-column: span 1; /* Em telas menores, ocupa 1 coluna */
+    }
+}
+
+/* --- Novas classes para substituir estilos inline --- */
+
+.ds-widget-card.full-width {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.ds-widget-header.no-border h3 {
+    font-size: 1.3rem;
+}
+
+.ds-widget-content.flex-grow {
+    display: flex;
+    flex-grow: 1;
+}
+
+.ds-chart-container.full-size {
+    height: 100%;
+    width: 100%;
+}
+
+.ds-bottom-cards-container {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+/* Cores dos ícones */
+.ds-icon-constellation { color: rgb(136, 13, 167); }
+.ds-icon-laudos-api { color: rgba(167, 13, 39, 1); }
+.ds-icon-vertis-api { color: rgb(255, 115, 0); }
+.ds-icon-nfse-api { color: rgba(53, 150, 8, 1); }
+.ds-icon-laudos-hora { color: rgb(0, 162, 255); }
+.ds-icon-publicadores { color: rgba(0, 162, 255, 1); }
+.ds-icon-ranking { color: rgba(255, 153, 0, 1); }
+.ds-icon-chamados { color: rgba(255, 0, 0, 1); }
+.ds-icon-top-publishers { color: #c57bff; }
+.ds-icon-analistas { color: #20c997; }
+
+/* Responsividade para o container dos cards inferiores */
+@media (max-width: 1200px) {
+    .ds-bottom-cards-container {
+        grid-template-columns: 1fr;
+    }
+}

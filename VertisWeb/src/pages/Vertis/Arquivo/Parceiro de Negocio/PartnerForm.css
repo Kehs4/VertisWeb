@@ -1,0 +1,163 @@
+.partner-form-container {
+    background-color: #fff;
+    padding: 3rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+.partner-form-title {
+    text-align: start;
+    color: rgb(0, 0, 0);
+    text-shadow: 1px 2px 3px rgba(116, 116, 116, 0.26);
+    padding: 10px;
+    border-radius: 20px;
+    font-size: 1.6rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end; /* Alinha os botões à direita */
+    gap: 15px;
+}
+
+.action-button {
+    padding: 0.6rem 1.2rem;
+    background-color: #FF6600;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.action-button.submit {
+    background-color: #FF6600; /* Laranja para ação principal */
+}
+
+.action-button.submit:hover {
+    background-color: #e75d00;
+}
+
+.action-button.update {
+    background-color: #3498db; /* Azul para alteração */
+}
+
+.action-button.update:hover {
+    background-color: #2980b9;
+}
+
+.action-button.search {
+    background-color: #2ecc71; /* Verde para pesquisa */
+}
+
+.action-button.search:hover {
+    background-color: #27ae60;
+}
+
+.action-button.delete {
+    background-color: #e74c3c; /* Vermelho para exclusão */
+}
+
+.action-button.delete:hover {
+    background-color: #c0392b;
+}
+
+.form-section {
+    border-top: 1px solid #eee;
+    padding-top: 1.5rem;
+}
+
+.form-section:first-child {
+    border-top: none;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.items-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.form-section-title {
+    font-size: 1.2rem;
+    color: #414141;
+    margin-bottom: 1rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.partner-form .form-group {
+    margin-bottom: 1.2rem;
+}
+
+.partner-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #2e3855fd;
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-icon .MuiSvgIcon-root {
+    position: absolute;
+    left: 12px;
+    color: #777;
+    pointer-events: none; /* Para não interferir com o clique no input */
+}
+
+.input-with-icon input,
+.input-with-icon select {
+    padding-left: 40px !important; /* Adiciona espaço para o ícone */
+}
+
+.partner-form .input-with-icon input {
+    background-color: transparent;
+    flex-grow: 1;
+    outline: none;
+}
+
+.partner-form input,
+.partner-form select {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.partner-form input:focus,
+.partner-form select:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.form-actions-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}

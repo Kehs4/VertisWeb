@@ -1,0 +1,20 @@
+.main-layout-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.content-area {
+    flex-grow: 1;
+    margin-top: 60px; /* Altura do cabeçalho */
+    margin-left: 0; /* Padrão, sem sidebar */
+    transition: margin-left 0.3s ease-in-out;
+    padding: 20px; /* Espaçamento interno para o conteúdo */
+    background-color: var(--bg-color, #fafafa); /* Usa a variável de tema, com um fallback */
+}
+
+.content-area.shifted {
+    margin-left: 250px; /* Largura do sidebar quando aberto */
+}
+
+/* Adicione estilos para o footer se houver um */

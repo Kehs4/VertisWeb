@@ -1,0 +1,37 @@
+.app-header {
+    background-color: #242424; /* Cor de fundo do cabeçalho */
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Alinha itens à esquerda e direita */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000; /* Garante que o cabeçalho fique acima de outros elementos */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.hamburger-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 1.5rem;
+    display: flex; /* Para centralizar o ícone */
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+}
+
+.header-logo {
+    height: 40px; /* Ajuste conforme o tamanho do seu logo */
+    width: auto;
+}

@@ -1,0 +1,395 @@
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background-color: #ffffff;
+    padding: 25px 30px; 
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 600px;
+    animation: slideIn 0.3s ease-out;
+    position: relative;
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.close-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #888;
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-button:hover {
+    background-color: #f0f0f0; 
+    color: #333; 
+    transition: all 0.3s ease-in; 
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%; 
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    background-color: #fff;
+    color: #333;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #ff6600;
+    box-shadow: 0 0 0 2px rgba(255, 102, 0, 0.2);
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px; 
+    padding-top: 20px; 
+    border-top: 1px solid #eee;
+}
+
+.cancel-btn, .save-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cancel-btn {
+    background-color: #f0f0f0; 
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.cancel-btn:hover {
+    background-color: #e0e0e0; 
+}
+
+.save-btn, .btn-primary {
+    background-color: #ff6600;
+    color: white;
+    border: none;
+}
+
+.save-btn:hover, .btn-primary:hover {
+    background-color: #e65c00;
+}
+
+/* --- Estilos para Contatos (Add Modal) --- */
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.form-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.form-section-header label {
+    margin: 0;
+    font-weight: 500;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.add-contact-btn {
+    background-color: #e9ecef;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.add-contact-form-inline {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.add-contact-form-inline svg {
+    color: #555657;
+}
+
+.contact-action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+.contact-action-btn.confirm:hover { background-color: #28a745;  border-radius: 25px;}
+.contact-action-btn.cancel:hover { background-color: #dc3545; border-radius: 25px; }
+
+.contact-list-add {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.contact-item-add {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e9ecef;
+    color: #333;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.remove-contact-btn {
+    background: none;
+    color: #dc3545;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 0 5px;
+    line-height: 1;
+}
+
+.remove-contact-btn:hover {
+    color: #a71d2a;
+}
+
+/* Estilos para o botão de pesquisa no input */
+.input-with-button {
+    display: flex;
+    align-items: center;
+}
+
+.input-with-button input {
+    flex-grow: 1;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-with-button .icon-button {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-left: none;
+    background-color: #f8f9fa;
+    color: #868e96;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.input-with-button .icon-button:hover {
+    background-color: #f0f0f0;
+}
+
+/* --- Novos Estilos para Seleção de Flags --- */
+.flag-section-container {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.flag-section-container.disabled {
+    background-color: #f1f3f5;
+    cursor: not-allowed;
+}
+
+.selected-flags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 4px 8px;
+    align-items: center;
+}
+
+.no-flags-text {
+    font-style: italic;
+    color: #888;
+    font-size: 0.75rem;
+}
+
+.add-flag-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #888;
+}
+
+.add-flag-button svg {
+    max-width: 18px;
+    max-height: 18px;
+}
+
+
+.add-flag-button:hover {
+    color: #0099ff;
+    transition: all 0.5s;
+}
+
+.available-flags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 8px;
+    border-top: 1px dashed #ddd;
+    margin-top: 2px;
+}
+
+.flag-item {
+    padding: 5px 8px;
+    border-radius: 16px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.flag-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.flag-item.available {
+    opacity: 0.8;
+}
+
+.flag-item.available:hover {
+    opacity: 1;
+}
+
+.flag-section-container.disabled .flag-item,
+.flag-section-container.disabled .add-flag-button {
+    cursor: not-allowed;
+}
+
+.flag-section-container.disabled .flag-item:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* --- Estilos para Seleção de Recursos --- */
+.resource-pills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 7px 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    min-height: 40px; /* Altura mínima para o container */
+    align-items: center;
+}
+
+.resource-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 4px 8px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+}
+
+.resource-pill button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #868e96;
+    padding: 0;
+    line-height: 1;
+}
+
+.resource-pills-container:hover svg {
+ color: #0099ff;
+ transition: all 0.5s;
+}
+
+.add-resource-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #888;
+}

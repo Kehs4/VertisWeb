@@ -1,0 +1,248 @@
+/* Overlay para quando o sidebar estiver aberto */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000; /* Abaixo do sidebar, mas acima do conteúdo */
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.sidebar-overlay.open {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Container principal do sidebar */
+.sidebar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px; /* Largura do sidebar */
+  height: 100%;
+  background-color: #1f1f1f; /* Cor de fundo do sidebar */
+  color: white;
+  z-index: 1001; /* Acima do overlay */
+  transform: translateX(-100%); /* Esconde o sidebar por padrão */
+  transition: transform 0.3s ease-in-out;
+  box-shadow: 3px 0 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-container.open {
+  transform: translateX(0); /* Mostra o sidebar */
+}
+
+.sidebar-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid rgb(255, 255, 255);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-logo {
+  height: 40px; /* Ajuste conforme o tamanho do seu logo */
+  width: auto;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1; /* Permite que o menu ocupe o espaço restante */
+  overflow-y: auto; /* Adiciona scroll se o conteúdo for muito grande */
+}
+
+.sidebar-menu-item,
+.sidebar-submenu-item,
+.sidebar-subsubmenu-item {
+  position: relative;
+  font-size: 0.85rem;
+  gap: 10px;
+  align-items: center
+}
+
+.menu-toggle-button,
+.submenu-toggle-button{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgb(212, 212, 212);
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.menu-toggle-button:hover,
+.submenu-toggle-button:hover {
+  background-color: #2c2c2c; /* Cor de hover para itens com submenus */
+  color: white;
+}
+
+.menu-toggle-button.active,
+.submenu-toggle-button.active {
+  background-color: #ff5100; /* Cor para item de menu ativo */
+  color: white;
+}
+
+.menu-link,
+.submenu-link,
+.subsubmenu-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  padding: 10px 20px;
+  color: rgb(212, 212, 212);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.menu-link:hover,
+.submenu-link:hover,
+.subsubmenu-link:hover {
+  background-color: #2c2c2c; /* Cor de hover para links */
+  color: white;
+}
+
+/* Estilos para submenus */
+.sidebar-submenu,
+.sidebar-subsubmenu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: #353535; /* Cor de fundo para submenus */
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+  max-height: 0; /* Escondido por padrão */
+}
+
+.sidebar-submenu .menu-link,
+.sidebar-submenu .submenu-toggle-button {
+  padding-left: 30px; /* Indentação para submenus */
+  
+}
+
+.sidebar-subsubmenu .submenu-link,
+.sidebar-subsubmenu .subsubmenu-toggle-button {
+  padding-left: 40px; /* Indentação para sub-submenus */
+}
+
+/* Quando um submenu está aberto */
+.sidebar-submenu.open,
+.sidebar-subsubmenu.open {
+  max-height: 500px; /* Valor grande o suficiente para mostrar todo o conteúdo */
+}
+
+.sidebar-menu-divider {
+    padding: 15px 20px 5px 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 10px;
+    border-top: 1px solid #3a3a3a;
+}
+
+
+/* Ícones de expansão */
+.menu-toggle-button svg,
+.submenu-toggle-button svg {
+  transition: transform 0.2s ease;
+}
+
+
+.user-logged-container {
+  display: flex;
+  align-items: center;
+  padding: 3px 15px;
+  transition: background-color 0.2s ease;
+}
+
+
+.user-logged {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-name {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: #e6e6e6;
+}
+
+.user-logged-option {
+  display: flex;
+  align-items: flex-end;
+  padding: 3px 15px;
+  transition: background-color 0.2s ease;
+}
+
+.user-logged-option svg {
+  border-radius: 50%;
+  color: gray;
+}
+
+.user-logged-option svg:hover {
+  transition: all 0.4s;
+  background-color: #2c2c2c;
+  color: white;
+}
+
+/* Adicione ao final do seu arquivo Menu.css */
+
+.settings-panel {
+  position: absolute;
+  bottom: 120%; /* Posiciona o painel acima do botão de engrenagem */
+  right: 0;
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  z-index: 100;
+  width: 120px;
+}
+
+.logout-button {
+  background-color: transparent;
+  color: #f1f1f1;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.logout-button:hover {
+  background-color: #ff5100;
+}
+
+/* --- Estilos para a Barra de Rolagem Moderna (WebKit) --- */
+.sidebar-menu::-webkit-scrollbar {
+  width: 8px; /* Largura da barra de rolagem */
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+  background: transparent; /* Fundo da trilha transparente */
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background-color: #4a4a4a; /* Cor do "polegar" da barra de rolagem */
+  border-radius: 10px; /* Bordas arredondadas */
+  border: 2px solid #1f1f1f; /* Cria um espaçamento ao redor do polegar */
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+  background-color: #ff5100; /* Cor do polegar ao passar o mouse */
+}
