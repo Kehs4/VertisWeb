@@ -42,6 +42,7 @@ interface TaskListViewProps {
     tasks: Task[];
     isLoading: boolean;
     onUpdateTask: (updatedTask: Task) => void;
+    updateTaskStatus: (taskId: number, newStatus: string) => void;
     onDeleteTask: (taskId: number) => void;
     onAddTask: (newTask: Task) => void;
     startDate: string | null; // Recebe a data inicial do pai
@@ -80,7 +81,7 @@ const statusOptions: { [key: string]: string } = {
 
 
 
-const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, onAddTask, onUpdateTask, onDeleteTask, startDate, endDate, onDateChange, contextType }) => {
+const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, onAddTask, onUpdateTask, onDeleteTask, updateTaskStatus, startDate, endDate, onDateChange, contextType }) => {
     // Define os textos e ícones com base no contexto
     const labels = {
         task: contextType === 'development' ? 'Tarefa' : 'Chamado', // Singular
@@ -168,11 +169,11 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
 
         // Filtra apenas as tarefas que foram finalizadas e possuem uma avaliação válida (número).
         const ratedTasks = tasks.filter(
-            (task) => task.ind_sit_tarefa === 'FN' && typeof task.satisfaction_rating === 'number'
+            (task) => task.ind_sit_tarefa === 'FN' && typeof task.tarefa_avaliacao === 'number'
         );
 
         // Calcula a soma de todas as avaliações.
-        const totalSatisfactionScore = ratedTasks.reduce((sum, task) => sum + task.satisfaction_rating!, 0);
+        const totalSatisfactionScore = ratedTasks.reduce((sum, task) => sum + task.tarefa_avaliacao!, 0);
         const avgSatisfaction = ratedTasks.length > 0 ? totalSatisfactionScore / ratedTasks.length : 0;
 
         return {
@@ -213,8 +214,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
     // Memoiza as tarefas ordenadas para evitar recálculos desnecessários
     const filteredAndSortedTasks = useMemo(() => {
         let filteredItems = tasks.filter(task => {
-            // 1. Filtro de Data
-            const taskDate = task.dth_inclusao.split('T')[0];
+            // 1. Filtro de Data (ajustado para o formato YYYY-MM-DD HH:mm:ss)
+            const taskDate = task.dth_inclusao.split('T')[0]; // Extrai apenas a parte da data (YYYY-MM-DD)
             if (startDate && taskDate < startDate) {
                 return false;
             }
@@ -293,12 +294,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
     // Utiliza o hook de exportação, agora que filteredAndSortedTasks já foi declarada.
     const { handleExport } = useTaskExporter(filteredAndSortedTasks, contextType);
 
-    const handleSaveTask = (newTaskData: Omit<Task, 'id' | 'dth_inclusao'>) => {
-        const newTask: Task = {
-            ...newTaskData,
-            id: Date.now(), // Gerando um ID simples para o exemplo
-            dth_inclusao: new Date().toISOString().split('T')[0], // Data atual
-        };
+    const handleSaveTask = (newTask: Task) => {
         onAddTask(newTask);
         setIsAddModalOpen(false); // Fecha o modal após salvar
     };
@@ -396,23 +392,18 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
 
     const handleStatusChange = (newStatusCode: string) => {
         if (selectedTask) {
-            const wasFinished = selectedTask.ind_sit_tarefa === 'FN';
-            const isNowFinished = newStatusCode === 'FN';
-
-            const updatedTask = {
-                ...selectedTask,
-                ind_sit_tarefa: newStatusCode,
-                sit_tarefa: statusOptions[newStatusCode] || selectedTask.sit_tarefa,
-                dth_encerramento: isNowFinished ? new Date().toISOString() : (wasFinished ? '' : selectedTask.dth_encerramento),
-            };
-            onUpdateTask(updatedTask);
+            // Chama a nova função otimizada, passando apenas o ID e o novo status
+            updateTaskStatus(selectedTask.id, newStatusCode);
         }
         handleStatusMenuClose();
     };
 
     const handleUpdateTask = (updatedTask: Task) => {
-        onUpdateTask(updatedTask);
-        setIsEditModalOpen(false);
+        // onUpdateTask agora é uma função async que faz a chamada à API.
+        // Usamos .then() para fechar o modal apenas quando a operação for concluída.
+        (onUpdateTask as (task: Task) => Promise<void>)(updatedTask).then(() => {
+            setIsEditModalOpen(false);
+        });
     };
 
     const confirmDelete = () => {
@@ -531,7 +522,13 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                     <label>Até:</label>
                     <input type="date" className="filter-date-input" value={endDate || ''} onChange={(e) => onDateChange(startDate || '', e.target.value)} />
                 </div>
-                <button className="clear-filters-btn" onClick={() => { setSearchTerm(''); onDateChange('', ''); }}>
+                <button className="clear-filters-btn" onClick={() => {
+                    // Limpa o termo de busca
+                    setSearchTerm('');
+                    // Limpa a data inicial para mostrar todos os registros antigos
+                    // Mantém a data final para que o campo "Até" continue preenchido
+                    onDateChange('', endDate);
+                }}>
                     Limpar Filtros
                 </button>
             </div>
@@ -581,7 +578,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                     </td>
                                     <td className="cell-status">
                                         <span className="status-badge" style={statusConfig[task.ind_sit_tarefa] || {}} onClick={(e) => handleStatusMenuOpen(e, task)}>
-                                            {task.sit_tarefa}
+                                            {statusOptions[task.ind_sit_tarefa] || task.sit_tarefa}
                                         </span>
                                     </td>
                                     <td className="cell-content">
@@ -634,7 +631,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                         )}
                                     </td>
                                     <td>
-                                        {new Date(task.dth_inclusao.replace(/-/g, '\/')).toLocaleDateString()}
+                                        {new Date(task.dth_inclusao).toLocaleDateString('pt-BR')}
                                     </td>
                                     <td className="cell-actions">
                                         <IconButton aria-label="mais opções" className="action-button" onClick={(e) => handleMenuOpen(e, task)}>

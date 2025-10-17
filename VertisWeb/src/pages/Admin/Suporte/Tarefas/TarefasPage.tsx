@@ -8,7 +8,9 @@ import { useTasks } from '../../../../hooks/useTasks';
 export interface Recurso { // Exportando para utilizar no edit task
     id_recurso: number;
     nom_recurso: string;
-    recurso_funcao?: string;
+    recurso_funcao?: string; // Mapeado de inf_adicional
+    telefone?: string;
+    email?: string;
 }
 
 export interface Comentario { // Exportando para utilizar no edit task
@@ -40,7 +42,7 @@ export interface Task { // Exportando para ser usado no Modal
     dth_encerramento?: string;
     dth_inclusao: string;
     tipo_chamado?: string[]; // Alterado para array de strings
-    satisfaction_rating?: number; // Novo campo para satisfação do cliente
+    tarefa_avaliacao?: number; // Novo campo para satisfação do cliente
     dth_exclusao?: string;
 }
 
@@ -49,7 +51,7 @@ export interface Task { // Exportando para ser usado no Modal
 
 function TarefasPage() {
     // Utiliza o hook customizado para buscar e gerenciar as tarefas de suporte
-    const { tasks, isLoading, startDate, endDate, setStartDate, setEndDate, addTask, updateTask, deleteTask } = useTasks('support');
+    const { tasks, isLoading, startDate, endDate, setStartDate, setEndDate, addTask, updateTask, deleteTask, updateTaskStatus } = useTasks('support');
 
     // Efeito para atualizar o título da página no navegador
     useEffect(() => {
@@ -72,6 +74,7 @@ function TarefasPage() {
             onAddTask={addTask}
             onUpdateTask={updateTask}
             onDeleteTask={deleteTask}
+            updateTaskStatus={updateTaskStatus}
             onDateChange={handleDateChange} // Passa a função de callback para o filho
             contextType='support'
         />

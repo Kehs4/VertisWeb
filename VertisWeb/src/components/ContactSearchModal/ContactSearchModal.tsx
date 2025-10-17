@@ -17,6 +17,8 @@ export interface Contact {
     id_unid_oper: number;
     nom_unid_oper: string;
     telefone: string;
+    email?: string;
+    inf_adicional?: string;
 }
 
 interface ContactSearchModalProps {
@@ -115,6 +117,7 @@ const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose
             id_unid_oper: 0,
             nom_unid_oper: '',
             telefone: ''
+            // email e inf_adicional serão undefined por padrão
         });
     };
 
@@ -149,10 +152,12 @@ const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose
                     <div className="contact-edit-form">
                         <h4>{editingContact.id ? 'Editar Contato' : 'Adicionar Novo Contato'}</h4>
                         <div className="form-grid">
-                            <input name="nome" value={editingContact.nome || ''} onChange={handleEditChange} placeholder="Nome do Contato" required />
+                            <input name="nome" value={editingContact.nome || ''} onChange={handleEditChange} placeholder="Nome*" required />
+                            <input name="inf_adicional" value={editingContact.inf_adicional || ''} onChange={handleEditChange} placeholder="Função/Info Adicional" />
+                            <input name="telefone" value={editingContact.telefone || ''} onChange={handleEditChange} placeholder="Telefone" />
+                            <input name="email" value={editingContact.email || ''} onChange={handleEditChange} placeholder="Email" />
                             <input name="nom_unid_negoc" value={editingContact.nom_unid_negoc || ''} onChange={handleEditChange} placeholder="Unidade de Negócio" />
                             <input name="nom_unid_oper" value={editingContact.nom_unid_oper || ''} onChange={handleEditChange} placeholder="Unidade Operacional" />
-                            <input name="telefone" value={editingContact.telefone || ''} onChange={handleEditChange} placeholder="Telefone" />
                             {/* Campos de ID ficam ocultos, mas são necessários */}
                             <input type="hidden" name="id_unid_negoc" value={editingContact.id_unid_negoc || 0} />
                             <input type="hidden" name="id_unid_oper" value={editingContact.id_unid_oper || 0} />
@@ -169,9 +174,11 @@ const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose
                         <thead>
                             <tr>
                                 <th>Contato</th>
+                                <th>Função</th>
+                                <th>Telefone</th>
+                                <th>Email</th>
                                 <th>Unid. Negócio</th>
                                 <th>Unid. Operacional</th>
-                                <th>Telefone</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -181,10 +188,12 @@ const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose
                             ) : contacts.length > 0 ? (
                                 contacts.map(contact => (
                                     <tr key={contact.id} onDoubleClick={() => handleSelectContact(contact)}>
-                                        <td onClick={() => handleSelectContact(contact)} className="selectable-cell">{contact.nome}</td>
-                                        <td onClick={() => handleSelectContact(contact)} className="selectable-cell">{contact.nom_unid_negoc}</td>
-                                        <td onClick={() => handleSelectContact(contact)} className="selectable-cell">{contact.nom_unid_oper}</td>
-                                        <td onClick={() => handleSelectContact(contact)} className="selectable-cell">{contact.telefone}</td>
+                                        <td className="selectable-cell" onClick={() => handleSelectContact(contact)}>{contact.nome}</td>
+                                        <td className="selectable-cell" onClick={() => handleSelectContact(contact)}>{contact.inf_adicional}</td>
+                                        <td className="selectable-cell" onClick={() => handleSelectContact(contact)}>{contact.telefone}</td>
+                                        <td className="selectable-cell" onClick={() => handleSelectContact(contact)}>{contact.email}</td>
+                                        <td className="selectable-cell" onClick={() => handleSelectContact(contact)}>{contact.nom_unid_negoc}</td>
+                                        <td className="selectable-cell" onClick={() => handleSelectContact(contact)}>{contact.nom_unid_oper}</td>
                                         <td className="cell-actions">
                                             <IconButton size="small" onClick={() => setEditingContact(contact)} title="Editar">
                                                 <EditIcon fontSize="small" />

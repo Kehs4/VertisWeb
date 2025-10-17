@@ -15,7 +15,7 @@ interface AddTaskModalProps {
     isOpen: boolean;
     onClose: () => void;
     // onSave agora espera a tarefa completa retornada pela API
-    onSave: (newTask: Task) => void; 
+    onSave: (newTask: Task) => void;
     contextType?: 'support' | 'development' | 'commercial';
 }
 
@@ -25,8 +25,8 @@ const initialFormState: Omit<Task, 'id' | 'dth_inclusao' | 'sit_tarefa'> & {
     nom_criado_por: string; // Nome do contato que criou a tarefa
     recursos: Recurso[]; // Garante que seja Recurso[]
 } = {
-    id_criado_por: null, 
-    nom_criado_por: '', 
+    id_criado_por: null,
+    nom_criado_por: '',
     titulo_tarefa: '',
     ind_prioridade: 2, // Default to 'Média'
     ind_sit_tarefa: 'AB',
@@ -43,7 +43,7 @@ const initialFormState: Omit<Task, 'id' | 'dth_inclusao' | 'sit_tarefa'> & {
     comentarios: [], // Não usado no POST, mas parte da interface Task
     dth_encerramento: undefined,
     tipo_chamado: [], // Agora é um array vazio
-    satisfaction_rating: undefined,
+    tarefa_avaliacao: undefined,
     dth_exclusao: undefined,
 };
 
@@ -66,7 +66,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     useEffect(() => {
         // Reset form when modal is opened
         if (isOpen) {
-            const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+            const today = new Date().toLocaleDateString('en-CA'); // Formato YYYY-MM-DD
             setFormData({
                 ...initialFormState,
                 dth_prev_entrega: today, // Preenche a previsão de entrega com a data atual
@@ -142,11 +142,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         e.preventDefault();
         if (isSaving) return; // Previne envio duplo
 
-       /* // Validação básica
-        if (!formData.titulo_tarefa || !formData.id_criado_por || !formData.id_unid_negoc || !formData.id_unid_oper) {
-            alert('Por favor, preencha todos os campos obrigatórios (Título, Solicitante, Unidade de Negócio, Unidade Operacional).');
-            return;
-        }*/
+        /* // Validação básica
+         if (!formData.titulo_tarefa || !formData.id_criado_por || !formData.id_unid_negoc || !formData.id_unid_oper) {
+             alert('Por favor, preencha todos os campos obrigatórios (Título, Solicitante, Unidade de Negócio, Unidade Operacional).');
+             return;
+         }*/
 
         setIsSaving(true);
 
@@ -240,7 +240,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                             name="titulo_tarefa"
                             value={formData.titulo_tarefa}
                             onChange={handleChange}
-                            style={{resize : 'none'}}
+                            style={{ resize: 'none' }}
                             required
                             rows={3}
                         />
@@ -273,38 +273,39 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                                     name="nom_unid_oper"
                                     value={formData.nom_unid_oper}
                                     onChange={handleChange}
-                                    
+
                                 />
                             </div>
                         )}
                     </div>
-
-                    <div className="form-group">
-                        <label htmlFor="ind_prioridade">Prioridade</label>
-                        <select
-                            id="ind_prioridade"
-                            name="ind_prioridade"
-                            value={formData.ind_prioridade}
-                            onChange={handleChange}
-                        >
-                            <option value={1}>Baixa</option>
-                            <option value={2}>Média</option>
-                            <option value={3}>Alta</option>
-                            <option value={4}>Urgente</option>
-                        </select>
-                    </div>
-
+                    
                     <div className="form-row">
                         <div className="form-group">
-                            <label htmlFor="dth_prev_entrega">Previsão de Entrega</label>
-                            <input
-                                type="date"
-                                id="dth_prev_entrega"
-                                name="dth_prev_entrega"
-                                value={formData.dth_prev_entrega}
+                            <label htmlFor="ind_prioridade">Prioridade</label>
+                            <select
+                                id="ind_prioridade"
+                                name="ind_prioridade"
+                                value={formData.ind_prioridade}
                                 onChange={handleChange}
-                            />
+                            >
+                                <option value={1}>Baixa</option>
+                                <option value={2}>Média</option>
+                                <option value={3}>Alta</option>
+                                <option value={4}>Urgente</option>
+                            </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="dth_prev_entrega">Previsão de Entrega</label>
+                                <input
+                                    type="date"
+                                    id="dth_prev_entrega"
+                                    name="dth_prev_entrega"
+                                    value={formData.dth_prev_entrega}
+                                    onChange={handleChange}
+                                />
                         </div>
+
                     </div>
 
                     <div className="form-row">
@@ -317,7 +318,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                                 name="nom_unid_negoc"
                                 value={formData.nom_unid_negoc}
                                 onChange={handleChange}
-                                
+
                             />
                         </div>
                         {/* O input para id_unid_negoc (o ID numérico) não precisa ser visível,
@@ -326,10 +327,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                             e ter o name="id_unid_negoc" e value={formData.id_unid_negoc}.
                             Por enquanto, assumimos que nom_unid_negoc é apenas para exibição.
                         */}
-                    </div>
-
-                    <div className="form-row">
-                        {/* Este form-row foi movido para evitar duplicação e organizar melhor */}
                         <div className="form-group">
                             <label htmlFor='nom_recurso'>{labels.analyst}</label>
                             <div className="resource-pills-container">
@@ -337,7 +334,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                                     <div key={resource.id_recurso} className="resource-pill">
                                         {resource.nom_recurso}
                                         <button type="button" onClick={() => {
-                                            handleResourceConfirm( (Array.isArray(formData.recursos) ? formData.recursos : []).filter(r => r.id_recurso !== resource.id_recurso) )
+                                            handleResourceConfirm((Array.isArray(formData.recursos) ? formData.recursos : []).filter(r => r.id_recurso !== resource.id_recurso))
                                         }}>&times;</button>
                                     </div>
                                 ))}
@@ -346,8 +343,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                                 </button>
                             </div>
                         </div>
-
                     </div>
+
+
 
                     <div className="form-group">
                         <label htmlFor="ind_vinculo">Vínculo</label>

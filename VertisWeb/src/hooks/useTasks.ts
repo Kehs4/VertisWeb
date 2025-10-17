@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Task } from '../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
 
 type TaskContext = 'support' | 'development' | 'commercial';
@@ -81,16 +81,105 @@ export const useTasks = (context: TaskContext) => {
         setTasks(prevTasks => [newTask, ...prevTasks]);
     };
 
-    const updateTask = (updatedTask: Task) => {
-        setTasks(prevTasks =>
-            prevTasks.map(task => (task.id === updatedTask.id ? updatedTask : task))
-        );
-    };
+    const updateTaskStatus = useCallback(async (taskId: number, newStatus: string) => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`/api/tasks/${taskId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ind_sit_tarefa: newStatus }),
+            });
 
-    const deleteTask = (taskId: number) => {
-        setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-    };
+            if (response.ok) {
+                const { ind_sit_tarefa, dth_encerramento } = await response.json();
+                // Atualiza o estado local de forma otimizada, sem refazer a busca
+                setTasks(prevTasks =>
+                    prevTasks.map(task =>
+                        task.id === taskId
+                            ? { ...task, ind_sit_tarefa, dth_encerramento: dth_encerramento || task.dth_encerramento }
+                            : task
+                    )
+                );
+            } else {
+                console.error(`Falha ao atualizar status da tarefa ${taskId}`);
+            }
+        } catch (error) {
+            console.error(`Erro de rede ao atualizar status da tarefa ${taskId}:`, error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const updateTask = useCallback(async (taskToUpdate: Task): Promise<void> => {
+        setIsLoading(true);
+        try {
+            // Prepara o payload para a API, removendo campos que não devem ser enviados
+            // e enviando apenas os dados que podem ser editados.
+            const payload = {
+                titulo_tarefa: taskToUpdate.titulo_tarefa,
+                ind_prioridade: taskToUpdate.ind_prioridade,
+                ind_sit_tarefa: taskToUpdate.ind_sit_tarefa,
+                dth_prev_entrega: taskToUpdate.dth_prev_entrega || null,
+                tarefa_avaliacao: taskToUpdate.tarefa_avaliacao,
+                id_vinculo: taskToUpdate.id_vinculo || null,
+                ind_vinculo: taskToUpdate.id_vinculo ? 'S' : 'N',
+                tipo_chamado: taskToUpdate.tipo_chamado || [],
+                recursos: Array.isArray(taskToUpdate.recursos) ? taskToUpdate.recursos.map(r => ({ id_recurso: r.id_recurso })) : [],
+            };
+
+            const response = await fetch(`/api/tasks/${taskToUpdate.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                const returnedTask = await response.json();
+                // Atualiza o estado local com a tarefa retornada pela API (que é a fonte da verdade)
+                setTasks(prevTasks =>
+                    prevTasks.map(task => (task.id === returnedTask.id ? returnedTask : task))
+                );
+            } else {
+                const errorText = await response.text();
+                console.error(`Falha ao atualizar tarefa ${taskToUpdate.id}:`, errorText);
+                alert(`Erro ao atualizar tarefa: ${errorText}`);
+                throw new Error(errorText); // Lança um erro para o .catch do chamador
+            }
+        } catch (error) {
+            console.error(`Erro de rede ao atualizar tarefa ${taskToUpdate.id}:`, error);
+            throw error; // Re-lança o erro
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const deleteTask = useCallback(async (taskId: number) => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`/api/tasks/${taskId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                // Se a exclusão no backend for bem-sucedida, remove a tarefa do estado local
+                setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+                // Opcional: Se houver alguma complexidade na atualização da lista,
+                // você pode chamar fetchTasks() novamente para garantir a consistência.
+                // await fetchTasks();
+            } else {
+                const errorText = await response.text();
+                console.error(`Falha ao remover tarefa ${taskId}:`, errorText);
+                alert(`Erro ao remover tarefa: ${errorText}`);
+            }
+        } catch (error) {
+            console.error(`Erro de rede ao remover tarefa ${taskId}:`, error);
+            alert('Erro de rede ao remover tarefa.');
+        } finally {
+            setIsLoading(false);
+        }
+    }, []); // Não há dependências externas que mudem o comportamento desta função
+
 
     // Retorna os estados e as funções para serem usados no componente
-    return { tasks, isLoading, startDate, endDate, setStartDate, setEndDate, addTask, updateTask, deleteTask };
+    return { tasks, isLoading, startDate, endDate, setStartDate, setEndDate, addTask, updateTask, deleteTask, updateTaskStatus };
 };

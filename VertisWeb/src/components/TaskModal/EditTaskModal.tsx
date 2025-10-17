@@ -52,31 +52,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         'FN': 'Finalizado',
         'CA': 'Cancelado',
     };
+
     useEffect(() => {
+        // Quando o modal abrir, define o estado do formulário com os dados da tarefa recebida.
+        // Também reseta os outros estados do modal.
         if (isOpen && task) {
-            const fetchTaskDetails = async () => {
-                setIsFetchingDetails(true);
-                try {
-                    const response = await fetch(`/api/task/${task.id}`);
-
-                    if (response.ok) {
-                        const detailedTask = await response.json();
-                        setFormData(detailedTask);
-                        console.log(detailedTask)
-                    } else {
-                        console.error("Falha ao buscar detalhes da tarefa:", response.statusText);
-                        // Em caso de erro, carrega os dados resumidos para não quebrar o modal
-                        setFormData(task);
-                    }
-                } catch (error) {
-                    console.error("Erro de rede ao buscar detalhes da tarefa:", error);
-                    setFormData(task);
-                } finally {
-                    setIsFetchingDetails(false);
-                }
-            };
-
-            fetchTaskDetails();
+            setFormData(task);
         }
         setIsEditing(false); // Reseta para o modo de visualização sempre que o modal/task muda
         setIsAddingFlags(false); // Esconde a lista de flags disponíveis
@@ -84,33 +65,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         setIsLinkedTasksModalOpen(false);
         setIsTaskSearchModalOpen(false);
         setIsSaving(false); // Reseta o estado de salvamento
-    }, [task, isOpen]);
-
-    // Efeito para buscar a contagem de tarefas vinculadas quando o ID do vínculo muda
-    useEffect(() => {
-        // Busca a contagem de tarefas vinculadas quando o modal é aberto
-        if (formData?.ind_vinculo === 'S' && formData.id_vinculo) {
-            const fetchLinkedTasksCount = async () => {
-                try {
-                    // A busca é feita em todas as tarefas, pois não há endpoint específico para contagem
-                    const response = await fetch(`/api/tasks`);
-                    if (response.ok) {
-                        const allTasks: Task[] = await response.json();
-                        const count = allTasks.filter(t => t.id_vinculo === formData.id_vinculo).length;
-                        setLinkedTasksCount(count);
-                    } else {
-                        setLinkedTasksCount(0);
-                    }
-                } catch (error) {
-                    console.error("Erro ao contar tarefas vinculadas:", error);
-                    setLinkedTasksCount(0);
-                }
-            };
-            fetchLinkedTasksCount();
-        } else {
-            setLinkedTasksCount(0);
-        }
-    }, [formData?.ind_vinculo, formData?.id_vinculo]);
+    }, [isOpen, task]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         if (!formData) return;
@@ -140,7 +95,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         } else {
             setFormData({
                 ...formData,
-                [name]: ['ind_prioridade', 'qtd_pontos', 'satisfaction_rating'].includes(name)
+                [name]: ['ind_prioridade', 'qtd_pontos', 'tarefa_avaliacao'].includes(name)
                     ? parseInt(value, 10) || 0 // Converte para número, com fallback para 0
                     : value,
             });
@@ -203,58 +158,13 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         e.preventDefault();
         if (!formData || !task || isSaving) return;
 
-        setIsSaving(true);
-
-        try {
-            const payload = {
-                ...formData,
-                // Garante que id_criado_por seja enviado, não nom_criado_por para a API
-                id_criado_por: formData.id_criado_por,
-                // Mapeia recursos para o formato esperado pela API
-                recursos: Array.isArray(formData.recursos) ? formData.recursos.map(r => ({ id_recurso: r.id_recurso })) : [],
-                // Garante que as datas estejam no formato correto para a API (YYYY-MM-DD HH:mm:ss ou null)
-                dth_prev_entrega: formData.dth_prev_entrega || null,
-                dth_abertura: formData.dth_abertura || null,
-                dth_encerramento: formData.dth_encerramento || null,
-                dth_exclusao: formData.dth_exclusao || null,
-                // Garante que tipo_chamado seja um array de strings
-                tipo_chamado: formData.tipo_chamado || [],
-                // Garante que id_vinculo seja null se não estiver definido
-                id_vinculo: formData.id_vinculo || null,
-                // Remove comentários, pois são tratados separadamente
-                comentarios: undefined,
-                // Remove sit_tarefa, pois é derivado de ind_sit_tarefa
-                sit_tarefa: undefined,
-                // Remove nom_criado_por, pois é derivado de id_criado_por
-                nom_criado_por: undefined,
-                // Remove nom_unid_negoc, nom_unid_oper, pois são derivados de IDs
-                nom_unid_negoc: undefined,
-                nom_unid_oper: undefined,
-            };
-
-            const response = await fetch(`/api/tasks/${task.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (response.ok) {
-                const updatedTask: Task = await response.json();
-                onSave(updatedTask); // Notifica o pai com a tarefa completa retornada pela API
-                onClose(); // Fecha o modal em caso de sucesso
-            } else {
-                const errorData = await response.text();
-                console.error('Erro ao atualizar tarefa:', errorData);
-                alert(`Erro ao atualizar tarefa: ${errorData}`);
-            }
-        } catch (error) {
-            console.error('Erro de rede ao atualizar tarefa:', error);
-            alert('Erro de rede ao atualizar tarefa.');
-        } finally {
-            setIsSaving(false);
-        }
+        // Agora, em vez de fazer o fetch aqui, apenas chamamos a função onSave
+        // que foi passada pelo componente pai (TaskListView), que por sua vez
+        // chama a função updateTask do hook useTasks.
+        // A lógica de salvamento e API fica centralizada no hook.
+        onSave(formData);
+        // O fechamento do modal e o controle de 'isSaving' serão gerenciados
+        // pela função que recebe o onSave.
     };
 
     const handleCancelEdit = () => {
@@ -368,7 +278,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                              <div className="form-row">
                                 <div className="form-group">
                                     <label htmlFor="dth_prev_entrega">Previsão de Entrega</label>
-                                    <input type="date" id="dth_prev_entrega" name="dth_prev_entrega" value={formData.dth_prev_entrega?.split(' ')[0] || ''} onChange={handleChange} readOnly={!isEditing} />
+                                    <input type="date" id="dth_prev_entrega" name="dth_prev_entrega" value={formData.dth_prev_entrega?.split('T')[0] || ''} onChange={handleChange} readOnly={!isEditing} />
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="dth_encerramento">Data de Encerramento</label>
@@ -378,12 +288,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                         readOnly style={{ cursor: 'default', backgroundColor: '#f1f3f5' }} />
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="satisfaction_rating">Avaliação</label>
+                                    <label htmlFor="tarefa_avaliacao">Avaliação</label>
                                     <div className="satisfaction-input-group">
                                         <StarIcon />
                                         <input
-                                            type="number" id="satisfaction_rating" name="satisfaction_rating"
-                                            value={formData.satisfaction_rating || ''} onChange={handleChange}
+                                            type="number" id="tarefa_avaliacao" name="tarefa_avaliacao"
+                                            value={formData.tarefa_avaliacao || ''} onChange={handleChange}
                                             min="0" max="10"
                                             readOnly={!isEditing || formData.ind_sit_tarefa !== 'FN'}
                                             placeholder="0-10" />

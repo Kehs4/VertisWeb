@@ -31,7 +31,7 @@ app.use(express.json());
 app.use(cookieParser()); // Adiciona o middleware para processar cookies
 app.use(cors());
  
-app.post('/login', async (req, res) => {
+app.post('/login', async (req, res) => { // endpoint de login que retorna o token
     try {
         const { username, password } = req.body;
         // Log dos dados recebidos do frontend
@@ -111,32 +111,64 @@ const getFormattedDate = (date) => {
     return `${year}-${month}-${day}`;
 };
 
-app.get('/tasks', async (req, res) => {
+// Helper function to format a Date object to 'YYYY-MM-DD HH:mm:ss' local time string
+const formatToDbTimestamp = (date) => {
+    if (!date) return null;
+    const d = new Date(date); // Ensure it's a Date object
+    // Check if the date is valid
+    if (isNaN(d.getTime())) {
+        console.warn(`Invalid date provided to formatToDbTimestamp: ${date}`);
+        return null;
+    }
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
+app.get('/tasks', async (req, res) => { // endpoint que retorna todas as tasks na task list view.
     // Pega as datas da query string ou usa a data atual como padrão
     const today = getFormattedDate(new Date());
-    const { dat_inicial = today, dat_final = today } = req.query;
+    // Pega os valores da query. Se não vierem, o padrão é `undefined`.
+    let { dat_inicial, dat_final } = req.query;
 
-    console.log(`[API /tasks] Buscando tarefas de ${dat_inicial} até ${dat_final} no banco de dados.`);
+    // Se a data final não for fornecida, usa a data de hoje como padrão.
+    if (!dat_final) {
+        dat_final = today;
+    }
+
+    // Converte string vazia para null para a lógica da query
+    const final_dat_inicial = dat_inicial === '' ? null : dat_inicial;
+
+    console.log(`[API /tasks] Buscando tarefas de ${final_dat_inicial || 'início'} até ${dat_final} no banco de dados.`);
 
     try {
-        // A coluna de data/hora na tabela parece ser 'dth_inclusao'.
-        // Usamos '::date' para comparar apenas a parte da data.
-        const query = `
+        let query = `
             SELECT
                 t.id, t.id_unid_negoc, t.id_unid_oper, t.id_sist_modulo, t.id_criado_por,
                 creator.nom_contato as nom_criado_por, -- Adiciona o nome do criador
-                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa,
-                TO_CHAR(t.dth_inclusao, 'YYYY-MM-DD HH24:MI:SS') as dth_inclusao,
-                TO_CHAR(t.dth_abertura, 'YYYY-MM-DD HH24:MI:SS') as dth_abertura,
-                TO_CHAR(t.dth_encerramento, 'YYYY-MM-DD HH24:MI:SS') as dth_encerramento,
-                TO_CHAR(t.dth_prev_entrega, 'YYYY-MM-DD HH24:MI:SS') as dth_prev_entrega,
-                t.dth_exclusao
+                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa, t.tarefa_avaliacao,
+                t.dth_inclusao, t.dth_abertura, t.dth_encerramento, t.dth_prev_entrega, t.dth_exclusao
             FROM unid_oper_tarefa t
             LEFT JOIN unid_oper_contatos creator ON t.id_criado_por = creator.id_contato
-            WHERE t.dth_inclusao::date >= $1 AND t.dth_inclusao::date <= $2
-            ORDER BY t.dth_inclusao DESC;
         `;
-        const params = [dat_inicial, dat_final];
+
+        const params = [];
+        const whereClauses = [];
+
+        // Adiciona a cláusula WHERE dinamicamente
+        if (final_dat_inicial) {
+            params.push(final_dat_inicial);
+            whereClauses.push(`t.dth_inclusao::date >= $${params.length}`);
+        }
+        params.push(dat_final); // A data final sempre existe
+        whereClauses.push(`t.dth_inclusao::date <= $${params.length}`);
+
+        query += ` WHERE ${whereClauses.join(' AND ')}`;
+        query += ' ORDER BY t.dth_inclusao DESC;';
 
         const { rows } = await pool.query(query, params);
         
@@ -158,7 +190,7 @@ app.get('/tasks', async (req, res) => {
     }
 });
 
-app.get('/task/:id', async (req, res) => {
+app.get('/task/:id', async (req, res) => { // endpoint para get na aba de detalhes de uma tarefa por id especifico.
     try {
         const taskId = req.params.id;
         console.log(`[API /task/:id] Buscando tarefa com ID: ${taskId}`);
@@ -168,11 +200,11 @@ app.get('/task/:id', async (req, res) => {
             SELECT 
                 t.id, t.id_unid_negoc, t.id_unid_oper, t.id_sist_modulo, t.id_criado_por,
                 creator.nom_contato as nom_criado_por,
-                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa,
-                TO_CHAR(t.dth_inclusao, 'YYYY-MM-DD HH24:MI:SS') as dth_inclusao,
-                TO_CHAR(t.dth_abertura, 'YYYY-MM-DD HH24:MI:SS') as dth_abertura,
-                TO_CHAR(t.dth_encerramento, 'YYYY-MM-DD HH24:MI:SS') as dth_encerramento,
-                TO_CHAR(t.dth_prev_entrega, 'YYYY-MM-DD HH24:MI:SS') as dth_prev_entrega,
+                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa, t.tarefa_avaliacao,
+                t.dth_inclusao,
+                t.dth_abertura,
+                t.dth_encerramento,
+                t.dth_prev_entrega,
                 t.dth_exclusao
             FROM unid_oper_tarefa t
             LEFT JOIN unid_oper_contatos creator ON t.id_criado_por = creator.id_contato
@@ -202,33 +234,93 @@ app.get('/task/:id', async (req, res) => {
     }
 })
 
-app.post('/tasks', async (req, res) => {
+app.delete('/tasks/:id', async (req, res) => { // Endpoint de remoção de task por id.
+    const { id } = req.params;
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN'); // Inicia a transação
+
+         // 1. Remover associações de recursos na tabela de junção.
+        // É importante fazer isso primeiro para evitar violações de chave estrangeira.
+        await client.query('DELETE FROM unid_oper_tarefa_x_recurso WHERE id_tarefa = $1', [id]);
+
+        // 2. Remover a tarefa principal da tabela de tarefas.
+        const { rowCount } = await client.query('DELETE FROM unid_oper_tarefa WHERE id = $1', [id]);
+
+        if (rowCount === 0) {
+            // Se a tarefa não foi encontrada, desfaz a transação e retorna 404.
+            await client.query('ROLLBACK');
+            return res.status(404).send('Tarefa não encontrada.');
+        }
+
+        await client.query('COMMIT'); // Confirma a transação se tudo deu certo.
+        console.log(`[API /tasks] Tarefa ${id} e seus recursos associados foram removidos com sucesso.`);
+        res.status(204).send(); // 204 No Content é a resposta padrão para um DELETE bem-sucedido.
+
+    } catch (error) {
+        await client.query('ROLLBACK'); // Desfaz a transação em caso de erro.
+        console.error(`Ocorreu um erro ao remover a tarefa ${id}:`, error);
+        res.status(500).send('Erro interno do servidor');
+    } finally {
+        client.release(); // Libera o cliente de volta para o pool.
+    }
+});
+
+app.post('/tasks', async (req, res) => { // endpoint de criação de uma task pelo botão adicionar.
     const client = await pool.connect();
     try {
         await client.query('BEGIN'); // Inicia a transação
 
         const { titulo_tarefa, id_criado_por, id_unid_negoc, id_unid_oper, ind_prioridade, dth_prev_entrega, recursos = [] } = req.body;
 
+        // Se dth_prev_entrega for a data de hoje, usamos NOW() para incluir a hora exata.
+        // Se for uma data futura, usamos o valor como está (que será 'YYYY-MM-DD 00:00:00' no DB).
+        const todayStr = new Date().toISOString().split('T')[0];
+        const isToday = dth_prev_entrega && dth_prev_entrega.startsWith(todayStr);
+        
         // 1. Insere a tarefa principal
         const taskQuery = `
             INSERT INTO unid_oper_tarefa (titulo_tarefa, id_criado_por, id_unid_negoc, id_unid_oper, ind_prioridade, dth_prev_entrega, ind_sit_tarefa, dth_inclusao)
-            VALUES ($1, $2, $3, $4, $5, $6, 'AB', NOW())
+            VALUES ($1, $2, $3, $4, $5, ${isToday ? `NOW()::timestamp(0)` : `$6`}, 'AB', NOW()::timestamp(0))
             RETURNING *;
         `;
-        const taskValues = [titulo_tarefa, id_criado_por, id_unid_negoc, id_unid_oper, ind_prioridade, dth_prev_entrega || null];
+        const taskValues = [titulo_tarefa, id_criado_por, id_unid_negoc, id_unid_oper, ind_prioridade];
+        if (!isToday) {
+            taskValues.push(dth_prev_entrega || null);
+        }
         const { rows: [newTask] } = await client.query(taskQuery, taskValues);
 
         // 2. Insere os recursos associados
         if (recursos && recursos.length > 0) {
-            const resourceQuery = 'INSERT INTO unid_oper_tarefa_x_recurso (id_tarefa, id_recurso) VALUES ($1, $2)';
+            const resourceQuery = 'INSERT INTO unid_oper_tarefa_x_recurso (id_tarefa, id_recurso, dth_inclusao) VALUES ($1, $2, NOW())';
             for (const recurso of recursos) {
                 await client.query(resourceQuery, [newTask.id, recurso.id_recurso]);
             }
         }
 
+        // 3. Busca a tarefa completa para retornar ao frontend
+        const selectFullTaskQuery = `
+            SELECT 
+                t.*,
+                creator.nom_contato as nom_criado_por
+            FROM unid_oper_tarefa t
+            LEFT JOIN unid_oper_contatos creator ON t.id_criado_por = creator.id_contato
+            WHERE t.id = $1;
+        `;
+        const { rows: [fullTask] } = await client.query(selectFullTaskQuery, [newTask.id]);
+
+        // Busca os recursos associados para adicionar à resposta
+        const resourceQuery = `
+            SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
+            FROM unid_oper_tarefa_x_recurso utr
+            JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
+            WHERE utr.id_tarefa = $1`;
+        const { rows: finalResources } = await client.query(resourceQuery, [newTask.id]);
+        fullTask.recursos = finalResources;
+
         await client.query('COMMIT'); // Confirma a transação
-        console.log('[API /tasks] Nova tarefa criada com sucesso:', newTask);
-        res.status(201).json(newTask);
+        console.log('[API /tasks] Nova tarefa criada com sucesso:', fullTask);
+        res.status(201).json(fullTask);
 
     } catch (error) {
         await client.query('ROLLBACK'); // Desfaz a transação em caso de erro
@@ -239,7 +331,7 @@ app.post('/tasks', async (req, res) => {
     }
 });
 
-app.put('/tasks/:id', async (req, res) => {
+app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma task por id especifico.
     const { id } = req.params;
     const client = await pool.connect();
     try {
@@ -260,46 +352,50 @@ app.put('/tasks/:id', async (req, res) => {
             dth_exclusao, // Se a tarefa for excluída logicamente
             ind_vinculo,
             id_vinculo,
-            satisfaction_rating,
-            tipo_chamado = [], // Array de strings para flags
+            tarefa_avaliacao,
             recursos = [] // Array de objetos { id_recurso, nom_recurso }
         } = req.body;
 
-        // Converte dth_prev_entrega para o formato de data do DB, ou null
-        const formattedDthPrevEntrega = dth_prev_entrega ? new Date(dth_prev_entrega.split(' ')[0]).toISOString() : null;
-        const formattedDthAbertura = dth_abertura ? new Date(dth_abertura.split(' ')[0]).toISOString() : null;
-        const formattedDthEncerramento = dth_encerramento ? new Date(dth_encerramento.split(' ')[0]).toISOString() : null;
-        const formattedDthExclusao = dth_exclusao ? new Date(dth_exclusao.split(' ')[0]).toISOString() : null;
+        // 1. Atualização dinâmica da tarefa principal
+        const updateFields = [];
+        const updateValues = [];
+        let paramIndex = 1;
 
-        // 1. Atualiza a tarefa principal
-        const updateTaskQuery = `
-            UPDATE unid_oper_tarefa
-            SET
-                titulo_tarefa = $1,
-                id_unid_negoc = $2,
-                id_unid_oper = $3,
-                id_sist_modulo = $4,
-                ind_prioridade = $5,
-                ind_sit_tarefa = $6,
-                qtd_pontos = $7,
-                dth_prev_entrega = $8,
-                dth_abertura = $9,
-                dth_encerramento = $10,
-                dth_exclusao = $11,
-                ind_vinculo = $12,
-                id_vinculo = $13,
-                satisfaction_rating = $14,
-                tipo_chamado = $15
-            WHERE id = $16
-            RETURNING *;
-        `;
-        const updateTaskValues = [
-            titulo_tarefa, id_unid_negoc, id_unid_oper, id_sist_modulo,
-            ind_prioridade, ind_sit_tarefa, qtd_pontos, formattedDthPrevEntrega,
-            formattedDthAbertura, formattedDthEncerramento, formattedDthExclusao,
-            ind_vinculo, id_vinculo, satisfaction_rating, tipo_chamado, id
-        ];
-        const { rows: [updatedTask], rowCount } = await client.query(updateTaskQuery, updateTaskValues);
+        // Mapeia os campos do body para as colunas do DB
+        const fieldMapping = {
+            titulo_tarefa: titulo_tarefa,
+            id_unid_negoc: id_unid_negoc,
+            id_unid_oper: id_unid_oper,
+            id_sist_modulo: id_sist_modulo,
+            ind_prioridade: ind_prioridade,
+            ind_sit_tarefa: ind_sit_tarefa,
+            qtd_pontos: qtd_pontos,
+            dth_prev_entrega: formatToDbTimestamp(dth_prev_entrega),
+            dth_abertura: formatToDbTimestamp(dth_abertura),
+            dth_exclusao: formatToDbTimestamp(dth_exclusao),
+            ind_vinculo: ind_vinculo,
+            id_vinculo: id_vinculo,
+            tarefa_avaliacao: tarefa_avaliacao,
+        };
+
+        // Adiciona a data de encerramento com lógica especial
+        if (ind_sit_tarefa === 'FN') {
+            fieldMapping.dth_encerramento = formatToDbTimestamp(new Date());
+        } else if (dth_encerramento !== undefined) {
+            fieldMapping.dth_encerramento = formatToDbTimestamp(dth_encerramento);
+        }
+
+        for (const [key, value] of Object.entries(fieldMapping)) {
+            if (value !== undefined) { // Apenas campos definidos são atualizados
+                updateFields.push(`${key} = $${paramIndex++}`);
+                updateValues.push(value);
+            }
+        }
+
+        updateValues.push(id); // Adiciona o ID da tarefa como último parâmetro
+        const updateTaskQuery = `UPDATE unid_oper_tarefa SET ${updateFields.join(', ')} WHERE id = $${paramIndex} RETURNING *;`;
+        
+        const { rows: [updatedTask], rowCount } = await client.query(updateTaskQuery, updateValues);
 
         if (rowCount === 0) {
             await client.query('ROLLBACK');
@@ -312,15 +408,35 @@ app.put('/tasks/:id', async (req, res) => {
 
         // Em seguida, insere os novos recursos
         if (recursos && recursos.length > 0) {
-            const insertResourceQuery = 'INSERT INTO unid_oper_tarefa_x_recurso (id_tarefa, id_recurso) VALUES ($1, $2)';
+            const insertResourceQuery = 'INSERT INTO unid_oper_tarefa_x_recurso (id_tarefa, id_recurso, dth_inclusao) VALUES ($1, $2, NOW())';
             for (const recurso of recursos) {
                 await client.query(insertResourceQuery, [id, recurso.id_recurso]);
             }
         }
 
+        // 3. Busca a tarefa completa para retornar ao frontend
+        const selectFullTaskQuery = `
+            SELECT 
+                t.*,
+                creator.nom_contato as nom_criado_por
+            FROM unid_oper_tarefa t
+            LEFT JOIN unid_oper_contatos creator ON t.id_criado_por = creator.id_contato
+            WHERE t.id = $1;
+        `;
+        const { rows: [fullTask] } = await client.query(selectFullTaskQuery, [id]);
+
+        // Busca os recursos associados para adicionar à resposta
+        const resourceQuery = `
+            SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
+            FROM unid_oper_tarefa_x_recurso utr
+            JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
+            WHERE utr.id_tarefa = $1`;
+        const { rows: finalResources } = await client.query(resourceQuery, [id]);
+        fullTask.recursos = finalResources;
+
         await client.query('COMMIT'); // Confirma a transação
-        console.log(`[API /tasks] Tarefa ${id} atualizada com sucesso:`, updatedTask);
-        res.status(200).json(updatedTask);
+        console.log(`[API /tasks] Tarefa ${id} atualizada com sucesso:`, fullTask);
+        res.status(200).json(fullTask);
 
     } catch (error) {
         await client.query('ROLLBACK'); // Desfaz a transação em caso de erro
@@ -435,13 +551,27 @@ app.get('/task/:id', async (req, res) => {
 app.get('/contacts', async (req, res) => {
     const { search } = req.query;
     try {
-        let query = 'SELECT id_contato as id, nom_contato as nome, id_unid_oper, num_telefone1 as telefone FROM unid_oper_contatos';
+        let query = `
+            SELECT 
+                c.id_contato as id, 
+                c.nom_contato as nome, 
+                c.id_unid_oper, 
+               -- uo.nom_unid_oper,
+               -- un.id_unid_negoc,
+                --un.nom_unid_negoc,
+                c.num_telefone1 as telefone,
+                c.email_1 as email,
+                c.inf_adicional
+            FROM unid_oper_contatos c
+            --LEFT JOIN unid_operacional uo ON c.id_unid_oper = uo.id_unid_oper
+            --LEFT JOIN unid_negocio un ON uo.id_unid_negoc = un.id_unid_negoc
+        `;
         const params = [];
         if (search) {
-            query += ` WHERE nom_contato ILIKE $1 OR num_telefone1 ILIKE $1`;
+            query += ` WHERE c.nom_contato ILIKE $1 OR c.num_telefone1 ILIKE $1 OR c.email_1 ILIKE $1 OR c.inf_adicional ILIKE $1`;
             params.push(`%${search}%`);
         }
-        query += ' ORDER BY id_contato';
+        query += ' ORDER BY c.nom_contato';
         const { rows } = await pool.query(query, params);
         res.status(200).json(rows);
     } catch (error) {
@@ -452,14 +582,14 @@ app.get('/contacts', async (req, res) => {
 
 // POST /contacts - Criar novo contato
 app.post('/contacts', async (req, res) => {
-    const { nome, id_unid_negoc, nom_unid_negoc, id_unid_oper, nom_unid_oper, telefone } = req.body;
+    const { nome, id_unid_oper, telefone, email, inf_adicional } = req.body;
     try {
         const query = `
-            INSERT INTO unid_oper_contatos (nom_contato, id_unid_oper, num_telefone1)
-            VALUES ($1, $2, $3)
-            RETURNING id_contato as id, nom_contato as nome, id_unid_oper, num_telefone1 as telefone;
+            INSERT INTO unid_oper_contatos (nom_contato, id_unid_oper, num_telefone1, email_1, inf_adicional)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id_contato as id, nom_contato as nome, id_unid_oper, num_telefone1 as telefone, email_1 as email, inf_adicional;
         `;
-        const values = [nome, id_unid_oper || null, telefone];
+        const values = [nome, id_unid_oper || null, telefone || null, email || null, inf_adicional || null];
         const { rows } = await pool.query(query, values);
         console.log('[API /contacts] Novo contato adicionado:', rows[0]);
         res.status(201).json(rows[0]);
@@ -472,15 +602,15 @@ app.post('/contacts', async (req, res) => {
 // PUT /contacts/:id - Atualizar contato
 app.put('/contacts/:id', async (req, res) => {
     const contactId = parseInt(req.params.id, 10);
-    const { nome, id_unid_negoc, nom_unid_negoc, id_unid_oper, nom_unid_oper, telefone } = req.body;
+    const { nome, id_unid_oper, telefone, email, inf_adicional } = req.body;
     try {
         const query = `
             UPDATE unid_oper_contatos
-            SET nom_contato = $1, id_unid_oper = $2, num_telefone1 = $3
-            WHERE id_contato = $4
-            RETURNING id_contato as id, nom_contato as nome, id_unid_oper, num_telefone1 as telefone;
+            SET nom_contato = $1, id_unid_oper = $2, num_telefone1 = $3, email_1 = $4, inf_adicional = $5
+            WHERE id_contato = $6
+            RETURNING id_contato as id, nom_contato as nome, id_unid_oper, num_telefone1 as telefone, email_1 as email, inf_adicional;
         `;
-        const values = [nome, id_unid_oper || null, telefone, contactId];
+        const values = [nome, id_unid_oper || null, telefone || null, email || null, inf_adicional || null, contactId];
         const { rows, rowCount } = await pool.query(query, values);
         if (rowCount === 0) {
             return res.status(404).send('Contato não encontrado.');
@@ -509,70 +639,132 @@ app.delete('/contacts/:id', async (req, res) => {
     }
 });
 
-// --- MOCK DATA E ENDPOINTS PARA RECURSOS (ANALISTAS/DESENVOLVEDORES) ---
+// --- ENDPOINTS PARA RECURSOS (ANALISTAS/DESENVOLVEDORES) ---
 
-let mockResources = [
-    { id_recurso: 1, nom_recurso: 'Kleyton', recurso_funcao: 'Desenvolvedor' },
-    { id_recurso: 2, nom_recurso: 'Lima', recurso_funcao: 'Desenvolvedor' },
-    { id_recurso: 3, nom_recurso: 'Marcelo', recurso_funcao: 'Desenvolvedor' },
-    { id_recurso: 4, nom_recurso: 'David', recurso_funcao: 'Desenvolvedor' },
-    { id_recurso: 5, nom_recurso: 'Martins', recurso_funcao: 'Analista de Suporte' },
-    { id_recurso: 6, nom_recurso: 'Mariana', recurso_funcao: 'Analista de Suporte' },
-    { id_recurso: 7, nom_recurso: 'Luiza', recurso_funcao: 'Analista de Suporte' },
-    { id_recurso: 8, nom_recurso: 'Ivan', recurso_funcao: 'Analista de Suporte' },
-    { id_recurso: 9, nom_recurso: 'Siuah', recurso_funcao: 'Desenvolvedor' },
-];
-let nextResourceId = 10;
-
-// GET /api/resources - Listar recursos com busca
-app.get('/resources', (req, res) => {
-    const { search = '' } = req.query;
-    const lowercasedSearch = search.toLowerCase();
-
-    const filtered = mockResources.filter(r => r.nom_recurso.toLowerCase().includes(lowercasedSearch));
-    res.status(200).json(filtered);
+// GET /resources - Listar recursos (contatos) com busca
+app.get('/resources', async (req, res) => {
+    const { search } = req.query;
+    try {
+        // A função é um valor estático, pois não existe na tabela de contatos.
+        let query = `
+            SELECT 
+                id_contato as id_recurso,
+                nom_contato as nom_recurso,
+                inf_adicional as recurso_funcao,
+                num_telefone1 as telefone,
+                email_1 as email
+            FROM unid_oper_contatos
+        `;
+        const params = [];
+        if (search) {
+            // Busca por nome, função (inf_adicional), telefone ou email
+            query += ` WHERE nom_contato ILIKE $1 OR inf_adicional ILIKE $1 OR num_telefone1 ILIKE $1 OR email_1 ILIKE $1`;
+            params.push(`%${search}%`);
+        }
+        query += ' ORDER BY nom_recurso';
+        const { rows } = await pool.query(query, params);
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error('Erro ao buscar recursos:', error);
+        res.status(500).send('Erro interno do servidor');
+    }
 });
 
-// POST /api/resources - Criar novo recurso
-app.post('/resources', (req, res) => {
-    const { nom_recurso, recurso_funcao } = req.body;
+// POST /resources - Criar novo recurso (contato)
+app.post('/resources', async (req, res) => {
+    const { nom_recurso, recurso_funcao, telefone, email } = req.body;
     if (!nom_recurso) {
         return res.status(400).send('O nome do recurso é obrigatório.');
     }
-    const newResource = { id_recurso: nextResourceId++, nom_recurso, recurso_funcao };
-    mockResources.push(newResource);
-    console.log('[API /resources] Novo recurso adicionado:', newResource);
-    res.status(201).json(newResource);
+    try {
+        const query = `
+            INSERT INTO unid_oper_contatos (nom_contato, inf_adicional, num_telefone1, email_1) 
+            VALUES ($1, $2, $3, $4) 
+            RETURNING id_contato as id_recurso, nom_contato as nom_recurso, inf_adicional as recurso_funcao, num_telefone1 as telefone, email_1 as email;
+        `;
+        const values = [nom_recurso, recurso_funcao || null, telefone || null, email || null];
+        const { rows: [newResource] } = await pool.query(query, values);
+        console.log('[API /resources] Novo recurso adicionado:', newResource);
+        res.status(201).json(newResource);
+    } catch (error) {
+        console.error('Erro ao criar recurso:', error);
+        res.status(500).send('Erro interno do servidor');
+    }
 });
 
-// PUT /api/resources/:id - Atualizar recurso
-app.put('/resources/:id', (req, res) => {
+// PUT /resources/:id - Atualizar recurso (contato)
+app.put('/resources/:id', async (req, res) => {
     const resourceId = parseInt(req.params.id, 10);
-    const { nom_recurso, recurso_funcao } = req.body;
-    const resourceIndex = mockResources.findIndex(r => r.id_recurso === resourceId);
-
-    if (resourceIndex === -1) {
-        return res.status(404).send('Recurso não encontrado.');
+    const { nom_recurso, recurso_funcao, telefone, email } = req.body;
+    try {
+        const query = `
+            UPDATE unid_oper_contatos 
+            SET nom_contato = $1, inf_adicional = $2, num_telefone1 = $3, email_1 = $4
+            WHERE id_contato = $5 
+            RETURNING id_contato as id_recurso, nom_contato as nom_recurso, inf_adicional as recurso_funcao, num_telefone1 as telefone, email_1 as email;
+        `;
+        const values = [nom_recurso, recurso_funcao, telefone, email, resourceId];
+        const { rows: [updatedResource], rowCount } = await pool.query(query, values);
+        if (rowCount === 0) return res.status(404).send('Recurso não encontrado.');
+        console.log(`[API /resources] Recurso ${resourceId} atualizado.`);
+        res.status(200).json(updatedResource);
+    } catch (error) {
+        console.error('Erro ao atualizar recurso:', error);
+        res.status(500).send('Erro interno do servidor');
     }
-    // Atualiza os campos, se eles forem fornecidos
-    if (nom_recurso) mockResources[resourceIndex].nom_recurso = nom_recurso;
-    if (recurso_funcao) mockResources[resourceIndex].recurso_funcao = recurso_funcao;
-
-    console.log(`[API /resources] Recurso ${resourceId} atualizado.`);
-    res.status(200).json(mockResources[resourceIndex]);
 });
 
-// DELETE /api/resources/:id - Excluir recurso
-app.delete('/resources/:id', (req, res) => {
+// DELETE /resources/:id - Excluir recurso (contato)
+app.delete('/resources/:id', async (req, res) => {
     const resourceId = parseInt(req.params.id, 10);
-    const initialLength = mockResources.length;
-    mockResources = mockResources.filter(r => r.id_recurso !== resourceId);
-
-    if (mockResources.length === initialLength) {
-        return res.status(404).send('Recurso não encontrado.');
+    try {
+        const { rowCount } = await pool.query('DELETE FROM unid_oper_contatos WHERE id_contato = $1', [resourceId]);
+        if (rowCount === 0) return res.status(404).send('Recurso não encontrado.');
+        console.log(`[API /resources] Recurso ${resourceId} excluído.`);
+        res.status(204).send();
+    } catch (error) {
+        // Adiciona tratamento para erro de chave estrangeira
+        if (error.code === '23503') { // Código de erro para foreign_key_violation
+            return res.status(400).send('Não é possível excluir o recurso pois ele está associado a uma ou mais tarefas.');
+        }
+        console.error('Erro ao excluir recurso:', error);
+        res.status(500).send('Erro interno do servidor');
     }
-    console.log(`[API /resources] Recurso ${resourceId} excluído.`);
-    res.status(204).send();
+});
+
+// Endpoint leve para atualizar apenas o status de uma tarefa
+app.patch('/tasks/:id/status', async (req, res) => {
+    const { id } = req.params;
+    const { ind_sit_tarefa } = req.body;
+
+    if (!ind_sit_tarefa) {
+        return res.status(400).send('O novo status (ind_sit_tarefa) é obrigatório.');
+    }
+
+    try {
+        let query = 'UPDATE unid_oper_tarefa SET ind_sit_tarefa = $1';
+        const params = [ind_sit_tarefa, id];
+
+        // Se o status for 'Finalizado', atualiza também a data de encerramento
+        if (ind_sit_tarefa === 'FN') {
+            query += ', dth_encerramento = NOW()';
+        }
+
+        query += ' WHERE id = $2 RETURNING id, ind_sit_tarefa, dth_encerramento;';
+
+        const { rows, rowCount } = await pool.query(query, params);
+
+        if (rowCount === 0) {
+            return res.status(404).send('Tarefa não encontrada.');
+        }
+
+        console.log(`[API /tasks/:id/status] Status da tarefa ${id} atualizado para ${ind_sit_tarefa}.`);
+        res.status(200).json(rows[0]);
+
+    } catch (error) {
+        console.error(`Erro ao atualizar status da tarefa ${id}:`, error);
+        res.status(500).send('Erro interno do servidor');
+    }
 });
 
 
