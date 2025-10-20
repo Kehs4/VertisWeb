@@ -156,7 +156,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
         const totalTasks = tasks.length;
         const openTasks = tasks.filter(t => t.ind_sit_tarefa === 'AB').length;
         const finishedTasks = tasks.filter(t => t.ind_sit_tarefa === 'FN').length;
-        const waitingTasks = tasks.filter(t => t.ind_sit_tarefa === 'AG').length;
+        const resolvingTasks = tasks.filter(t => t.ind_sit_tarefa === 'ER').length;
 
         const createdToday = tasks.filter(t => t.dth_inclusao.startsWith(todayStr)).length;
         const resolvedToday = tasks.filter(t => t.dth_encerramento?.startsWith(todayStr)).length;
@@ -194,7 +194,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
             totalTasks,
             openTasks,
             finishedTasks,
-            waitingTasks,
+            resolvingTasks,
             createdToday,
             resolvedToday,
             successRateToday,
@@ -563,8 +563,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                     </div>
                     <div className="card-sub-metrics">
                         <div className="sub-metric-item"><RadioButtonUncheckedIcon className="sub-icon open" /> Abertos: <strong>{analytics.openTasks}</strong></div>
+                        <div className="sub-metric-item"><HourglassEmptyIcon className="sub-icon waiting" /> Em Resolução: <strong>{analytics.resolvingTasks}</strong></div>
                         <div className="sub-metric-item"><CheckCircleOutlineIcon className="sub-icon finished" /> Finalizados: <strong>{analytics.finishedTasks}</strong></div>
-                        <div className="sub-metric-item"><HourglassEmptyIcon className="sub-icon waiting" /> Aguardando: <strong>{analytics.waitingTasks}</strong></div>
                     </div>
                 </div>
 
