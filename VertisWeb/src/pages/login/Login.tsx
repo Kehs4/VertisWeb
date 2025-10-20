@@ -45,7 +45,7 @@ function Login() {
   return (
     <>
       <div className='login-box'>
-        <img src="/logo-white.png" alt="" width={200}/>
+        <img src="/logo-white.png" alt="" width={120}/>
         <div className='login-box-content'>
           <div className='login-header'>
             <AccountCircleIcon style={{width: '25px', height: '25px'}}/>
@@ -62,7 +62,7 @@ function Login() {
                   name="user"
                   id="user"
                   className='login-input'
-                  placeholder='Usuário'
+                  placeholder='Digite seu usuário..'
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                 />
@@ -76,7 +76,7 @@ function Login() {
                     name="password"
                     id="password"
                     className='login-input'
-                    placeholder='Senha'
+                    placeholder='Sua senha..'
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                   />
@@ -90,8 +90,8 @@ function Login() {
                       zIndex: 2
                     }}
                   >
-                    {showPassword ? <VisibilityIcon className='login-password-icon' style={{ width: '18px', height: '18px', top: '-14px', position: 'absolute', right: '-15px', color: 'black', cursor: 'pointer' }} />
-                      : <VisibilityOffIcon className='login-password-icon' style={{ width: '18px', height: '18px', top: '-14px', position: 'absolute', right: '-15px', color: 'black', cursor: 'pointer' }} />}
+                    {showPassword ? <VisibilityIcon className='login-password-icon' style={{ width: '18px', height: '18px', top: '-19px', position: 'absolute', right: '-15px', color: 'rgb(78, 78, 78)', cursor: 'pointer' }} />
+                      : <VisibilityOffIcon className='login-password-icon' style={{ width: '18px', height: '18px', top: '-19px', position: 'absolute', right: '-15px', color: 'rgb(78, 78, 78)', cursor: 'pointer' }} />}
                   </span>
                 </div>
               </div>

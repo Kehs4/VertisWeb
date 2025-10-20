@@ -58,33 +58,33 @@
   display: flex;
   flex-direction: column;
   width: 350px;
-  gap: 10px;
+  gap: 5px;
 }
 
 .login-label {
   padding: 0 3px;
-  font-weight: 400;
-  color: rgba(80, 80, 80, 0.815);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.815);
   font-size: 0.9rem;
-  letter-spacing: -0.8px;
-  text-shadow: 0px 1px 1px rgba(116, 116, 116, 0.2);
+  letter-spacing: -0.5px;
+  text-shadow: 0px 1px 1px rgba(102, 102, 102, 0.068);
 }
 
 .login-input {
   padding: 12px 8px;
   border: 1px solid #c4c4c4e8;
-  border-radius: 10px;
+  border-radius: 12px;
   color: black;
   outline: none;
   font-size: 0.9rem;
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 
 }
 
 .login-input::placeholder {
   color: #969696e8;
-  font-weight: 200;
+  font-weight: 300;
 }
 
 .login-input:focus {
@@ -102,7 +102,7 @@
   font-weight: 300;
   color: #fd5d00;
   text-decoration: none;
-  text-shadow: 0px 1px 1px rgba(68, 68, 68, 0.26);
+  text-shadow: 0px 1px 1px rgba(68, 68, 68, 0.062);
 
 }
 
@@ -111,25 +111,26 @@
 }
 
 .login-remember-me {
-  color: #474747;
-  font-weight: 400;
+  color: #8d8d8d;
+  font-weight: 300;
   text-decoration: none;
   font-size: 0.8rem;
-  text-shadow: 0px 1px 1px rgba(116, 116, 116, 0.2);
+  text-shadow: 0px 1px 1px rgba(77, 73, 73, 0.068);
 }
 
 .login-button {
   width: 100%;
-  padding: 15px;
-  border-radius: 15px;
+  padding: 12px;
+  border-radius: 25px;
   background-color: black;
   color: white;
   border: 1px solid rgb(61, 61, 61);
   font-size: 1rem;
+  font-weight: 500;
   letter-spacing: -0.9px;
   cursor: pointer;
   box-shadow: 0 1px 5px 2px rgba(95, 95, 95, 0.199);
-  margin-top: 20px;
+  margin-top: 40px;
 }
 
 .login-button:hover {
