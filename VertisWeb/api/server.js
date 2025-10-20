@@ -21,6 +21,7 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD,
     // Usar + para converter para número é um pouco mais limpo que parseInt
     port: +(process.env.DB_PORT || "5432"),
+    client_encoding: 'utf8', // Garante que a conexão sempre use UTF-8
 });
 
 const app = express();
@@ -150,7 +151,12 @@ app.get('/tasks', async (req, res) => { // endpoint que retorna todas as tasks n
             SELECT
                 t.id, t.id_unid_negoc, t.id_unid_oper, t.id_sist_modulo, t.id_criado_por,
                 creator.nom_contato as nom_criado_por, -- Adiciona o nome do criador
-                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa, t.tarefa_avaliacao,
+                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa, t.tarefa_avaliacao, t.ind_vinculo, t.id_vinculo,
+                (
+                    SELECT COALESCE(array_agg(utm.id_marcador::text), ARRAY[]::text[])
+                    FROM unid_oper_tarefa_x_marcador utm
+                    WHERE utm.id_tarefa = t.id
+                ) as tipo_chamado, 
                 t.dth_inclusao, t.dth_abertura, t.dth_encerramento, t.dth_prev_entrega, t.dth_exclusao
             FROM unid_oper_tarefa t
             LEFT JOIN unid_oper_contatos creator ON t.id_criado_por = creator.id_contato
@@ -181,7 +187,22 @@ app.get('/tasks', async (req, res) => { // endpoint que retorna todas as tasks n
                 JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
                 WHERE utr.id_tarefa = $1`;
             const { rows: resources } = await pool.query(resourceQuery, [task.id]);
-            task.recursos = resources;
+            task.recursos = resources; 
+
+            // Busca os comentários associados
+            const commentQuery = `
+                SELECT
+                    utc.id,
+                    utc.id_incluido_por as id_recurso,
+                    uoc.nom_contato as nom_recurso,
+                    utc.comentario,
+                    utc.dth_inclusao
+                FROM unid_oper_tarefa_comentario utc
+                LEFT JOIN unid_oper_contatos uoc ON utc.id_incluido_por = uoc.id_contato
+                WHERE utc.id_tarefa = $1 ORDER BY utc.dth_inclusao ASC;`;
+            const { rows: comentario } = await pool.query(commentQuery, [task.id]);
+            task.comentarios = comentario;
+            // A propriedade 'comentarios' é adicionada ao objeto 'task' antes de ser enviada.
         }
         res.status(200).json(rows);
     } catch (error) {
@@ -200,7 +221,12 @@ app.get('/task/:id', async (req, res) => { // endpoint para get na aba de detalh
             SELECT 
                 t.id, t.id_unid_negoc, t.id_unid_oper, t.id_sist_modulo, t.id_criado_por,
                 creator.nom_contato as nom_criado_por,
-                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa, t.tarefa_avaliacao,
+                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa, t.tarefa_avaliacao, t.ind_vinculo, t.id_vinculo,
+                (
+                    SELECT COALESCE(array_agg(utm.id_marcador::text), ARRAY[]::text[])
+                    FROM unid_oper_tarefa_x_marcador utm
+                    WHERE utm.id_tarefa = t.id
+                ) as tipo_chamado, -- Corrigido o alias de 'comentarios' para 'tipo_chamado'
                 t.dth_inclusao,
                 t.dth_abertura,
                 t.dth_encerramento,
@@ -227,6 +253,20 @@ app.get('/task/:id', async (req, res) => { // endpoint para get na aba de detalh
         const { rows: resources } = await pool.query(resourceQuery, [taskId]);
         task.recursos = resources;
 
+        // Query para buscar os comentários associados
+        const commentQuery = `
+            SELECT
+                utc.id,
+                utc.id_incluido_por as id_recurso,
+                uoc.nom_contato as nom_recurso,
+                utc.comentario,
+                utc.dth_inclusao
+            FROM unid_oper_tarefa_comentario utc
+            LEFT JOIN unid_oper_contatos uoc ON utc.id_incluido_por = uoc.id_contato
+            WHERE utc.id_tarefa = $1 ORDER BY utc.dth_inclusao ASC;`;
+        const { rows: comentario } = await pool.query(commentQuery, [taskId]);
+        task.comentarios = comentario;
+        // A propriedade 'comentarios' é adicionada ao objeto 'task' antes de ser enviada.
         res.status(200).json(task);
     } catch (error) {
         console.error(`[API /task/${taskId}] Ocorreu um erro ao buscar detalhes da tarefa:`, error);
@@ -271,7 +311,7 @@ app.post('/tasks', async (req, res) => { // endpoint de criação de uma task pe
     try {
         await client.query('BEGIN'); // Inicia a transação
 
-        const { titulo_tarefa, id_criado_por, id_unid_negoc, id_unid_oper, ind_prioridade, dth_prev_entrega, recursos = [] } = req.body;
+        const { titulo_tarefa, id_criado_por, id_unid_negoc, id_unid_oper, ind_prioridade, dth_prev_entrega, recursos = [], tipo_chamado = [] } = req.body;
 
         // Se dth_prev_entrega for a data de hoje, usamos NOW() para incluir a hora exata.
         // Se for uma data futura, usamos o valor como está (que será 'YYYY-MM-DD 00:00:00' no DB).
@@ -298,7 +338,15 @@ app.post('/tasks', async (req, res) => { // endpoint de criação de uma task pe
             }
         }
 
-        // 3. Busca a tarefa completa para retornar ao frontend
+        // 3. Insere os marcadores (flags) associados
+        if (tipo_chamado && tipo_chamado.length > 0) {
+            const markerQuery = 'INSERT INTO unid_oper_tarefa_x_marcador (id_tarefa, id_marcador, dth_inclusao) VALUES ($1, $2, NOW())';
+            for (const id_marcador of tipo_chamado) {
+                await client.query(markerQuery, [newTask.id, id_marcador]);
+            }
+        }
+
+        // 4. Busca a tarefa completa para retornar ao frontend
         const selectFullTaskQuery = `
             SELECT 
                 t.*,
@@ -318,6 +366,27 @@ app.post('/tasks', async (req, res) => { // endpoint de criação de uma task pe
         const { rows: finalResources } = await client.query(resourceQuery, [newTask.id]);
         fullTask.recursos = finalResources;
 
+        // Busca os marcadores associados para adicionar à resposta
+        const markerQuery = `
+            SELECT id_marcador::text FROM unid_oper_tarefa_x_marcador WHERE id_tarefa = $1
+        `;
+        const { rows: finalMarkers } = await client.query(markerQuery, [newTask.id]);
+        // Mapeia para um array de strings, como o frontend espera
+        fullTask.tipo_chamado = finalMarkers.map(m => m.id_marcador);
+
+        // Busca os comentários associados para adicionar à resposta
+        const commentQuery = `
+            SELECT
+                utc.id,
+                utc.id_incluido_por as id_recurso,
+                uoc.nom_contato as nom_recurso,
+                utc.comentario,
+                utc.dth_inclusao
+            FROM unid_oper_tarefa_comentario utc
+            JOIN unid_oper_contatos uoc ON utc.id_incluido_por = uoc.id_contato
+            WHERE utc.id_tarefa = $1 ORDER BY utc.dth_inclusao ASC;`;
+        const { rows: finalComments } = await client.query(commentQuery, [newTask.id]);
+        fullTask.comentarios = finalComments;
         await client.query('COMMIT'); // Confirma a transação
         console.log('[API /tasks] Nova tarefa criada com sucesso:', fullTask);
         res.status(201).json(fullTask);
@@ -353,6 +422,8 @@ app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma 
             ind_vinculo,
             id_vinculo,
             tarefa_avaliacao,
+            tipo_chamado = [],
+            comentarios = [],
             recursos = [] // Array de objetos { id_recurso, nom_recurso }
         } = req.body;
 
@@ -414,6 +485,17 @@ app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma 
             }
         }
 
+        // Atualiza os marcadores (flags)
+        // Primeiro, remove todos os marcadores existentes para esta tarefa
+        await client.query('DELETE FROM unid_oper_tarefa_x_marcador WHERE id_tarefa = $1', [id]);
+        // Em seguida, insere os novos marcadores
+        if (tipo_chamado && tipo_chamado.length > 0) {
+            const insertMarkerQuery = 'INSERT INTO unid_oper_tarefa_x_marcador (id_tarefa, id_marcador, dth_inclusao) VALUES ($1, $2, NOW())';
+            for (const id_marcador of tipo_chamado) {
+                await client.query(insertMarkerQuery, [id, id_marcador]);
+            }
+        }
+
         // 3. Busca a tarefa completa para retornar ao frontend
         const selectFullTaskQuery = `
             SELECT 
@@ -434,6 +516,28 @@ app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma 
         const { rows: finalResources } = await client.query(resourceQuery, [id]);
         fullTask.recursos = finalResources;
 
+        // Busca os marcadores associados para adicionar à resposta
+        const markerQuery = `
+            SELECT id_marcador::text FROM unid_oper_tarefa_x_marcador WHERE id_tarefa = $1
+        `;
+        const { rows: finalMarkers } = await client.query(markerQuery, [id]);
+        // Mapeia para um array de strings, como o frontend espera
+        fullTask.tipo_chamado = finalMarkers.map(m => m.id_marcador);
+
+        // Busca os comentários associados para adicionar à resposta
+        const commentQuery = `
+            SELECT
+                utc.id,
+                utc.id_incluido_por as id_recurso,
+                uoc.nom_contato as nom_recurso,
+                utc.comentario,
+                utc.dth_inclusao
+            FROM unid_oper_tarefa_comentario utc
+            JOIN unid_oper_contatos uoc ON utc.id_incluido_por = uoc.id_contato
+            WHERE utc.id_tarefa = $1 ORDER BY utc.dth_inclusao ASC;`;
+        const { rows: finalComments } = await client.query(commentQuery, [id]);
+        fullTask.comentarios = finalComments;
+        // A propriedade 'comentarios' é adicionada ao objeto 'fullTask' antes de ser enviada.
         await client.query('COMMIT'); // Confirma a transação
         console.log(`[API /tasks] Tarefa ${id} atualizada com sucesso:`, fullTask);
         res.status(200).json(fullTask);
@@ -444,6 +548,27 @@ app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma 
         res.status(500).send('Erro interno do servidor');
     } finally {
         client.release(); // Libera o cliente de volta para o pool
+    }
+});
+
+// Endpoint para buscar as flags/marcadores
+app.get('/flags', async (req, res) => {
+    try {
+        // A query busca os marcadores e já formata a resposta para ser compatível
+        // com a interface FlagConfig do frontend, usando os IDs do banco.
+        const query = `
+            SELECT 
+                id::text, -- Converte id para texto para corresponder à interface
+                nome_marcador as label
+            FROM unid_oper_marcador 
+            WHERE dth_exclusao IS NULL 
+            ORDER BY nome_marcador;
+        `;
+        const { rows } = await pool.query(query);
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error('Erro ao buscar flags/marcadores:', error);
+        res.status(500).send('Erro interno do servidor');
     }
 });
 
@@ -767,6 +892,42 @@ app.patch('/tasks/:id/status', async (req, res) => {
     }
 });
 
+// Endpoint para adicionar um novo comentário a uma tarefa
+app.post('/tasks/:id/comments', async (req, res) => {
+    const { id: id_tarefa } = req.params;
+    const { id_incluido_por, comentario } = req.body;
+
+    if (!id_incluido_por || !comentario) {
+        return res.status(400).send('ID do usuário e comentário são obrigatórios.');
+    }
+
+    try {
+        // Insere o novo comentário
+        const insertQuery = `
+            INSERT INTO unid_oper_tarefa_comentario (id_tarefa, id_incluido_por, comentario, dth_inclusao)
+            VALUES ($1, $2, $3, NOW())
+            RETURNING id;
+        `;
+        const { rows: [newComment] } = await pool.query(insertQuery, [id_tarefa, id_incluido_por, comentario]);
+
+        // Busca o comentário completo (com o nome do usuário) para retornar ao frontend
+        const selectQuery = `
+            SELECT
+                c.id, c.id_tarefa, c.id_incluido_por as id_recurso, u.nom_contato as nom_recurso, c.comentario, c.dth_inclusao
+            FROM unid_oper_tarefa_comentario c
+            JOIN unid_oper_contatos u ON c.id_incluido_por = u.id_contato
+            WHERE c.id = $1;
+        `;
+        const { rows: [fullComment] } = await pool.query(selectQuery, [newComment.id]);
+
+        console.log(`[API /tasks/:id/comments] Novo comentário adicionado à tarefa ${id_tarefa}.`);
+        res.status(201).json(fullComment);
+
+    } catch (error) {
+        console.error(`Erro ao adicionar comentário à tarefa ${id_tarefa}:`, error);
+        res.status(500).send('Erro interno do servidor');
+    }
+});
 
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);

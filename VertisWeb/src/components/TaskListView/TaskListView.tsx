@@ -1,4 +1,4 @@
-import React, { useState, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useMemo, lazy, Suspense, useEffect } from 'react';
 import { useTheme } from '../ThemeContext'; // Importando o hook do tema
 import './TaskListView.css';
 import { useTaskExporter } from '../../hooks/useTaskExporter'; // Importa o novo hook
@@ -135,6 +135,20 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
     const [solicitanteSearch, setSolicitanteSearch] = useState('');
     const [selectedSolicitantes, setSelectedSolicitantes] = useState<string[]>([]);
 
+    // --- Estados para o filtro de Status ---
+    const [statusFilterAnchorEl, setStatusFilterAnchorEl] = useState<null | HTMLElement>(null);
+    const isStatusFilterOpen = Boolean(statusFilterAnchorEl);
+    const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+
+    // --- Estados para o filtro de Unidade ---
+    const [unitFilterAnchorEl, setUnitFilterAnchorEl] = useState<null | HTMLElement>(null);
+    const isUnitFilterOpen = Boolean(unitFilterAnchorEl);
+    const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
+
+    // --- Estados para Paginação ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(15); // Valor padrão
+
     // --- Lógica para os Cards de Análise ---
     const analytics = useMemo(() => {
         const todayStr = new Date().toISOString().split('T')[0];
@@ -211,9 +225,20 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
         return Array.from(solicitanteSet).sort();
     }, [tasks]);
 
+    // Extrai a lista de todas as unidades únicas para o filtro
+    const allUnits = useMemo(() => {
+        const unitSet = new Set<string>();
+        tasks.forEach(task => {
+            if (task.nom_unid_oper) {
+                unitSet.add(task.nom_unid_oper);
+            }
+        });
+        return Array.from(unitSet).sort();
+    }, [tasks]);
+
     // Memoiza as tarefas ordenadas para evitar recálculos desnecessários
     const filteredAndSortedTasks = useMemo(() => {
-        let filteredItems = tasks.filter(task => {
+        const filteredItems = tasks.filter(task => {
             // 1. Filtro de Data (ajustado para o formato YYYY-MM-DD HH:mm:ss)
             const taskDate = task.dth_inclusao.split('T')[0]; // Extrai apenas a parte da data (YYYY-MM-DD)
             if (startDate && taskDate < startDate) {
@@ -252,10 +277,24 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                     return false;
                 }
             }
+
+            // 5. Filtro de Status
+            if (selectedStatuses.length > 0) {
+                if (!selectedStatuses.includes(task.ind_sit_tarefa)) {
+                    return false;
+                }
+            }
+
+            // 6. Filtro de Unidade
+            if (selectedUnits.length > 0) {
+                if (!task.nom_unid_oper || !selectedUnits.includes(task.nom_unid_oper)) {
+                    return false;
+                }
+            }
             return true;
         });
 
-        let sortableItems = [...filteredItems];
+        const sortableItems = [...filteredItems];
         if (sortConfig.key !== null) {
             const sortKey = sortConfig.key; // Captura a chave de ordenação em uma constante
 
@@ -289,7 +328,55 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
             });
         }
         return sortableItems;
-    }, [tasks, sortConfig, searchTerm, startDate, endDate, selectedResources, selectedSolicitantes]);
+    }, [tasks, sortConfig, searchTerm, startDate, endDate, selectedResources, selectedSolicitantes, selectedStatuses, selectedUnits]);
+
+    // Efeito para resetar a página para 1 sempre que os filtros mudarem
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filteredAndSortedTasks.length, itemsPerPage]);
+
+    // Lógica para obter as tarefas da página atual
+    const paginatedTasks = useMemo(() => {
+        const indexOfLastItem = currentPage * itemsPerPage;
+        const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+        return filteredAndSortedTasks.slice(indexOfFirstItem, indexOfLastItem);
+    }, [filteredAndSortedTasks, currentPage, itemsPerPage]);
+
+    // Lógica para os controles de paginação
+    const totalPages = Math.ceil(filteredAndSortedTasks.length / itemsPerPage);
+    const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+    const handlePrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+    const handlePageClick = (page: number) => setCurrentPage(page);
+
+    // Lógica para gerar os botões de paginação com elipses
+    const getPaginationItems = () => {
+        const pageNeighbours = 1; // Quantidade de vizinhos de cada lado da página atual
+        const totalNumbers = (pageNeighbours * 2) + 3; // Total de números de página a serem mostrados
+        const totalBlocks = totalNumbers + 2; // Total de blocos incluindo elipses
+
+        if (totalPages > totalBlocks) {
+            const startPage = Math.max(2, currentPage - pageNeighbours);
+            const endPage = Math.min(totalPages - 1, currentPage + pageNeighbours);
+            let pages: (number | string)[] = Array.from({ length: (endPage - startPage) + 1 }, (_, i) => startPage + i);
+
+            const hasLeftSpill = startPage > 2;
+            const hasRightSpill = (totalPages - endPage) > 1;
+
+            if (hasLeftSpill && !hasRightSpill) {
+                const extraPages = Array.from({ length: (totalNumbers - pages.length - 1) }, (_, i) => startPage - i - 1).reverse();
+                pages = ["...", ...extraPages, ...pages];
+            } else if (!hasLeftSpill && hasRightSpill) {
+                const extraPages = Array.from({ length: (totalNumbers - pages.length - 1) }, (_, i) => endPage + i + 1);
+                pages = [...pages, ...extraPages, "..."];
+            } else if (hasLeftSpill && hasRightSpill) {
+                pages = ["...", ...pages, "..."];
+            }
+
+            return [1, ...pages, totalPages];
+        }
+        return Array.from({ length: totalPages }, (_, i) => i + 1);
+    };
+
 
     // Utiliza o hook de exportação, agora que filteredAndSortedTasks já foi declarada.
     const { handleExport } = useTaskExporter(filteredAndSortedTasks, contextType);
@@ -377,6 +464,32 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
         const newSelected = [...selectedSolicitantes];
         currentIndex === -1 ? newSelected.push(solicitanteName) : newSelected.splice(currentIndex, 1);
         setSelectedSolicitantes(newSelected);
+    };
+
+    // Funções para o filtro de status
+    const handleStatusFilterOpen = (event: React.MouseEvent<HTMLElement>) => {
+        event.stopPropagation();
+        setStatusFilterAnchorEl(event.currentTarget);
+    };
+    const handleStatusFilterClose = () => setStatusFilterAnchorEl(null);
+    const handleStatusToggle = (statusCode: string) => {
+        const currentIndex = selectedStatuses.indexOf(statusCode);
+        const newSelected = [...selectedStatuses];
+        currentIndex === -1 ? newSelected.push(statusCode) : newSelected.splice(currentIndex, 1);
+        setSelectedStatuses(newSelected);
+    };
+
+    // Funções para o filtro de unidade
+    const handleUnitFilterOpen = (event: React.MouseEvent<HTMLElement>) => {
+        event.stopPropagation();
+        setUnitFilterAnchorEl(event.currentTarget);
+    };
+    const handleUnitFilterClose = () => setUnitFilterAnchorEl(null);
+    const handleUnitToggle = (unitName: string) => {
+        const currentIndex = selectedUnits.indexOf(unitName);
+        const newSelected = [...selectedUnits];
+        currentIndex === -1 ? newSelected.push(unitName) : newSelected.splice(currentIndex, 1);
+        setSelectedUnits(newSelected);
     };
 
     // Funções para as opções do menu
@@ -504,6 +617,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
 
             {/* --- Seção de Filtros --- */}
             <div className="filter-container">
+                
                 <div className="search-input-wrapper">
                     <SearchIcon className="search-icon" />
                     <input
@@ -513,6 +627,17 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                </div>
+                <div className="page-size-filter-group">
+                    <label>Registros:</label>
+                    <select
+                        className="filter-select-input"
+                        value={itemsPerPage}
+                        onChange={(e) => setItemsPerPage(Number(e.target.value))}>
+                        <option value={15}>15</option>
+                        <option value={30}>30</option>
+                        <option value={60}>60</option>
+                    </select>
                 </div>
                 <div className="date-filter-group">
                     <label>De:</label>
@@ -531,14 +656,44 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                 }}>
                     Limpar Filtros
                 </button>
+                <div className="pagination-controls">
+                    <button onClick={handlePrevPage} disabled={currentPage === 1} className="pagination-arrow">
+                        &lt;
+                    </button>
+                    <div className="pagination-numbers">
+                        {getPaginationItems().map((item, index) => (
+                            typeof item === 'number' ? (
+                                <button
+                                    key={index}
+                                    onClick={() => handlePageClick(item)}
+                                    className={`pagination-number ${currentPage === item ? 'active' : ''}`}
+                                >
+                                    {item}
+                                </button>
+                            ) : (
+                                <span key={index} className="pagination-ellipsis">...</span>
+                            )
+                        ))}
+                    </div>
+                    <button onClick={handleNextPage} disabled={currentPage === totalPages} className="pagination-arrow">
+                        &gt;
+                    </button>
+                </div>
             </div>
 
             <div className="task-table-wrapper">
                 <table className="task-table">
                     <thead>
                         <tr>
-                            <th onClick={() => requestSort('ind_prioridade')} className={getSortClassName('ind_prioridade')}><div className="th-content"><AnnouncementIcon /> Prioridade</div></th>
-                            <th onClick={() => requestSort('ind_sit_tarefa')} className={getSortClassName('ind_sit_tarefa')}><div className="th-content"><HistoryIcon /> Status</div></th>
+                            <th onClick={() => requestSort('ind_prioridade')} className={getSortClassName('ind_prioridade')}>
+                                <div className="th-content"><AnnouncementIcon /> Prioridade</div>
+                            </th>
+                            <th onClick={() => requestSort('ind_sit_tarefa')} className={getSortClassName('ind_sit_tarefa')}>
+                                <div className="th-content">
+                                    <HistoryIcon /> Status
+                                    <IconButton size="small" onClick={handleStatusFilterOpen} className="th-filter-button" title="Filtrar por status"><FilterListIcon fontSize="inherit" /></IconButton>
+                                </div>
+                            </th>
                             <th onClick={() => requestSort('titulo_tarefa')} className={getSortClassName('titulo_tarefa')}><div className="th-content"><ArticleIcon /> {labels.task}</div></th>
                             <th onClick={() => requestSort('nom_criado_por')} className={getSortClassName('nom_criado_por')}>
                                 <div className="th-content">
@@ -547,7 +702,12 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                 </div>
                             </th>
                             {contextType === 'support' && (
-                                <th onClick={() => requestSort('nom_unid_oper')} className={getSortClassName('nom_unid_oper')}><div className="th-content"><ApartmentIcon /> Unidade</div></th>
+                                <th onClick={() => requestSort('nom_unid_oper')} className={getSortClassName('nom_unid_oper')}>
+                                    <div className="th-content">
+                                        <ApartmentIcon /> Unidade
+                                        <IconButton size="small" onClick={handleUnitFilterOpen} className="th-filter-button" title="Filtrar por unidade"><FilterListIcon fontSize="inherit" /></IconButton>
+                                    </div>
+                                </th>
                             )}
                             <th onClick={() => requestSort('recursos')} className={getSortClassName('recursos')}>
                                 <div className="th-content">
@@ -567,8 +727,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                     Carregando {labels.tasks.toLowerCase()}...
                                 </td>
                             </tr>
-                        ) : filteredAndSortedTasks.length > 0 ? (
-                            filteredAndSortedTasks.map(task => (
+                        ) : paginatedTasks.length > 0 ? (
+                            paginatedTasks.map(task => (
                                 <tr key={task.id} className={`task-row status-${task.ind_sit_tarefa.toLowerCase()}`}>
                                     <td>
                                         <div className="priority-content">
@@ -631,7 +791,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                         )}
                                     </td>
                                     <td>
-                                        {new Date(task.dth_inclusao).toLocaleDateString('pt-BR')}
+                                        {new Date(task.dth_inclusao).toLocaleString('pt-BR')}
                                     </td>
                                     <td className="cell-actions">
                                         <IconButton aria-label="mais opções" className="action-button" onClick={(e) => handleMenuOpen(e, task)}>
@@ -659,6 +819,41 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                         <span className="status-badge" style={statusConfig[code] || {}}>{label}</span>
                     </MenuItem>
                 ))}
+            </Menu>
+            <Menu
+                anchorEl={statusFilterAnchorEl}
+                open={isStatusFilterOpen}
+                onClose={handleStatusFilterClose}
+            >
+                <ListSubheader>Filtrar por Status</ListSubheader>
+                {Object.entries(statusOptions).map(([code, label]) => (
+                    <MenuItem key={code} onClick={() => handleStatusToggle(code)}>
+                        <ListItemIcon><Checkbox edge="start" checked={selectedStatuses.includes(code)} tabIndex={-1} disableRipple /></ListItemIcon>
+                        <ListItemText primary={label} />
+                    </MenuItem>
+                ))}
+                <div className="filter-menu-actions">
+                    <Button size="small" onClick={() => setSelectedStatuses([])}>Limpar</Button>
+                    <Button size="small" variant="contained" onClick={handleStatusFilterClose}>Aplicar</Button>
+                </div>
+            </Menu>
+            <Menu
+                anchorEl={unitFilterAnchorEl}
+                open={isUnitFilterOpen}
+                onClose={handleUnitFilterClose}
+                slotProps={{ paper: { sx: { width: 300, maxHeight: 400 } } }}
+            >
+                <ListSubheader>Filtrar por Unidade</ListSubheader>
+                {allUnits.map(unit => (
+                    <MenuItem key={unit} onClick={() => handleUnitToggle(unit)}>
+                        <ListItemIcon><Checkbox edge="start" checked={selectedUnits.includes(unit)} tabIndex={-1} disableRipple /></ListItemIcon>
+                        <ListItemText primary={unit} />
+                    </MenuItem>
+                ))}
+                <div className="filter-menu-actions">
+                    <Button size="small" onClick={() => setSelectedUnits([])}>Limpar</Button>
+                    <Button size="small" variant="contained" onClick={handleUnitFilterClose}>Aplicar</Button>
+                </div>
             </Menu>
             <Menu
                 anchorEl={resourceFilterAnchorEl}

@@ -54,28 +54,26 @@ export const useTaskExporter = (tasks: Task[], contextType?: TaskContext) => {
             status: 'Status',
             priority: 'Prioridade',
             user: 'Solicitante',
-            customer: contextType === 'development' ? 'Cliente' : 'Unidade Operacional',
+            customer: contextType === 'development' ? 'Cliente' : 'Unidade de Negócio',
             analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista(s)',
             includeDate: 'Data de Inclusão',
             prevDate: 'Previsão de Entrega',
             finishDate: 'Data de Encerramento',
-            points: 'Pontos',
             rating: 'Avaliação'
         };
 
         const body = tasks.map(task => ({
             id: task.id,
             title: task.titulo_tarefa,
-            status: task.sit_tarefa,
+            status: task.ind_sit_tarefa,
             priority: priorityConfig[task.ind_prioridade]?.label || 'N/D',
             user: task.nom_criado_por,
-            customer: contextType === 'support' ? task.nom_unid_oper : 'N/A',
+            customer: contextType === 'support' ? task.id_unid_negoc : 'N/A',
             analyst: Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso).join(', ') : task.recursos,
-            includeDate: new Date(task.dth_inclusao.replace(/-/g, '\/')).toLocaleDateString(),
-            prevDate: task.dth_prev_entrega ? new Date(task.dth_prev_entrega.replace(/-/g, '\/')).toLocaleDateString() : '',
-            finishDate: task.dth_encerramento ? new Date(task.dth_encerramento.replace(/-/g, '\/')).toLocaleString() : '',
-            points: task.qtd_pontos,
-            rating: task.satisfaction_rating || ''
+            includeDate: new Date(task.dth_inclusao).toLocaleDateString('pt-BR'),
+            prevDate: task.dth_prev_entrega ? new Date(task.dth_prev_entrega).toLocaleDateString('pt-BR') : '',
+            finishDate: task.dth_encerramento ? new Date(task.dth_encerramento).toLocaleString('pt-BR') : '',
+            rating: task.tarefa_avaliacao || ''
         }));
 
         const fileName = `TaskList_Vertis_${new Date().toLocaleDateString().replace(/\//g, '-')}`;

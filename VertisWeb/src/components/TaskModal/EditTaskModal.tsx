@@ -56,16 +56,37 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
     useEffect(() => {
         // Quando o modal abrir, define o estado do formulário com os dados da tarefa recebida.
         // Também reseta os outros estados do modal.
-        if (isOpen && task) {
-            setFormData(task);
+        if (isOpen && task?.id) {
+            const fetchTaskDetails = async () => {
+                setIsFetchingDetails(true);
+                try {
+                    const response = await fetch(`/api/task/${task.id}`);
+                    if (response.ok) {
+                        const detailedTask = await response.json();
+                        setFormData(detailedTask);
+                    } else {
+                        console.error("Falha ao buscar detalhes da tarefa:", response.statusText);
+                        // Em caso de erro, carrega os dados básicos para não quebrar o modal
+                        setFormData(task);
+                    }
+                } catch (error) {
+                    console.error("Erro de rede ao buscar detalhes da tarefa:", error);
+                    setFormData(task);
+                } finally {
+                    setIsFetchingDetails(false);
+                }
+            };
+
+            fetchTaskDetails();
         }
+
         setIsEditing(false); // Reseta para o modo de visualização sempre que o modal/task muda
         setIsAddingFlags(false); // Esconde a lista de flags disponíveis
         setIsResourceModalOpen(false);
         setIsLinkedTasksModalOpen(false);
         setIsTaskSearchModalOpen(false);
         setIsSaving(false); // Reseta o estado de salvamento
-    }, [isOpen, task]);
+    }, [isOpen, task?.id]); // Depende do ID da tarefa para evitar re-execuções desnecessárias
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         if (!formData) return;
@@ -128,21 +149,40 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         setIsTaskSearchModalOpen(false);
     };
 
-    const handleAddComment = () => {
+    const handleAddComment = async () => {
         if (!formData || !newComment.trim()) return;
 
-        const comment: Comentario = {
-            id_recurso: 99, // ID do usuário logado (exemplo)
-            nom_recurso: localStorage.getItem('userName') || 'Usuário', // Nome do usuário logado
+        // TODO: Substituir '10' pelo ID real do usuário logado
+        const payload = {
+            id_incluido_por: 10, 
             comentario: newComment,
-            dth_inclusao: new Date().toISOString(),
         };
 
-        setFormData({
-            ...formData,
-            // Garante que `comentarios` seja sempre um array antes de adicionar o novo comentário
-            comentarios: [...(Array.isArray(formData.comentarios) ? formData.comentarios : []), comment],
-        });
+        try {
+            const response = await fetch(`/api/tasks/${formData.id}/comments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                // Após adicionar o comentário com sucesso, busca novamente os detalhes completos da tarefa
+                // para garantir que a lista de comentários seja atualizada.
+                const taskDetailsResponse = await fetch(`/api/task/${formData.id}`);
+                if (taskDetailsResponse.ok) {
+                    const updatedTask = await taskDetailsResponse.json();
+                    // Atualiza o estado local do modal para exibir o novo comentário imediatamente
+                    setFormData(updatedTask);
+                } else {
+                    // Se a busca falhar, pelo menos o comentário não será perdido na próxima atualização
+                    console.error("Falha ao buscar detalhes da tarefa após adicionar comentário.");
+                }
+            } else {
+                alert('Falha ao adicionar comentário.');
+            }
+        } catch (error) {
+            console.error('Erro de rede ao adicionar comentário:', error);
+        }
         setNewComment(''); // Limpa o campo de comentário
     };
 
@@ -301,23 +341,25 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                 </div>
                             </div>
 
-                            <div className="form-group">
-                                <label htmlFor="ind_vinculo">Vínculo</label>
-                                <div className="input-with-button">
-                                    <input
-                                        type="text"
-                                        id="ind_vinculo"
-                                        name="id_vinculo"
-                                        value={formData.id_vinculo || ''}
-                                        onChange={handleChange}
-                                        placeholder={vinculoPlaceholder}
-                                        readOnly={!isEditing}
-                                    />
-                                    {isEditing && <button type="button" className="icon-button" onClick={() => setIsTaskSearchModalOpen(true)} title="Pesquisar Tarefa para Vincular">
-                                        <SearchIcon />
-                                    </button>}
+                            {contextType !== 'support' && (
+                                <div className="form-group">
+                                    <label htmlFor="ind_vinculo">Vínculo</label>
+                                    <div className="input-with-button">
+                                        <input
+                                            type="text"
+                                            id="ind_vinculo"
+                                            name="id_vinculo"
+                                            value={formData.id_vinculo || ''}
+                                            onChange={handleChange}
+                                            placeholder={vinculoPlaceholder}
+                                            readOnly={!isEditing}
+                                        />
+                                        {isEditing && <button type="button" className="icon-button" onClick={() => setIsTaskSearchModalOpen(true)} title="Pesquisar Tarefa para Vincular">
+                                            <SearchIcon />
+                                        </button>}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <div className="form-group">
                                 <label htmlFor="tipo_chamado">Flags</label>

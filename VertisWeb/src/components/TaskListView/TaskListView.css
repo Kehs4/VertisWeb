@@ -174,6 +174,32 @@
     border-color: #e74c3c;
 }
 
+.page-size-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.filter-select-input {
+    padding: 9px 30px 9px 12px; /* Espaço para a seta */
+    border: 1px solid var(--table-border-color);
+    border-radius: 8px;
+    background-color: var(--table-bg);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    -webkit-appearance: none; /* Remove a aparência padrão no Chrome/Safari */
+    -moz-appearance: none; /* Remove a aparência padrão no Firefox */
+    appearance: none;
+    /* Adiciona uma seta customizada */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+}
+
 
 /* --- Estilos para os Cards de Análise --- */
 .analytics-cards-container {
@@ -398,6 +424,64 @@
     border-top: 1px solid var(--table-border-color);
 }
 
+/* --- Estilos para Paginação --- */
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centraliza o grupo de paginação */
+    gap: 8px;
+    margin-left: auto; /* Empurra para a direita dentro do container de filtros */
+}
+
+.pagination-numbers {
+    display: flex;
+    gap: 5px;
+}
+
+.pagination-arrow,
+.pagination-number {
+    background-color: var(--table-bg);
+    border: 1px solid var(--table-border-color);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    min-width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.pagination-arrow:hover:not(:disabled),
+.pagination-number:hover:not(.active) {
+    background-color: var(--row-hover-bg);
+    color: var(--text-primary);
+    border-color: #ff6600;
+}
+
+.pagination-arrow:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagination-number.active {
+    background-color: var(--btn-primary-color);
+    color: white;
+    border-color: var(--btn-primary-color);
+    font-weight: 700;
+}
+
+.pagination-ellipsis {
+    color: var(--text-secondary);
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    height: 38px;
+}
+
 
 /* --- Estilos para Ordenação --- */
 .task-table th.sortable {
@@ -480,6 +564,10 @@
     border-radius: 4px;
     margin: 1px;
     display: inline-block;
+    padding: 5px 8px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    border-radius: 15px;
 }
 
 .solicitante-info {

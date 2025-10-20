@@ -124,6 +124,7 @@ export const useTasks = (context: TaskContext) => {
                 id_vinculo: taskToUpdate.id_vinculo || null,
                 ind_vinculo: taskToUpdate.id_vinculo ? 'S' : 'N',
                 tipo_chamado: taskToUpdate.tipo_chamado || [],
+                comentarios: taskToUpdate.comentarios || [],
                 recursos: Array.isArray(taskToUpdate.recursos) ? taskToUpdate.recursos.map(r => ({ id_recurso: r.id_recurso })) : [],
             };
 

@@ -347,22 +347,24 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
 
 
 
-                    <div className="form-group">
-                        <label htmlFor="ind_vinculo">Vínculo</label>
-                        <div className="input-with-button">
-                            <input
-                                type="text"
-                                id="ind_vinculo"
-                                name="id_vinculo" // O campo de texto controla o id_vinculo
-                                value={formData.id_vinculo || ''}
-                                onChange={handleChange}
-                                placeholder={vinculoPlaceholder}
-                            />
-                            <button type="button" className="icon-button" onClick={() => setIsTaskSearchModalOpen(true)} title="Pesquisar Tarefa para Vincular">
-                                <SearchIcon />
-                            </button>
+                    {contextType !== 'support' && (
+                        <div className="form-group">
+                            <label htmlFor="ind_vinculo">Vínculo</label>
+                            <div className="input-with-button">
+                                <input
+                                    type="text"
+                                    id="ind_vinculo"
+                                    name="id_vinculo" // O campo de texto controla o id_vinculo
+                                    value={formData.id_vinculo || ''}
+                                    onChange={handleChange}
+                                    placeholder={vinculoPlaceholder}
+                                />
+                                <button type="button" className="icon-button" onClick={() => setIsTaskSearchModalOpen(true)} title="Pesquisar Tarefa para Vincular">
+                                    <SearchIcon />
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="form-group">
                         <label htmlFor="tipo_chamado">Flags</label>
