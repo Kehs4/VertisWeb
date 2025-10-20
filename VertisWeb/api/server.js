@@ -450,8 +450,11 @@ app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma 
         };
 
         // Adiciona a data de encerramento com lógica especial
-        if (ind_sit_tarefa === 'FN') {
+        // Se o status for 'Finalizado' E nenhuma data de encerramento foi enviada, usa a data atual.
+        // Se uma data foi enviada, ela será respeitada.
+        if (ind_sit_tarefa === 'FN' && !dth_encerramento) {
             fieldMapping.dth_encerramento = formatToDbTimestamp(new Date());
+        // Se o status não for 'Finalizado', mas uma data foi enviada (ou limpa), atualiza.
         } else if (dth_encerramento !== undefined) {
             fieldMapping.dth_encerramento = formatToDbTimestamp(dth_encerramento);
         }
@@ -674,29 +677,40 @@ app.get('/task/:id', async (req, res) => {
 
 // GET /contacts - Listar contatos com busca
 app.get('/contacts', async (req, res) => {
-    const { search } = req.query;
+    const { search, id_unid_oper } = req.query;
     try {
         let query = `
             SELECT 
                 c.id_contato as id, 
                 c.nom_contato as nome, 
                 c.id_unid_oper, 
-               -- uo.nom_unid_oper,
-               -- un.id_unid_negoc,
-                --un.nom_unid_negoc,
+                uo.nom_unid_oper,
+                un.id_unid_negoc,
+                un.nom_unid_negoc,
                 c.num_telefone1 as telefone,
                 c.email_1 as email,
                 c.inf_adicional
             FROM unid_oper_contatos c
-            --LEFT JOIN unid_operacional uo ON c.id_unid_oper = uo.id_unid_oper
-            --LEFT JOIN unid_negocio un ON uo.id_unid_negoc = un.id_unid_negoc
+            LEFT JOIN unid_operacional uo ON c.id_unid_oper = uo.id_unid_oper
+            LEFT JOIN unid_negocio un ON uo.id_unid_negoc = un.id_unid_negoc
         `;
         const params = [];
+        const whereClauses = [];
+
         if (search) {
-            query += ` WHERE c.nom_contato ILIKE $1 OR c.num_telefone1 ILIKE $1 OR c.email_1 ILIKE $1 OR c.inf_adicional ILIKE $1`;
             params.push(`%${search}%`);
+            whereClauses.push(`(c.nom_contato ILIKE $${params.length} OR c.num_telefone1 ILIKE $${params.length} OR c.email_1 ILIKE $${params.length} OR c.inf_adicional ILIKE $${params.length})`);
         }
-        query += ' ORDER BY c.nom_contato';
+        if (id_unid_oper) {
+            params.push(id_unid_oper);
+            whereClauses.push(`c.id_unid_oper = $${params.length}`);
+        }
+
+        if (whereClauses.length > 0) {
+            query += ` WHERE ${whereClauses.join(' AND ')}`;
+        }
+
+        query += ' ORDER BY c.nom_contato;';
         const { rows } = await pool.query(query, params);
         res.status(200).json(rows);
     } catch (error) {
@@ -888,6 +902,35 @@ app.patch('/tasks/:id/status', async (req, res) => {
 
     } catch (error) {
         console.error(`Erro ao atualizar status da tarefa ${id}:`, error);
+        res.status(500).send('Erro interno do servidor');
+    }
+});
+
+// Endpoint para buscar Unidades Operacionais
+app.get('/units', async (req, res) => {
+    const { search_by = 'nom_unid_oper', search_term = '' } = req.query;
+
+    // Validação simples para evitar SQL Injection
+    const allowedSearchFields = ['nom_unid_oper', 'id_unid_oper'];
+    if (!allowedSearchFields.includes(search_by)) {
+        return res.status(400).send('Critério de busca inválido.');
+    }
+
+    try {
+        const query = `
+            SELECT 
+                uo.id_unid_oper as id,
+                uo.nom_unid_oper,
+                un.nom_unid_negoc
+            FROM unid_operacional uo
+            LEFT JOIN unid_negocio un ON uo.id_unid_negoc = un.id_unid_negoc
+            WHERE ${search_by}::text ILIKE $1
+            ORDER BY uo.nom_unid_oper;
+        `;
+        const { rows } = await pool.query(query, [`%${search_term}%`]);
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error('Erro ao buscar unidades operacionais:', error);
         res.status(500).send('Erro interno do servidor');
     }
 });

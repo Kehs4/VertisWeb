@@ -120,6 +120,7 @@ export const useTasks = (context: TaskContext) => {
                 ind_prioridade: taskToUpdate.ind_prioridade,
                 ind_sit_tarefa: taskToUpdate.ind_sit_tarefa,
                 dth_prev_entrega: taskToUpdate.dth_prev_entrega || null,
+                dth_encerramento: taskToUpdate.dth_encerramento || null,
                 tarefa_avaliacao: taskToUpdate.tarefa_avaliacao,
                 id_vinculo: taskToUpdate.id_vinculo || null,
                 ind_vinculo: taskToUpdate.id_vinculo ? 'S' : 'N',

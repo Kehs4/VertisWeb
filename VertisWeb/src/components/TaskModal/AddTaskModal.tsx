@@ -2,13 +2,14 @@ import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import './AddTaskModal.css';
 import { Recurso, Task } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
 import CloseIcon from '@mui/icons-material/Close';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import SearchIcon from '@mui/icons-material/Search';
-import { Contact } from '../ContactSearchModal/ContactSearchModal.tsx';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import { Contact } from '../TaskSearchModal/ContactSearchModal.tsx';
 import { flags, flagsMap, FlagConfig } from '../TaskListView/taskFlags.ts';
-const ContactSearchModal = lazy(() => import('../ContactSearchModal/ContactSearchModal.tsx'));
-const ResourceSearchModal = lazy(() => import('../ResourceSearchModal/ResourceSearchModal.tsx'));
-const TaskSearchModal = lazy(() => import('../LinkedTasksModal/TaskSearchModal.tsx'));
+const ContactSearchModal = lazy(() => import('../TaskSearchModal/ContactSearchModal.tsx'));
+const OperationalUnitSearchModal = lazy(() => import('../TaskSearchModal/OperationalUnitSearchModal.tsx'));
+const ResourceSearchModal = lazy(() => import('../ResourceSearchModal/ResourceSearchModal'));
+const TaskSearchModal = lazy(() => import('../LinkedTasksModal/TaskSearchModal'));
 
 interface AddTaskModalProps {
     title: string;
@@ -57,6 +58,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
 
     const [formData, setFormData] = useState(initialFormState);
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+    const [isUnitModalOpen, setIsUnitModalOpen] = useState(false);
     const [isAddingFlags, setIsAddingFlags] = useState(false); // Estado para mostrar/esconder flags disponíveis
     const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
     const [isTaskSearchModalOpen, setIsTaskSearchModalOpen] = useState(false);
@@ -73,6 +75,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
             });
             setIsAddingFlags(false); // Garante que a lista de flags esteja fechada
             setIsResourceModalOpen(false);
+            setIsUnitModalOpen(false);
             setIsTaskSearchModalOpen(false);
             setLinkedTasksCount(0);
             setIsSaving(false); // Reseta o estado de salvamento
@@ -100,6 +103,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         }
     }, [formData.ind_vinculo]);
 
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
 
@@ -116,6 +120,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                 [name]: name === 'ind_prioridade' ? parseInt(value, 10) : value,
             }));
         }
+    };
+
+    const handleContactButtonClick = () => {
+        console.log('handleContactButtonClick chamado, id_unid_oper:', formData.id_unid_oper);
+        if (!formData.id_unid_oper || formData.id_unid_oper === 0) {
+            alert('Preencha a unidade operacional do usuário.');
+            return;
+        }
+        setIsContactModalOpen(true);
     };
 
 
@@ -192,8 +205,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     const handleContactSelect = (contact: Contact) => {
         setFormData(prev => ({
             ...prev,
-            id_criado_por: contact.id, // Correção: usa contact.id em vez de contact.id_contato
-            nom_criado_por: contact.nome, // Define o nome para exibição
+            id_criado_por: contact.id as number,
+            nom_criado_por: contact.nome,
             nom_unid_oper: contact.nom_unid_oper,
             id_unid_oper: contact.id_unid_oper,
             nom_unid_negoc: contact.nom_unid_negoc,
@@ -202,6 +215,16 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         setIsContactModalOpen(false);
     };
 
+    const handleUnitSelect = (unit: { id: number; nom_unid_oper: string; nom_unid_negoc: string; }) => {
+        setFormData(prev => ({
+            ...prev,
+            id_unid_oper: unit.id,
+            nom_unid_oper: unit.nom_unid_oper,
+            // Opcional: Atualizar a unidade de negócio se vier junto
+            nom_unid_negoc: unit.nom_unid_negoc || prev.nom_unid_negoc,
+        }));
+        setIsUnitModalOpen(false);
+    };
     const handleTaskLinkSelect = (taskId: number) => {
         setFormData(prev => ({ ...prev, ind_vinculo: 'S', id_vinculo: taskId }));
         setIsTaskSearchModalOpen(false);
@@ -233,6 +256,47 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                     </button>
                 </div>
                 <form onSubmit={handleSubmit} className="modal-form">
+                    <div className="form-row">
+                        {contextType === 'support' && (
+                            <div className="form-group">
+                                <label htmlFor="nom_unid_oper">Unidade Operacional</label>
+                                <div className="input-with-button">
+                                <input
+                                    type="text"
+                                    id="nom_unid_oper"
+                                    name="nom_unid_oper"
+                                    value={formData.nom_unid_oper}
+                                    onChange={handleChange}
+                                    placeholder="Selecione uma unidade..."
+                                    readOnly
+                                />
+                                <button type="button" className="icon-button" onClick={() => setIsUnitModalOpen(true)} title="Pesquisar Unidade Operacional">
+                                    <SearchIcon />
+                                </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="form-group">
+                            <label htmlFor="criado_por">Usuário Solicitante</label>
+                            <div className="input-with-button">
+                                <input
+                                    type="text"
+                                    id="criado_por"
+                                    name="criado_por"
+                                    value={formData.nom_criado_por} // Exibe o nome
+                                    onChange={handleChange}
+                                    required
+                                    readOnly
+                                    disabled={!formData.id_unid_oper} // Desabilita se não houver unidade
+                                />
+                                <button type="button" className="icon-button" onClick={handleContactButtonClick} title="Pesquisar Contato">
+                                    <SearchIcon />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="form-group">
                         <label htmlFor="titulo_tarefa">{labels.taskDescription}</label>
                         <textarea
@@ -246,39 +310,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                         />
                     </div>
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="criado_por">Usuário Solicitante</label>
-                            <div className="input-with-button">
-                                <input
-                                    type="text"
-                                    id="criado_por"
-                                    name="criado_por"
-                                    value={formData.nom_criado_por} // Exibe o nome
-                                    onChange={handleChange}
-                                    required
-                                    readOnly // Deve ser somente leitura, selecionado via modal
-                                />
-                                <button type="button" className="icon-button" onClick={() => setIsContactModalOpen(true)} title="Pesquisar Contato">
-                                    <SearchIcon />
-                                </button>
-                            </div>
-                        </div>
-                        {contextType === 'support' && (
-                            <div className="form-group">
-                                <label htmlFor="nom_unid_oper">Nome Unidade Operacional</label>
-                                <input
-                                    type="text"
-                                    id="nom_unid_oper"
-                                    name="nom_unid_oper"
-                                    value={formData.nom_unid_oper}
-                                    onChange={handleChange}
 
-                                />
-                            </div>
-                        )}
-                    </div>
-                    
+
                     <div className="form-row">
                         <div className="form-group">
                             <label htmlFor="ind_prioridade">Prioridade</label>
@@ -293,40 +326,22 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                                 <option value={3}>Alta</option>
                                 <option value={4}>Urgente</option>
                             </select>
-                            </div>
+                        </div>
 
-                            <div className="form-group">
-                                <label htmlFor="dth_prev_entrega">Previsão de Entrega</label>
-                                <input
-                                    type="date"
-                                    id="dth_prev_entrega"
-                                    name="dth_prev_entrega"
-                                    value={formData.dth_prev_entrega}
-                                    onChange={handleChange}
-                                />
+                        <div className="form-group">
+                            <label htmlFor="dth_prev_entrega">Previsão de Entrega</label>
+                            <input
+                                type="date"
+                                id="dth_prev_entrega"
+                                name="dth_prev_entrega"
+                                value={formData.dth_prev_entrega}
+                                onChange={handleChange}
+                            />
                         </div>
 
                     </div>
 
                     <div className="form-row">
-                        {/* Adicionado o campo de Unidade de Negócio aqui, pois estava faltando ou duplicado */}
-                        <div className="form-group">
-                            <label htmlFor="nom_unid_negoc">Unidade de Negócio</label>
-                            <input
-                                type="text"
-                                id="nom_unid_negoc"
-                                name="nom_unid_negoc"
-                                value={formData.nom_unid_negoc}
-                                onChange={handleChange}
-
-                            />
-                        </div>
-                        {/* O input para id_unid_negoc (o ID numérico) não precisa ser visível,
-                            ele é preenchido via handleContactSelect.
-                            Se precisar de um input para id_unid_negoc, ele deve ser do tipo number
-                            e ter o name="id_unid_negoc" e value={formData.id_unid_negoc}.
-                            Por enquanto, assumimos que nom_unid_negoc é apenas para exibição.
-                        */}
                         <div className="form-group">
                             <label htmlFor='nom_recurso'>{labels.analyst}</label>
                             <div className="resource-pills-container">
@@ -419,7 +434,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                         <ContactSearchModal
                             isOpen={isContactModalOpen}
                             onClose={() => setIsContactModalOpen(false)}
-                            onSelect={handleContactSelect} />
+                            onSelect={handleContactSelect}
+                            id_unid_oper={formData.id_unid_oper} />
+                    )}
+                    {isUnitModalOpen && (
+                        <OperationalUnitSearchModal
+                            isOpen={isUnitModalOpen}
+                            onClose={() => setIsUnitModalOpen(false)}
+                            onSelect={handleUnitSelect} />
                     )}
                     {isResourceModalOpen && (
                         <ResourceSearchModal

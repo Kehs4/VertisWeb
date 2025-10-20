@@ -88,6 +88,20 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         setIsSaving(false); // Reseta o estado de salvamento
     }, [isOpen, task?.id]); // Depende do ID da tarefa para evitar re-execuções desnecessárias
 
+    // Função auxiliar para formatar a data para o input datetime-local.
+    // É necessária para converter o formato ISO (com fuso horário) para o formato local esperado pelo input.
+    const formatToDateTimeLocal = (isoString: string | undefined) => {
+        if (!isoString) return '';
+        try {
+            const date = new Date(isoString);
+            // Ajusta para o fuso horário local e formata para 'YYYY-MM-DDTHH:mm'
+            const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+            return localDate.toISOString().slice(0, 16);
+        } catch (e) {
+            return '';
+        }
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         if (!formData) return;
         const { name, value } = e.target;
@@ -103,6 +117,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                 sit_tarefa: statusOptions[newStatus] || formData.sit_tarefa,
                 // Define a data de encerramento se o status for 'Finalizado', ou limpa se for revertido
                 dth_encerramento: isNowFinished ? new Date().toISOString() : (wasFinished ? '' : formData.dth_encerramento),
+            });
+        } else if (name === 'dth_encerramento') {
+            // Converte o valor do input 'datetime-local' de volta para o formato ISO string
+            setFormData({
+                ...formData,
+                dth_encerramento: value ? new Date(value).toISOString() : '',
             });
         } else
 
@@ -322,10 +342,14 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="dth_encerramento">Data de Encerramento</label>
-                                    <input
-                                        type="text" id="dth_encerramento" name="dth_encerramento"
-                                        value={formData.dth_encerramento ? new Date(formData.dth_encerramento).toLocaleString('pt-BR') : ''}
-                                        readOnly style={{ cursor: 'default', backgroundColor: '#f1f3f5' }} />
+                                    <input 
+                                        type="datetime-local" 
+                                        id="dth_encerramento" 
+                                        name="dth_encerramento"
+                                        value={formatToDateTimeLocal(formData.dth_encerramento)}
+                                        onChange={handleChange}
+                                        readOnly={!isEditing} 
+                                    />
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="tarefa_avaliacao">Avaliação</label>

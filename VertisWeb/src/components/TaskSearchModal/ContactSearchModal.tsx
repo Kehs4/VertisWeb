@@ -25,9 +25,10 @@ interface ContactSearchModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSelect: (contact: Contact) => void;
+    id_unid_oper?: number | null; // Novo parâmetro opcional
 }
 
-const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose, onSelect }) => {
+const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose, onSelect, id_unid_oper }) => {
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -36,7 +37,7 @@ const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose
     const fetchContacts = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`/api/contacts?search=${searchTerm}`);
+            const response = await fetch(`/api/contacts?search=${searchTerm}&id_unid_oper=${id_unid_oper || ''}`);
             if (response.ok) {
                 const data = await response.json();
                 setContacts(data);
@@ -54,7 +55,7 @@ const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose
         if (isOpen) {
             fetchContacts();
         }
-    }, [isOpen, searchTerm]);
+    }, [isOpen, searchTerm, id_unid_oper]);
 
     const handleSelectContact = (contact: Contact) => {
         onSelect(contact);

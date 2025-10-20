@@ -1,3 +1,17 @@
+/* --- Estilos para o Overlay do Modal --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Fundo escurecido */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000; /* Garante que o modal fique sobre outros elementos */
+}
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -24,8 +38,10 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #eee;
-    padding-bottom: 15px;
+    padding: 15px;
+    border-radius: 10px;
     margin-bottom: 20px;
+    background-color: black;
 }
 
 .modal-header h2 {
@@ -81,6 +97,10 @@
     transition: border-color 0.2s;
     background-color: #fff;
     color: #333;
+}
+
+#titulo_tarefa {
+    min-height: 140px;
 }
 
 .form-group input:focus,
