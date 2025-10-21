@@ -67,6 +67,7 @@ const OperationalUnitSearchModal: React.FC<OperationalUnitSearchModalProps> = ({
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="filter-search-input"
+                            style={{ color: 'black', backgroundColor: 'white' }}
                             autoFocus
                         />
                     </div>
