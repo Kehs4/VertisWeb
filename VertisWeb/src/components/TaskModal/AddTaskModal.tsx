@@ -64,7 +64,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
     const [isTaskSearchModalOpen, setIsTaskSearchModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false); // Novo estado para controlar o status de salvamento
-    const [linkedTasksCount, setLinkedTasksCount] = useState(0);
 
     useEffect(() => {
         // Reset form when modal is opened
@@ -78,31 +77,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
             setIsResourceModalOpen(false);
             setIsUnitModalOpen(false);
             setIsTaskSearchModalOpen(false);
-            setLinkedTasksCount(0);
             setIsSaving(false); // Reseta o estado de salvamento
         }
     }, [isOpen]);
-
-    // Efeito para buscar a contagem de tarefas vinculadas quando o ID do vínculo muda
-    useEffect(() => {
-        if (formData.id_tarefa_pai !== null) {
-            const fetchLinkedTasksCount = async () => {
-                try {
-                    const response = await fetch(`/api/tasks`);
-                    if (response.ok) {
-                        const allTasks: Task[] = await response.json();
-                        const count = allTasks.filter(t => t.id_tarefa_pai).length;
-                        setLinkedTasksCount(count);
-                    }
-                } catch (error) {
-                    console.error("Erro ao contar tarefas vinculadas:", error);
-                }
-            };
-            fetchLinkedTasksCount();
-        } else {
-            setLinkedTasksCount(0);
-        }
-    }, [formData.id_tarefa_pai]);
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -236,11 +213,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     const selectedFlags = useMemo(() => selectedFlagIds.map(id => flagsMap.get(id)).filter(Boolean) as FlagConfig[], [selectedFlagIds]);
 
     const vinculoPlaceholder = useMemo(() => {
-        if (formData.id_tarefa_pai === undefined || formData.id_tarefa_pai === null) {
-            return "Nenhuma tarefa vinculada.";
+        if (formData.id_tarefa_pai) {
+            return `Vinculada à tarefa pai ID: ${formData.id_tarefa_pai}`;
         }
-        return `Existe ${linkedTasksCount} tarefa(s) vinculada(s) a esta.`;
-    }, [formData.id_tarefa_pai, linkedTasksCount]);
+        return "Nenhuma tarefa pai vinculada.";
+    }, [formData.id_tarefa_pai]);
 
     if (!isOpen) {
         return null;
