@@ -55,9 +55,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
     };
 
     useEffect(() => {
-        // Quando o modal abrir, define o estado do formulário com os dados da tarefa recebida.
-        // Também reseta os outros estados do modal.
-        if (isOpen && task?.id) {
+        // Efeito para buscar os detalhes da tarefa sempre que o ID da tarefa mudar.
+        // A busca só acontece se o modal estiver aberto, um ID de tarefa for fornecido,
+        // E o formData ainda não estiver populado com os detalhes desta tarefa específica.
+        if (isOpen && task?.id && (!formData || formData.id !== task.id)) {
             const fetchTaskDetails = async (taskId: number) => {
                 setIsFetchingDetails(true);
                 try {
@@ -79,15 +80,21 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
             };
 
             fetchTaskDetails(task.id);
-        }
+        } // Depende de isOpen, task.id e formData.id para controlar a busca de forma precisa.
+    }, [isOpen, task?.id, formData?.id, task]);
 
-        setIsEditing(false); // Reseta para o modo de visualização sempre que o modal/task muda
-        setIsAddingFlags(false); // Esconde a lista de flags disponíveis
-        setIsResourceModalOpen(false);
-        setIsLinkedTasksModalOpen(false);
-        setIsTaskSearchModalOpen(false);
-        setIsSaving(false); // Reseta o estado de salvamento
-    }, [isOpen, task?.id]); // Depende apenas do ID da tarefa para evitar re-execuções desnecessárias
+    useEffect(() => {
+        // Efeito para resetar os estados internos sempre que o modal é aberto.
+        // Isso não refaz a busca de dados, apenas limpa a UI.
+        if (isOpen) {
+            setIsEditing(false);
+            setIsAddingFlags(false);
+            setIsResourceModalOpen(false);
+            setIsLinkedTasksModalOpen(false);
+            setIsTaskSearchModalOpen(false);
+            setIsSaving(false);
+        }
+    }, [isOpen]); // Depende apenas do estado de abertura do modal.
 
     // Função auxiliar para formatar a data para o input datetime-local.
     // É necessária para converter o formato ISO (com fuso horário) para o formato local esperado pelo input.

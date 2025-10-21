@@ -6,11 +6,17 @@ type TaskContext = 'support' | 'development' | 'commercial';
 
 /**
  * Hook customizado para buscar e gerenciar a lista de tarefas.
- * @param context - O contexto das tarefas a serem buscadas ('support', 'development', etc.).
+ * Centraliza a lógica de estado, busca de dados e manipulação (CRUD) de tarefas.
+ * @param context O contexto das tarefas a serem buscadas ('support', 'development', etc.), usado para filtrar os resultados.
+ * @returns Um objeto contendo a lista de tarefas, estados de carregamento, datas de filtro e funções para manipular as tarefas.
  */
 export const useTasks = (context: TaskContext) => {
     const showAlert = useContext(AlertContext);
-    // Função para formatar a data para o formato YYYY-MM-DD
+    /**
+     * Formata um objeto Date para uma string no formato 'YYYY-MM-DD'.
+     * @param date O objeto Date a ser formatado.
+     * @returns A data formatada como string.
+     */
     const getFormattedDate = (date: Date) => {
         return date.toISOString().split('T')[0];
     };
@@ -22,7 +28,10 @@ export const useTasks = (context: TaskContext) => {
     const [endDate, setEndDate] = useState(getFormattedDate(new Date()));
 
     useEffect(() => {
-        // Na montagem inicial, busca a data da tarefa pendente mais antiga
+        /**
+         * Na montagem inicial do hook, busca a data da tarefa pendente mais antiga
+         * para definir como a data de início padrão do filtro.
+         */
         const fetchInitialDate = async () => {
             if (startDate === null) { // Executa apenas uma vez
                 try {
@@ -43,6 +52,10 @@ export const useTasks = (context: TaskContext) => {
     }, []); // Array de dependência vazio para rodar apenas uma vez
 
     useEffect(() => {
+        /**
+         * Efeito que busca as tarefas da API sempre que o intervalo de datas (startDate, endDate)
+         * ou o contexto da aplicação é alterado.
+         */
         const fetchTasks = async () => {
             setIsLoading(true);
             try {
@@ -79,10 +92,19 @@ export const useTasks = (context: TaskContext) => {
     // --- Funções de Manipulação de Estado ---
     // Movidas para o hook para centralizar a lógica
 
+    /**
+     * Adiciona uma nova tarefa ao início da lista de tarefas no estado local.
+     * @param newTask A nova tarefa a ser adicionada.
+     */
     const addTask = (newTask: Task) => {
         setTasks(prevTasks => [newTask, ...prevTasks]);
     };
 
+    /**
+     * Atualiza o status de uma tarefa específica.
+     * @param taskId O ID da tarefa a ser atualizada.
+     * @param newStatus O novo código de status da tarefa.
+     */
     const updateTaskStatus = useCallback(async (taskId: number, newStatus: string) => {
         setIsLoading(true);
         try {
@@ -112,6 +134,11 @@ export const useTasks = (context: TaskContext) => {
         }
     }, []);
 
+    /**
+     * Atualiza os dados de uma tarefa completa no backend e no estado local.
+     * @param taskToUpdate O objeto da tarefa com os dados atualizados.
+     * @throws Lança um erro se a atualização na API falhar.
+     */
     const updateTask = useCallback(async (taskToUpdate: Task): Promise<void> => {
         setIsLoading(true);
         try {
@@ -158,6 +185,10 @@ export const useTasks = (context: TaskContext) => {
         }
     }, []);
 
+    /**
+     * Realiza a exclusão lógica (soft delete) de uma tarefa.
+     * @param taskId O ID da tarefa a ser removida.
+     */
     const deleteTask = useCallback(async (taskId: number) => {
         setIsLoading(true);
         try {
@@ -182,7 +213,6 @@ export const useTasks = (context: TaskContext) => {
             setIsLoading(false);
         }
     }, [showAlert]);
-
 
     // Retorna os estados e as funções para serem usados no componente
     return { tasks, isLoading, startDate, endDate, setStartDate, setEndDate, addTask, updateTask, deleteTask, updateTaskStatus };

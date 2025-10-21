@@ -10,11 +10,11 @@ const EditTaskModal = lazy(() => import('../TaskModal/EditTaskModal'));
 const ConfirmationModal = lazy(() => import('../ConfirmationModal/ConfirmationModal'));
 
 interface LinkedTasksModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    childTaskId: number; // ID da tarefa filha que estamos editando
-    parentTaskId: number; // ID da tarefa pai que está sendo visualizada
-    onUnlink: () => void; // Callback para notificar que o vínculo foi removido
+    isOpen: boolean; // Controla a visibilidade do modal.
+    onClose: () => void; // Função para fechar o modal.
+    childTaskId: number; // ID da tarefa "filha" que está sendo editada.
+    parentTaskId: number; // ID da tarefa "pai" que está sendo visualizada.
+    onUnlink: () => void; // Callback para notificar o componente pai que o vínculo foi removido.
 }
 
 const statusConfig: { [key: string]: { backgroundColor: string, color?: string } } = {
@@ -27,6 +27,10 @@ const statusConfig: { [key: string]: { backgroundColor: string, color?: string }
     
 };
 
+/**
+ * Componente modal para visualizar os detalhes de uma tarefa pai vinculada
+ * e permitir ações como ver detalhes completos ou desvincular.
+ */
 const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, childTaskId, parentTaskId, onUnlink }) => {
     const showAlert = useContext(AlertContext);
     const [parentTask, setParentTask] = useState<Task | null>(null);
@@ -37,6 +41,9 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, ch
 
     useEffect(() => {
         if (isOpen && parentTaskId) {
+            /**
+             * Busca os detalhes da tarefa pai na API quando o modal é aberto.
+             */
             const fetchParentTask = async () => {
                 setIsLoading(true);
                 try {
@@ -59,13 +66,19 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, ch
         }
     }, [isOpen, parentTaskId]);
 
+    /**
+     * Abre o modal de detalhes (`EditTaskModal`) para a tarefa pai.
+     */
     const handleOpenDetails = () => {
         if (parentTask) {
             setIsDetailsModalOpen(true);
         }
     };
 
-    // Função para ser chamada quando a tarefa pai for salva dentro do EditTaskModal
+    /**
+     * Lida com o salvamento de alterações feitas na tarefa pai dentro do `EditTaskModal`.
+     * @param updatedTask O objeto da tarefa pai com os dados atualizados.
+     */
     const handleParentTaskSave = async (updatedTask: Task) => {
         try {
             const response = await fetch(`/api/tasks/${updatedTask.id}`, {
@@ -82,6 +95,9 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, ch
         }
     };
 
+    /**
+     * Confirma e executa a ação de desvincular a tarefa filha da tarefa pai.
+     */
     const confirmUnlinkParent = async () => {
         if (!childTaskId) return;
         setIsConfirmUnlinkOpen(false); // Fecha o modal de confirmação

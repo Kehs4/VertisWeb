@@ -92,6 +92,10 @@ app.post('/login', async (req, res) => { // endpoint de login que retorna o toke
     }
 });
 
+/**
+ * @route POST /logout
+ * @description Realiza o logout do usuário invalidando o cookie de autenticação.
+ */
 app.post('/logout', (req, res) => {
     // Define o cookie 'authToken' com uma data de expiração no passado para removê-lo
     res.setHeader('Set-Cookie', serialize('authToken', '', {
@@ -104,7 +108,11 @@ app.post('/logout', (req, res) => {
     res.status(200).json({ message: 'Logout bem-sucedido' });
   });
 
-// Função para formatar a data como YYYY-MM-DD
+/**
+ * Formata um objeto Date para uma string no formato 'YYYY-MM-DD'.
+ * @param {Date} date O objeto Date a ser formatado.
+ * @returns {string} A data formatada.
+ */
 const getFormattedDate = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -112,6 +120,11 @@ const getFormattedDate = (date) => {
     return `${year}-${month}-${day}`;
 };
 
+/**
+ * Formata um objeto Date para um timestamp de banco de dados no formato 'YYYY-MM-DD HH:mm:ss'.
+ * @param {Date | string} date O objeto Date ou string a ser formatado.
+ * @returns {string | null} O timestamp formatado ou null se a data for inválida.
+ */
 // Helper function to format a Date object to 'YYYY-MM-DD HH:mm:ss' local time string
 const formatToDbTimestamp = (date) => {
     if (!date) return null;
@@ -130,7 +143,12 @@ const formatToDbTimestamp = (date) => {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
-app.get('/tasks', async (req, res) => { // endpoint que retorna todas as tasks na task list view.
+/**
+ * @route GET /tasks
+ * @description Retorna uma lista de tarefas ativas (não excluídas) com base em um intervalo de datas.
+ * Também anexa os recursos, marcadores e comentários associados a cada tarefa.
+ */
+app.get('/tasks', async (req, res) => {
     // Pega as datas da query string ou usa a data atual como padrão
     const today = getFormattedDate(new Date());
     // Pega os valores da query. Se não vierem, o padrão é `undefined`.
@@ -144,7 +162,7 @@ app.get('/tasks', async (req, res) => { // endpoint que retorna todas as tasks n
     // Converte string vazia para null para a lógica da query
     const final_dat_inicial = dat_inicial === '' ? null : dat_inicial;
 
-    console.log(`[API /tasks] Buscando tarefas de ${final_dat_inicial || 'início'} até ${dat_final} no banco de dados.`);
+    // console.log(`[API /tasks] Buscando tarefas de ${final_dat_inicial || 'início'} até ${dat_final} no banco de dados.`);
 
     try {
         let query = `
@@ -213,7 +231,11 @@ app.get('/tasks', async (req, res) => { // endpoint que retorna todas as tasks n
     }
 });
 
-app.get('/task/:id', async (req, res) => { // endpoint para get na aba de detalhes de uma tarefa por id especifico.
+/**
+ * @route GET /task/:id
+ * @description Retorna os detalhes completos de uma única tarefa ativa, incluindo recursos, marcadores e comentários.
+ */
+app.get('/task/:id', async (req, res) => {
     try {
         const taskId = req.params.id;
         console.log(`[API /task/:id] Buscando tarefa com ID: ${taskId}`);
@@ -276,7 +298,12 @@ app.get('/task/:id', async (req, res) => { // endpoint para get na aba de detalh
     }
 })
 
-app.delete('/tasks/:id', async (req, res) => { // Endpoint de remoção de task por id.
+/**
+ * @route DELETE /tasks/:id
+ * @description Realiza a exclusão lógica (soft delete) de uma tarefa e suas associações
+ * (recursos, marcadores, comentários), definindo a coluna `dth_exclusao`.
+ */
+app.delete('/tasks/:id', async (req, res) => {
     // Alterado para fazer "soft delete" (exclusão lógica)
     const { id } = req.params;
     const client = await pool.connect(); // Obter cliente para transação
@@ -319,7 +346,11 @@ app.delete('/tasks/:id', async (req, res) => { // Endpoint de remoção de task 
     }
 });
 
-app.post('/tasks', async (req, res) => { // endpoint de criação de uma task pelo botão adicionar.
+/**
+ * @route POST /tasks
+ * @description Cria uma nova tarefa e suas associações (recursos, marcadores).
+ */
+app.post('/tasks', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN'); // Inicia a transação
@@ -413,7 +444,12 @@ app.post('/tasks', async (req, res) => { // endpoint de criação de uma task pe
     }
 });
 
-app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma task por id especifico.
+/**
+ * @route PUT /tasks/:id
+ * @description Atualiza os dados de uma tarefa existente. Também gerencia as associações
+ * de recursos e marcadores, realizando "soft delete" para os removidos e inserindo os novos.
+ */
+app.put('/tasks/:id', async (req, res) => {
     const { id } = req.params;
     const client = await pool.connect();
     try {
@@ -606,7 +642,11 @@ app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma 
     }
 });
 
-// Endpoint para buscar as flags/marcadores
+/**
+ * @route GET /flags
+ * @description Retorna uma lista de todos os marcadores (flags) ativos
+ * disponíveis no sistema.
+ */
 app.get('/flags', async (req, res) => {
     try {
         // A query busca os marcadores e já formata a resposta para ser compatível
@@ -727,7 +767,11 @@ app.get('/task/:id', async (req, res) => {
 
 */
 
-// GET /contacts - Listar contatos com busca
+/**
+ * @route GET /contacts
+ * @description Retorna uma lista de contatos ativos, com opções de filtro por termo de busca
+ * e por ID da unidade operacional.
+ */
 app.get('/contacts', async (req, res) => {
     const { search, id_unid_oper } = req.query;
     try {
@@ -774,7 +818,10 @@ app.get('/contacts', async (req, res) => {
     }
 });
 
-// POST /contacts - Criar novo contato
+/**
+ * @route POST /contacts
+ * @description Cria um novo registro de contato no banco de dados.
+ */
 app.post('/contacts', async (req, res) => {
     const { nome, id_unid_oper, telefone, email, inf_adicional } = req.body;
     try {
@@ -793,7 +840,10 @@ app.post('/contacts', async (req, res) => {
     }
 });
 
-// PUT /contacts/:id - Atualizar contato
+/**
+ * @route PUT /contacts/:id
+ * @description Atualiza os dados de um contato existente.
+ */
 app.put('/contacts/:id', async (req, res) => {
     const contactId = parseInt(req.params.id, 10);
     const { nome, id_unid_oper, telefone, email, inf_adicional } = req.body;
@@ -817,7 +867,10 @@ app.put('/contacts/:id', async (req, res) => {
     }
 });
 
-// DELETE /contacts/:id - Excluir contato
+/**
+ * @route DELETE /contacts/:id
+ * @description Realiza a exclusão lógica (soft delete) de um contato.
+ */
 app.delete('/contacts/:id', async (req, res) => {
     const contactId = parseInt(req.params.id, 10);
     try {
@@ -835,7 +888,11 @@ app.delete('/contacts/:id', async (req, res) => {
 
 // --- ENDPOINTS PARA RECURSOS (ANALISTAS/DESENVOLVEDORES) ---
 
-// GET /resources - Listar recursos (contatos) com busca
+/**
+ * @route GET /resources
+ * @description Retorna uma lista de contatos que são considerados "recursos" (analistas/desenvolvedores),
+ * com opção de busca por texto.
+ */
 app.get('/resources', async (req, res) => {
     const { search } = req.query;
     try {
@@ -864,7 +921,10 @@ app.get('/resources', async (req, res) => {
     }
 });
 
-// POST /resources - Criar novo recurso (contato)
+/**
+ * @route POST /resources
+ * @description Cria um novo recurso (que também é um contato).
+ */
 app.post('/resources', async (req, res) => {
     const { nom_recurso, recurso_funcao, telefone, email } = req.body;
     if (!nom_recurso) {
@@ -886,7 +946,10 @@ app.post('/resources', async (req, res) => {
     }
 });
 
-// PUT /resources/:id - Atualizar recurso (contato)
+/**
+ * @route PUT /resources/:id
+ * @description Atualiza os dados de um recurso existente.
+ */
 app.put('/resources/:id', async (req, res) => {
     const resourceId = parseInt(req.params.id, 10);
     const { nom_recurso, recurso_funcao, telefone, email } = req.body;
@@ -908,7 +971,10 @@ app.put('/resources/:id', async (req, res) => {
     }
 });
 
-// DELETE /resources/:id - Excluir recurso (contato)
+/**
+ * @route DELETE /resources/:id
+ * @description Realiza a exclusão lógica (soft delete) de um recurso.
+ */
 app.delete('/resources/:id', async (req, res) => {
     const resourceId = parseInt(req.params.id, 10);
     try {
@@ -926,7 +992,11 @@ app.delete('/resources/:id', async (req, res) => {
     }
 });
 
-// Endpoint leve para atualizar apenas o status de uma tarefa
+/**
+ * @route PATCH /tasks/:id/status
+ * @description Atualiza de forma otimizada apenas o status de uma tarefa.
+ * Se o status for 'FN' (Finalizado), também define a data de encerramento.
+ */
 app.patch('/tasks/:id/status', async (req, res) => {
     const { id } = req.params;
     const { ind_sit_tarefa } = req.body;
@@ -961,6 +1031,11 @@ app.patch('/tasks/:id/status', async (req, res) => {
     }
 });
 
+/**
+ * @route PATCH /tasks/:id/link-parent
+ * @description Vincula uma tarefa (filha) a uma tarefa pai, atualizando a referência
+ * na tabela de tarefas e criando um registro na tabela de histórico de vínculos.
+ */
 app.patch('/tasks/:id/link-parent', async (req, res) => {
     const { id } = req.params; // Este é o ID da tarefa FILHA
     const { id_tarefa_pai } = req.body; // Este é o ID da tarefa PAI
@@ -1002,7 +1077,11 @@ app.patch('/tasks/:id/link-parent', async (req, res) => {
     }
 });
 
-// Endpoint para remover o vínculo de uma tarefa pai
+/**
+ * @route PATCH /tasks/:id/unlink-parent
+ * @description Remove o vínculo de uma tarefa filha com sua tarefa pai, limpando a referência
+ * na tabela de tarefas e marcando o registro de vínculo como excluído.
+ */
 app.patch('/tasks/:id/unlink-parent', async (req, res) => {
     const { id } = req.params; // Este é o ID da tarefa FILHA
     const client = await pool.connect();
@@ -1040,7 +1119,11 @@ app.patch('/tasks/:id/unlink-parent', async (req, res) => {
     }
 });
 
-// Endpoint para buscar Unidades Operacionais
+/**
+ * @route GET /units
+ * @description Retorna uma lista de unidades operacionais, com opção de busca
+ * por nome ou ID.
+ */
 app.get('/units', async (req, res) => {
     const { search_by = 'nom_unid_oper', search_term = '' } = req.query;
 
@@ -1069,7 +1152,11 @@ app.get('/units', async (req, res) => {
     }
 });
 
-// Endpoint para adicionar um novo comentário a uma tarefa
+/**
+ * @route POST /tasks/:id/comments
+ * @description Adiciona um novo comentário a uma tarefa específica e retorna
+ * o comentário completo com os dados do autor.
+ */
 app.post('/tasks/:id/comments', async (req, res) => {
     const { id: id_tarefa } = req.params;
     const { id_incluido_por, comentario } = req.body;
