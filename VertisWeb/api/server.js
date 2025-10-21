@@ -151,7 +151,7 @@ app.get('/tasks', async (req, res) => { // endpoint que retorna todas as tasks n
             SELECT
                 t.id, t.id_unid_negoc, t.id_unid_oper, t.id_sist_modulo, t.id_criado_por,
                 creator.nom_contato as nom_criado_por, -- Adiciona o nome do criador
-                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa, t.tarefa_avaliacao, t.ind_vinculo, t.id_vinculo,
+                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa, t.tarefa_avaliacao, t.id_tarefa_pai,
                 (
                     SELECT COALESCE(array_agg(utm.id_marcador::text), ARRAY[]::text[])
                     FROM unid_oper_tarefa_x_marcador utm
@@ -221,7 +221,7 @@ app.get('/task/:id', async (req, res) => { // endpoint para get na aba de detalh
             SELECT 
                 t.id, t.id_unid_negoc, t.id_unid_oper, t.id_sist_modulo, t.id_criado_por,
                 creator.nom_contato as nom_criado_por,
-                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa, t.tarefa_avaliacao, t.ind_vinculo, t.id_vinculo,
+                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa, t.tarefa_avaliacao, t.id_tarefa_pai,
                 (
                     SELECT COALESCE(array_agg(utm.id_marcador::text), ARRAY[]::text[])
                     FROM unid_oper_tarefa_x_marcador utm
@@ -419,11 +419,9 @@ app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma 
             dth_abertura, // Pode ser atualizado se o status mudar para 'AB'
             dth_encerramento, // Atualizado quando o status muda para 'FN'
             dth_exclusao, // Se a tarefa for excluída logicamente
-            ind_vinculo,
-            id_vinculo,
+            id_tarefa_pai,
             tarefa_avaliacao,
             tipo_chamado = [],
-            comentarios = [],
             recursos = [] // Array de objetos { id_recurso, nom_recurso }
         } = req.body;
 
@@ -444,8 +442,7 @@ app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma 
             dth_prev_entrega: formatToDbTimestamp(dth_prev_entrega),
             dth_abertura: formatToDbTimestamp(dth_abertura),
             dth_exclusao: formatToDbTimestamp(dth_exclusao),
-            ind_vinculo: ind_vinculo,
-            id_vinculo: id_vinculo,
+            id_tarefa_pai: id_tarefa_pai,
             tarefa_avaliacao: tarefa_avaliacao,
         };
 

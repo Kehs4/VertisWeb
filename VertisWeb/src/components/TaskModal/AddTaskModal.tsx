@@ -31,8 +31,7 @@ const initialFormState: Omit<Task, 'id' | 'dth_inclusao' | 'sit_tarefa'> & {
     titulo_tarefa: '',
     ind_prioridade: 2, // Default to 'Média'
     ind_sit_tarefa: 'AB',
-    ind_vinculo: 'N',
-    id_vinculo: undefined,
+    id_tarefa_pai: undefined,
     // --- Valores padrão para campos obrigatórios ---
     id_unid_negoc: 0,
     nom_unid_negoc: '',
@@ -84,13 +83,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
 
     // Efeito para buscar a contagem de tarefas vinculadas quando o ID do vínculo muda
     useEffect(() => {
-        if (formData.ind_vinculo && formData.ind_vinculo !== 'N') {
+        if (formData.id_tarefa_pai !== null) {
             const fetchLinkedTasksCount = async () => {
                 try {
                     const response = await fetch(`/api/tasks`);
                     if (response.ok) {
                         const allTasks: Task[] = await response.json();
-                        const count = allTasks.filter(t => t.ind_vinculo === formData.ind_vinculo).length;
+                        const count = allTasks.filter(t => t.id_tarefa_pai).length;
                         setLinkedTasksCount(count);
                     }
                 } catch (error) {
@@ -101,7 +100,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         } else {
             setLinkedTasksCount(0);
         }
-    }, [formData.ind_vinculo]);
+    }, [formData.id_tarefa_pai]);
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -155,11 +154,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         e.preventDefault();
         if (isSaving) return; // Previne envio duplo
 
-        /* // Validação básica
+         // Validação básica
          if (!formData.titulo_tarefa || !formData.id_criado_por || !formData.id_unid_negoc || !formData.id_unid_oper) {
              alert('Por favor, preencha todos os campos obrigatórios (Título, Solicitante, Unidade de Negócio, Unidade Operacional).');
              return;
-         }*/
+         };
 
         setIsSaving(true);
 
@@ -173,8 +172,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                 dth_prev_entrega: formData.dth_prev_entrega || null, // YYYY-MM-DD ou null
                 recursos: Array.isArray(formData.recursos) ? formData.recursos.map(r => ({ id_recurso: r.id_recurso })) : [],
                 tipo_chamado: formData.tipo_chamado,
-                ind_vinculo: formData.id_vinculo ? 'S' : 'N',
-                id_vinculo: formData.id_vinculo || null,
+                id_tarefa_pai: formData.id_tarefa_pai || null,
             };
 
             const response = await fetch('/api/tasks', {
@@ -226,7 +224,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         setIsUnitModalOpen(false);
     };
     const handleTaskLinkSelect = (taskId: number) => {
-        setFormData(prev => ({ ...prev, ind_vinculo: 'S', id_vinculo: taskId }));
+        setFormData(prev => ({ ...prev, id_tarefa_pai: taskId }));
         setIsTaskSearchModalOpen(false);
     };
 
@@ -236,11 +234,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     const selectedFlags = useMemo(() => selectedFlagIds.map(id => flagsMap.get(id)).filter(Boolean) as FlagConfig[], [selectedFlagIds]);
 
     const vinculoPlaceholder = useMemo(() => {
-        if (formData.ind_vinculo !== 'S' || !formData.id_vinculo) {
+        if (formData.id_tarefa_pai === null) {
             return "Nenhuma tarefa vinculada.";
         }
         return `Existe ${linkedTasksCount} tarefa(s) vinculada(s) a esta.`;
-    }, [formData.ind_vinculo, formData.id_vinculo, linkedTasksCount]);
+    }, [formData.id_tarefa_pai, linkedTasksCount]);
 
     if (!isOpen) {
         return null;
@@ -362,15 +360,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
 
 
 
-                    {contextType !== 'support' && (
                         <div className="form-group">
-                            <label htmlFor="ind_vinculo">Vínculo</label>
+                            <label htmlFor="id_tarefa_pai">Vínculo</label>
                             <div className="input-with-button">
                                 <input
                                     type="text"
-                                    id="ind_vinculo"
-                                    name="id_vinculo" // O campo de texto controla o id_vinculo
-                                    value={formData.id_vinculo || ''}
+                                    id="id_tarefa_pai"
+                                    name="id_tarefa_pai"
+                                    value={formData.id_tarefa_pai || ''}
                                     onChange={handleChange}
                                     placeholder={vinculoPlaceholder}
                                 />
@@ -379,7 +376,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                                 </button>
                             </div>
                         </div>
-                    )}
 
                     <div className="form-group">
                         <label htmlFor="tipo_chamado">Flags</label>

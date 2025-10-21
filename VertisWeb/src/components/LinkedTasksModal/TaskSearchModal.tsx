@@ -11,6 +11,16 @@ interface TaskSearchModalProps {
     resourceIds: number[];
 }
 
+const statusConfig: { [key: string]: { backgroundColor: string, color?: string } } = {
+    'AG': { backgroundColor: 'rgb(177, 167, 140)' },       // Aguardando
+    'AB': { backgroundColor: 'rgb(149, 161, 159)' },       // Aberto
+    'ER': { backgroundColor: 'rgb(53, 146, 158)' },       // Em resolução
+    'AT': { backgroundColor: 'rgb(247, 208, 38)' },       // Em atraso
+    'CA': { backgroundColor: 'rgb(255, 205, 205)', color: 'rgb(153, 48, 48)' }, // Cancelado
+    'FN': { backgroundColor: '#2ecc71' },       // Finalizado
+    
+};
+
 const TaskSearchModal: React.FC<TaskSearchModalProps> = ({ isOpen, onClose, onSelectTask, resourceIds }) => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -83,7 +93,7 @@ const TaskSearchModal: React.FC<TaskSearchModalProps> = ({ isOpen, onClose, onSe
                                 <li key={task.id} className="task-search-item" onClick={() => onSelectTask(task.id)}>
                                     <span className="task-id">#{task.id}</span>
                                     <span className="task-title">{task.titulo_tarefa}</span>
-                                    <span className="task-status">{task.sit_tarefa}</span>
+                                    <span className="task-status" style={statusConfig[task.ind_sit_tarefa] || {}}>{task.ind_sit_tarefa}</span>
                                 </li>
                             ))}
                         </ul>

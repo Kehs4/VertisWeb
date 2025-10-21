@@ -255,6 +255,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                 const searchIn = [
                     task.titulo_tarefa || '',
                     task.nom_criado_por || '',
+                    task.id || '',
+                    task.nom_unid_oper || '',
                     // Inclui os nomes dos recursos na busca, se for um array
                     ...(Array.isArray(task.recursos) ? task.recursos.map(r => r.nom_recurso) : [])
                 ].join(' ').toLowerCase();
@@ -743,6 +745,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                     </td>
                                     <td className="cell-content">
                                         <p className="task-description" title={task.titulo_tarefa}>
+                                            <span style={{ fontWeight: 'bold', fontSize: '0.65rem', display: 'flex', color: 'rgba(0, 183, 255, 0.82)' }}>ID: {task.id}</span>
                                             {task.titulo_tarefa.length > 80
                                                 ? `${task.titulo_tarefa.substring(0, 70)}...`
                                                 : task.titulo_tarefa

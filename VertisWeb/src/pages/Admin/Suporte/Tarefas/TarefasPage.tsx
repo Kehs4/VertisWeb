@@ -31,8 +31,7 @@ export interface Task { // Exportando para ser usado no Modal
     ind_prioridade: number;
     ind_sit_tarefa: string;
     sit_tarefa: string;
-    ind_vinculo: 'S' | 'N'; // Indica se há um vínculo
-    id_vinculo?: number; // Armazena o ID da tarefa principal do vínculo
+    id_tarefa_pai?: number; // Armazena o ID da tarefa principal do vínculo
     qtd_pontos: number;
     titulo_tarefa: string;
     recursos: Recurso[] | number;

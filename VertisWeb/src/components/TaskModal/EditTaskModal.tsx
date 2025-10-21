@@ -40,7 +40,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
     const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
     const [isLinkedTasksModalOpen, setIsLinkedTasksModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false); // Novo estado para controlar o status de salvamento
-    const [linkedTasksCount, setLinkedTasksCount] = useState(0);
     const [isTaskSearchModalOpen, setIsTaskSearchModalOpen] = useState(false);
 
     // Mapeamento de status para ser usado no select e na lógica
@@ -165,7 +164,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
 
     const handleTaskLinkSelect = (taskId: number) => {
         if (!isEditing || !formData) return;
-        setFormData(prev => prev ? { ...prev, ind_vinculo: 'S', id_vinculo: taskId } : null);
+        setFormData(prev => prev ? { ...prev, id_tarefa_pai: taskId } : null);
         setIsTaskSearchModalOpen(false);
     };
 
@@ -242,12 +241,14 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
     const selectedFlags = useMemo(() => selectedFlagIds.map(id => flagsMap.get(id)).filter(Boolean) as FlagConfig[], [selectedFlagIds]);
 
     const vinculoPlaceholder = useMemo(() => {
-        if (formData?.ind_vinculo !== 'S' || !formData.id_vinculo) {
-            return "Nenhuma tarefa vinculada.";
+        if (formData?.id_tarefa_pai === null) {
+            return 'Nenhuma tarefa pai vinculada a esta.';
         }
+        else {
         // A contagem inclui a própria tarefa, então ajustamos se necessário.
-        return `Existe ${linkedTasksCount} tarefa(s) vinculada(s) a esta.`;
-    }, [formData?.ind_vinculo, formData?.id_vinculo, linkedTasksCount]);
+        return `Tarefa ID ${formData?.id_tarefa_pai} está vinculada como antecessora a execução desta.`;
+        };
+    }, [formData?.id_tarefa_pai]);
 
     if (!isOpen) {
         return null;
@@ -266,8 +267,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                 <div className="modal-header">
                     <div className="modal-title-group">
                         <h2>Detalhes da Tarefa #{task?.id}</h2>
-                        {formData.ind_vinculo === 'S' && formData.id_vinculo && (
-                            <IconButton onClick={() => setIsLinkedTasksModalOpen(true)} title={`Ver tarefas com vínculo: ${formData.id_vinculo}`} className="link-icon-button"><LinkIcon /></IconButton>
+                        {formData.id_tarefa_pai !== null && (
+                            <IconButton onClick={() => setIsLinkedTasksModalOpen(true)} title={`Ver tarefas com vínculo: ${formData.id_tarefa_pai}`} className="link-icon-button"><LinkIcon /></IconButton>
                         )}
                     </div>
                     <button onClick={onClose} className="close-button"><CloseIcon /></button>
@@ -365,15 +366,13 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                 </div>
                             </div>
 
-                            {contextType !== 'support' && (
                                 <div className="form-group">
-                                    <label htmlFor="ind_vinculo">Vínculo</label>
+                                    <label htmlFor="id_tarefa_pai">Vínculo</label>
                                     <div className="input-with-button">
                                         <input
                                             type="text"
-                                            id="ind_vinculo"
-                                            name="id_vinculo"
-                                            value={formData.id_vinculo || ''}
+                                            id="id_tarefa_pai"
+                                            name="id_tarefa_pai"
                                             onChange={handleChange}
                                             placeholder={vinculoPlaceholder}
                                             readOnly={!isEditing}
@@ -383,7 +382,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                         </button>}
                                     </div>
                                 </div>
-                            )}
 
                             <div className="form-group">
                                 <label htmlFor="tipo_chamado">Flags</label>
@@ -485,11 +483,11 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                             initialSelectedResources={Array.isArray(formData?.recursos) ? formData.recursos : []}
                         />
                     )}
-                    {isLinkedTasksModalOpen && formData.id_vinculo && (
+                    {isLinkedTasksModalOpen && formData.id_tarefa_pai && (
                         <LinkedTasksModal
                             isOpen={isLinkedTasksModalOpen}
                             onClose={() => setIsLinkedTasksModalOpen(false)}
-                            vinculoId={formData.id_vinculo}
+                            vinculoId={formData.id_tarefa_pai}
                         />
                     )}
                     {isTaskSearchModalOpen && (
