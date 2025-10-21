@@ -58,10 +58,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         // Quando o modal abrir, define o estado do formulário com os dados da tarefa recebida.
         // Também reseta os outros estados do modal.
         if (isOpen && task?.id) {
-            const fetchTaskDetails = async () => {
+            const fetchTaskDetails = async (taskId: number) => {
                 setIsFetchingDetails(true);
                 try {
-                    const response = await fetch(`/api/task/${task.id}`);
+                    const response = await fetch(`/api/task/${taskId}`);
                     if (response.ok) {
                         const detailedTask = await response.json();
                         setFormData(detailedTask);
@@ -78,7 +78,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                 }
             };
 
-            fetchTaskDetails();
+            fetchTaskDetails(task.id);
         }
 
         setIsEditing(false); // Reseta para o modo de visualização sempre que o modal/task muda
@@ -87,7 +87,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         setIsLinkedTasksModalOpen(false);
         setIsTaskSearchModalOpen(false);
         setIsSaving(false); // Reseta o estado de salvamento
-    }, [isOpen, task?.id]); // Depende do ID da tarefa para evitar re-execuções desnecessárias
+    }, [isOpen, task?.id]); // Depende apenas do ID da tarefa para evitar re-execuções desnecessárias
 
     // Função auxiliar para formatar a data para o input datetime-local.
     // É necessária para converter o formato ISO (com fuso horário) para o formato local esperado pelo input.
@@ -164,18 +164,47 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         });
     };
 
-    const handleTaskLinkSelect = (taskId: number) => {
-        if (!isEditing || !formData) return;
-        setFormData(prev => prev ? { ...prev, id_tarefa_pai: taskId } : null);
-        setIsTaskSearchModalOpen(false);
+    const handleTaskLinkSelect = async (parentTaskId: number) => {
+        if (!isEditing || !formData?.id) return;
+
+        setIsSaving(true); // Mostra um feedback de que algo está acontecendo
+        try {
+            const response = await fetch(`/api/tasks/${formData.id}/link-parent`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_tarefa_pai: parentTaskId }),
+            });
+
+            if (response.ok) {
+                const updatedLink = await response.json();
+                // Atualiza o estado local com o novo ID da tarefa pai
+                setFormData(prev => prev ? { ...prev, id_tarefa_pai: updatedLink.id_tarefa_pai } : null);
+                showAlert({ message: 'Tarefa vinculada com sucesso!', type: 'success' });
+            } else {
+                const errorText = await response.text();
+                showAlert({ message: `Falha ao vincular tarefa: ${errorText}`, type: 'error' });
+            }
+        } catch (error) {
+            console.error('Erro de rede ao vincular tarefa:', error);
+            showAlert({ message: 'Erro de rede ao vincular tarefa.', type: 'error' });
+        } finally {
+            setIsSaving(false);
+            setIsTaskSearchModalOpen(false); // Fecha o modal de busca
+        }
     };
 
     const handleOpenTaskSearchModal = () => {
-        if (formData?.id_tarefa_pai !== null) {
+        if (formData?.id_tarefa_pai) {
             showAlert({ message: 'Você deve desvincular a tarefa pai atual antes de vincular uma nova.', type: 'info' });
         } else {
             setIsTaskSearchModalOpen(true);
         }
+    };
+
+    const handleUnlink = () => {
+        // Atualiza o estado para remover o vínculo e fecha o modal de tarefas vinculadas
+        setFormData(prev => prev ? { ...prev, id_tarefa_pai: undefined } : null);
+        setIsLinkedTasksModalOpen(false);
     };
 
     const handleAddComment = async () => {
@@ -252,13 +281,11 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
     const selectedFlags = useMemo(() => selectedFlagIds.map(id => flagsMap.get(id)).filter(Boolean) as FlagConfig[], [selectedFlagIds]);
 
     const vinculoPlaceholder = useMemo(() => {
-        if (formData?.id_tarefa_pai === null) {
+        // Verifica se o id_tarefa_pai é nulo ou indefinido
+        if (!formData?.id_tarefa_pai) {
             return 'Nenhuma tarefa pai vinculada a esta.';
-        }
-        else {
-        // A contagem inclui a própria tarefa, então ajustamos se necessário.
-        return `Tarefa ID ${formData?.id_tarefa_pai} está vinculada como antecessora a execução desta.`;
-        };
+        } 
+        return `Tarefa ID ${formData.id_tarefa_pai} está vinculada como antecessora a execução desta.`;
     }, [formData?.id_tarefa_pai]);
 
     if (!isOpen) {
@@ -278,7 +305,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                 <div className="modal-header">
                     <div className="modal-title-group">
                         <h2>Detalhes da Tarefa #{task?.id}</h2>
-                        {formData.id_tarefa_pai !== null && (
+                        {/* Mostra o ícone de vínculo apenas se id_tarefa_pai for um valor válido (não nulo ou indefinido) */}
+                        {formData.id_tarefa_pai && (
                             <IconButton onClick={() => setIsLinkedTasksModalOpen(true)} title={`Ver tarefas com vínculo: ${formData.id_tarefa_pai}`} className="link-icon-button"><LinkIcon /></IconButton>
                         )}
                     </div>
@@ -386,7 +414,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                             name="id_tarefa_pai"
                                             onChange={handleChange}
                                             placeholder={vinculoPlaceholder}
-                                            readOnly={!isEditing}
+                                            readOnly
                                         />
                                         {isEditing && <button type="button" className="icon-button" onClick={handleOpenTaskSearchModal} title="Pesquisar Tarefa para Vincular">
                                             <SearchIcon />
@@ -500,6 +528,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                             onClose={() => setIsLinkedTasksModalOpen(false)}
                             childTaskId={task.id}
                             parentTaskId={formData.id_tarefa_pai}
+                            onUnlink={handleUnlink}
                         />
                     )}
                     {isTaskSearchModalOpen && (

@@ -14,6 +14,7 @@ interface LinkedTasksModalProps {
     onClose: () => void;
     childTaskId: number; // ID da tarefa filha que estamos editando
     parentTaskId: number; // ID da tarefa pai que está sendo visualizada
+    onUnlink: () => void; // Callback para notificar que o vínculo foi removido
 }
 
 const statusConfig: { [key: string]: { backgroundColor: string, color?: string } } = {
@@ -26,7 +27,7 @@ const statusConfig: { [key: string]: { backgroundColor: string, color?: string }
     
 };
 
-const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, childTaskId, parentTaskId }) => {
+const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, childTaskId, parentTaskId, onUnlink }) => {
     const showAlert = useContext(AlertContext);
     const [parentTask, setParentTask] = useState<Task | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -64,25 +65,20 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, ch
         }
     };
 
-    const handleSaveParentTask = async (updatedTask: Task) => {
-        // Esta função é chamada quando a tarefa pai é salva no EditTaskModal.
-        // Ela faz a chamada PUT para a API e depois fecha o modal de detalhes.
+    // Função para ser chamada quando a tarefa pai for salva dentro do EditTaskModal
+    const handleParentTaskSave = async (updatedTask: Task) => {
         try {
             const response = await fetch(`/api/tasks/${updatedTask.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedTask),
+                body: JSON.stringify(updatedTask)
             });
-            if (response.ok) {
-                const returnedTask = await response.json();
-                setParentTask(returnedTask); // Atualiza os dados da tarefa pai no modal atual
-                setIsDetailsModalOpen(false); // Fecha o modal de detalhes
-            } else {
-                showAlert({ message: 'Falha ao salvar a tarefa pai.', type: 'error' });
-            }
+            const savedTask = await response.json();
+            setIsDetailsModalOpen(false); // Fecha o modal de detalhes primeiro
+            // onClose(); // A remoção desta linha impede o fechamento do modal pai, permitindo que o usuário veja a tarefa pai atualizada.
         } catch (error) {
-            console.error('Erro ao salvar tarefa pai:', error);
-            showAlert({ message: 'Erro de rede ao salvar tarefa pai.', type: 'error' });
+            console.error("Erro ao salvar a tarefa pai:", error);
+            showAlert({ message: 'Erro ao salvar as alterações da tarefa pai.', type: 'error' });
         }
     };
 
@@ -97,7 +93,7 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, ch
 
             if (response.ok) {
                 showAlert({ message: 'Vínculo removido com sucesso.', type: 'success' });
-                onClose(); // Fecha o modal principal para forçar a atualização da tela anterior
+                onUnlink(); // Chama o callback para o pai atualizar o estado e fechar o modal
             } else {
                 const errorText = await response.text();
                 showAlert({ message: `Falha ao remover o vínculo: ${errorText}`, type: 'error' });
@@ -143,7 +139,7 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, ch
                             isOpen={isDetailsModalOpen}
                             onClose={() => setIsDetailsModalOpen(false)}
                             task={parentTask}
-                            onSave={handleSaveParentTask}
+                            onSave={handleParentTaskSave}
                         />
                     )}
                 </Suspense>

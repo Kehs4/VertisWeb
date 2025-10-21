@@ -961,27 +961,82 @@ app.patch('/tasks/:id/status', async (req, res) => {
     }
 });
 
+app.patch('/tasks/:id/link-parent', async (req, res) => {
+    const { id } = req.params; // Este é o ID da tarefa FILHA
+    const { id_tarefa_pai } = req.body; // Este é o ID da tarefa PAI
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Atualiza a tarefa filha com o ID da tarefa pai
+        const updateQuery = `
+            UPDATE unid_oper_tarefa 
+            SET id_tarefa_pai = $1 
+            WHERE id = $2 and dth_exclusao IS NULL 
+            RETURNING id, id_tarefa_pai;
+        `;
+        const { rows, rowCount } = await client.query(updateQuery, [id_tarefa_pai, id]);
+
+        if (rowCount === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).send('Tarefa filha não encontrada.');
+        }
+
+        // 2. Insere o registro na tabela de histórico de vínculos
+        const insertLinkQuery = `
+            INSERT INTO unid_oper_tarefa_vinculo (id_tarefa, id_tarefa_top, dth_inclusao)
+            VALUES ($1, $2, NOW());
+        `;
+        await client.query(insertLinkQuery, [id, id_tarefa_pai]);
+
+        await client.query('COMMIT');
+        console.log(`[API] Tarefa ${id} vinculada com sucesso à tarefa pai ${id_tarefa_pai}.`);
+        res.status(200).json(rows[0]);
+
+    } catch (error) {
+        console.error(`Erro ao vincular tarefa ${id} à tarefa pai ${id_tarefa_pai}:`, error);
+        res.status(500).send('Erro interno do servidor');
+    }
+    finally {
+        if (client) client.release();
+    }
+});
+
 // Endpoint para remover o vínculo de uma tarefa pai
 app.patch('/tasks/:id/unlink-parent', async (req, res) => {
     const { id } = req.params; // Este é o ID da tarefa FILHA
+    const client = await pool.connect();
     try {
-        const query = `
+        await client.query('BEGIN');
+
+        // 1. Remove o ID da tarefa pai da tarefa filha
+        const updateQuery = `
             UPDATE unid_oper_tarefa 
             SET id_tarefa_pai = NULL 
-            WHERE id = $1 
+            WHERE id = $1 and dth_exclusao IS NULL 
             RETURNING id, id_tarefa_pai;
         `;
-        const { rows, rowCount } = await pool.query(query, [id]);
+        const { rows, rowCount } = await client.query(updateQuery, [id]);
 
         if (rowCount === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).send('Tarefa não encontrada.');
         }
 
+        // 2. Marca o vínculo como excluído na tabela de histórico
+        await client.query(`
+            UPDATE unid_oper_tarefa_vinculo
+            SET dth_exclusao = NOW()
+            WHERE id_tarefa = $1 AND dth_exclusao IS NULL;`, [id]);
+
+        await client.query('COMMIT');
         console.log(`[API] Vínculo da tarefa pai removido da tarefa ${id}.`);
         res.status(200).json(rows[0]);
     } catch (error) {
         console.error(`Erro ao remover vínculo da tarefa pai para a tarefa ${id}:`, error);
         res.status(500).send('Erro interno do servidor');
+    } finally {
+        if (client) client.release();
     }
 });
 
