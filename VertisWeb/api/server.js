@@ -903,6 +903,30 @@ app.patch('/tasks/:id/status', async (req, res) => {
     }
 });
 
+// Endpoint para remover o vínculo de uma tarefa pai
+app.patch('/tasks/:id/unlink-parent', async (req, res) => {
+    const { id } = req.params; // Este é o ID da tarefa FILHA
+    try {
+        const query = `
+            UPDATE unid_oper_tarefa 
+            SET id_tarefa_pai = NULL 
+            WHERE id = $1 
+            RETURNING id, id_tarefa_pai;
+        `;
+        const { rows, rowCount } = await pool.query(query, [id]);
+
+        if (rowCount === 0) {
+            return res.status(404).send('Tarefa não encontrada.');
+        }
+
+        console.log(`[API] Vínculo da tarefa pai removido da tarefa ${id}.`);
+        res.status(200).json(rows[0]);
+    } catch (error) {
+        console.error(`Erro ao remover vínculo da tarefa pai para a tarefa ${id}:`, error);
+        res.status(500).send('Erro interno do servidor');
+    }
+});
+
 // Endpoint para buscar Unidades Operacionais
 app.get('/units', async (req, res) => {
     const { search_by = 'nom_unid_oper', search_term = '' } = req.query;

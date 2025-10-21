@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext, lazy, Suspense } from 'react';
 import './ContactSearchModal.css';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
@@ -8,6 +8,9 @@ import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import IconButton from '@mui/material/IconButton';
+import { AlertContext } from '../MainLayout';
+
+const ConfirmationModal = lazy(() => import('../ConfirmationModal/ConfirmationModal'));
 
 export interface Contact {
     id: number;
@@ -29,10 +32,13 @@ interface ContactSearchModalProps {
 }
 
 const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose, onSelect, id_unid_oper }) => {
+    const showAlert = useContext(AlertContext);
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [editingContact, setEditingContact] = useState<Partial<Contact> | null>(null); // Para adicionar ou editar
+
+    const [contactToDelete, setContactToDelete] = useState<number | null>(null);
 
     const fetchContacts = async () => {
         setIsLoading(true);
@@ -62,24 +68,27 @@ const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose
         onClose();
     };
 
-    const handleDeleteContact = async (contactId: number) => {
-        if (window.confirm('Tem certeza que deseja excluir este contato?')) {
-            try {
-                const response = await fetch(`/api/contacts/${contactId}`, { method: 'DELETE' });
-                if (response.ok) {
-                    fetchContacts(); // Recarrega a lista
-                } else {
-                    alert('Falha ao excluir o contato.');
-                }
-            } catch (error) {
-                console.error("Erro de rede ao excluir contato:", error);
+    const confirmDeleteContact = async () => {
+        if (!contactToDelete) return;
+        try {
+            const response = await fetch(`/api/contacts/${contactToDelete}`, { method: 'DELETE' });
+            if (response.ok) {
+                showAlert({ message: 'Contato excluído com sucesso.', type: 'success' });
+                fetchContacts(); // Recarrega a lista
+            } else {
+                const errorText = await response.text();
+                showAlert({ message: `Falha ao excluir o contato: ${errorText}`, type: 'error' });
             }
+        } catch (error) {
+            console.error("Erro de rede ao excluir contato:", error);
+            showAlert({ message: 'Erro de rede ao excluir o contato.', type: 'error' });
         }
+        setContactToDelete(null); // Fecha o modal de confirmação
     };
 
     const handleSaveContact = async () => {
         if (!editingContact || !editingContact.nome) {
-            alert('O nome do contato é obrigatório.');
+            showAlert({ message: 'O nome do contato é obrigatório.', type: 'warning' });
             return;
         }
 
@@ -97,10 +106,12 @@ const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose
                 setEditingContact(null); // Fecha o formulário de edição
                 fetchContacts(); // Recarrega a lista
             } else {
-                alert('Falha ao salvar o contato.');
+                const errorText = await response.text();
+                showAlert({ message: `Falha ao salvar o contato: ${errorText}`, type: 'error' });
             }
         } catch (error) {
             console.error("Erro de rede ao salvar contato:", error);
+            showAlert({ message: 'Erro de rede ao salvar o contato.', type: 'error' });
         }
     };
 
@@ -199,7 +210,7 @@ const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose
                                             <IconButton size="small" onClick={() => setEditingContact(contact)} title="Editar">
                                                 <EditIcon fontSize="small" />
                                             </IconButton>
-                                            <IconButton size="small" onClick={() => handleDeleteContact(contact.id)} title="Excluir">
+                                            <IconButton size="small" onClick={() => setContactToDelete(contact.id)} title="Excluir">
                                                 <DeleteIcon fontSize="small" color="error" />
                                             </IconButton>
                                         </td>
@@ -211,6 +222,16 @@ const ContactSearchModal: React.FC<ContactSearchModalProps> = ({ isOpen, onClose
                         </tbody>
                     </table>
                 </div>
+                <Suspense>
+                    {contactToDelete !== null && (
+                        <ConfirmationModal
+                            isOpen={contactToDelete !== null}
+                            onClose={() => setContactToDelete(null)}
+                            onConfirm={confirmDeleteContact}
+                            title="Confirmar Exclusão"
+                            message={`Tem certeza que deseja excluir o contato? Esta ação não pode ser desfeita.`} />
+                    )}
+                </Suspense>
             </div>
         </div>
     );

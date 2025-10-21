@@ -1,4 +1,4 @@
-import React, { useState, useEffect, KeyboardEvent, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, KeyboardEvent, useMemo, lazy, Suspense, useContext } from 'react';
 import './EditTaskModal.css';
 import { Task, Comentario, Recurso } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
 import CloseIcon from '@mui/icons-material/Close';
@@ -9,6 +9,7 @@ import StarIcon from '@mui/icons-material/Star';
 import SearchIcon from '@mui/icons-material/Search';
 import { flags, flagsMap, FlagConfig } from '../TaskListView/taskFlags';
 import { IconButton } from '@mui/material';
+import { AlertContext } from '../MainLayout';
 
 const ResourceSearchModal = lazy(() => import('../ResourceSearchModal/ResourceSearchModal'));
 const LinkedTasksModal = lazy(() => import('../LinkedTasksModal/LinkedTasksModal'));
@@ -24,6 +25,7 @@ interface EditTaskModalProps {
 }
 
 const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, task, contextType = 'support' }) => {
+    const showAlert = useContext(AlertContext);
     const [formData, setFormData] = useState<Task | null>(null);
     const [isFetchingDetails, setIsFetchingDetails] = useState(false);
     const labels = {
@@ -168,6 +170,14 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         setIsTaskSearchModalOpen(false);
     };
 
+    const handleOpenTaskSearchModal = () => {
+        if (formData?.id_tarefa_pai !== null) {
+            showAlert({ message: 'Você deve desvincular a tarefa pai atual antes de vincular uma nova.', type: 'info' });
+        } else {
+            setIsTaskSearchModalOpen(true);
+        }
+    };
+
     const handleAddComment = async () => {
         if (!formData || !newComment.trim()) return;
 
@@ -197,10 +207,11 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                     console.error("Falha ao buscar detalhes da tarefa após adicionar comentário.");
                 }
             } else {
-                alert('Falha ao adicionar comentário.');
+                showAlert({ message: 'Falha ao adicionar comentário.', type: 'error' });
             }
         } catch (error) {
             console.error('Erro de rede ao adicionar comentário:', error);
+            showAlert({ message: 'Erro de rede ao adicionar comentário.', type: 'error' });
         }
         setNewComment(''); // Limpa o campo de comentário
     };
@@ -249,6 +260,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         return `Tarefa ID ${formData?.id_tarefa_pai} está vinculada como antecessora a execução desta.`;
         };
     }, [formData?.id_tarefa_pai]);
+
+    useEffect(() => {
+        
+    }, []);
 
     if (!isOpen) {
         return null;
@@ -377,7 +392,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                             placeholder={vinculoPlaceholder}
                                             readOnly={!isEditing}
                                         />
-                                        {isEditing && <button type="button" className="icon-button" onClick={() => setIsTaskSearchModalOpen(true)} title="Pesquisar Tarefa para Vincular">
+                                        {isEditing && <button type="button" className="icon-button" onClick={handleOpenTaskSearchModal} title="Pesquisar Tarefa para Vincular">
                                             <SearchIcon />
                                         </button>}
                                     </div>
@@ -483,11 +498,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                             initialSelectedResources={Array.isArray(formData?.recursos) ? formData.recursos : []}
                         />
                     )}
-                    {isLinkedTasksModalOpen && formData.id_tarefa_pai && (
+                    {isLinkedTasksModalOpen && formData.id_tarefa_pai && task?.id && (
                         <LinkedTasksModal
                             isOpen={isLinkedTasksModalOpen}
                             onClose={() => setIsLinkedTasksModalOpen(false)}
-                            vinculoId={formData.id_tarefa_pai}
+                            childTaskId={task.id}
+                            parentTaskId={formData.id_tarefa_pai}
                         />
                     )}
                     {isTaskSearchModalOpen && (

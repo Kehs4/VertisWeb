@@ -1,10 +1,11 @@
-import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useMemo, useContext } from 'react';
 import './AddTaskModal.css';
 import { Recurso, Task } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { Contact } from '../TaskSearchModal/ContactSearchModal.tsx';
+import { AlertContext } from '../MainLayout.tsx';
 import { flags, flagsMap, FlagConfig } from '../TaskListView/taskFlags.ts';
 const ContactSearchModal = lazy(() => import('../TaskSearchModal/ContactSearchModal.tsx'));
 const OperationalUnitSearchModal = lazy(() => import('../TaskSearchModal/OperationalUnitSearchModal.tsx'));
@@ -54,6 +55,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         saveBtn: contextType === 'development' ? 'Salvar Tarefa' : 'Salvar Chamado',
     };
 
+    const showAlert = useContext(AlertContext);
 
     const [formData, setFormData] = useState(initialFormState);
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -124,7 +126,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     const handleContactButtonClick = () => {
         console.log('handleContactButtonClick chamado, id_unid_oper:', formData.id_unid_oper);
         if (!formData.id_unid_oper || formData.id_unid_oper === 0) {
-            alert('Preencha a unidade operacional do usuário.');
+            showAlert({ message: 'Selecione uma Unidade Operacional antes de buscar o solicitante.', type: 'info' });
             return;
         }
         setIsContactModalOpen(true);
@@ -156,7 +158,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
 
          // Validação básica
          if (!formData.titulo_tarefa || !formData.id_criado_por || !formData.id_unid_negoc || !formData.id_unid_oper) {
-             alert('Por favor, preencha todos os campos obrigatórios (Título, Solicitante, Unidade de Negócio, Unidade Operacional).');
+             showAlert({ message: 'Preencha os campos obrigatórios (Título, Solicitante e Unidade).', type: 'warning' });
              return;
          };
 
@@ -190,11 +192,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
             } else {
                 const errorData = await response.text();
                 console.error('Erro ao criar tarefa:', errorData);
-                alert(`Erro ao criar tarefa: ${errorData}`);
+                showAlert({ message: `Erro ao criar tarefa: ${errorData}`, type: 'error' });
             }
         } catch (error) {
             console.error('Erro de rede ao criar tarefa:', error);
-            alert('Erro de rede ao criar tarefa.');
+            showAlert({ message: 'Erro de rede ao criar tarefa.', type: 'error' });
         } finally {
             setIsSaving(false);
         }
@@ -234,7 +236,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     const selectedFlags = useMemo(() => selectedFlagIds.map(id => flagsMap.get(id)).filter(Boolean) as FlagConfig[], [selectedFlagIds]);
 
     const vinculoPlaceholder = useMemo(() => {
-        if (formData.id_tarefa_pai === null) {
+        if (formData.id_tarefa_pai === undefined || formData.id_tarefa_pai === null) {
             return "Nenhuma tarefa vinculada.";
         }
         return `Existe ${linkedTasksCount} tarefa(s) vinculada(s) a esta.`;

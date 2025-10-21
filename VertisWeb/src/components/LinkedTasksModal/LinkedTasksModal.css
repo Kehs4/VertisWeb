@@ -30,12 +30,27 @@
 
 .linked-task-item .task-id {
     font-weight: 600;
-    color: #00ccff;
+    color: #ff6600;
 }
 
 .linked-task-item .task-title {
     flex-grow: 1;
-    color: #ffffff;
+
+}
+
+.delete-link-button {
+    background-color: #272727;
+    border: none;
+    color: rgb(228, 0, 0);
+    cursor: pointer;
+    font-size: 0.6rem;
+    padding: 3px 4px;
+    border-radius: 5px;
+}
+
+.delete-link-button:hover {
+    background-color: #000000;
+    color: rgb(255, 0, 0);
 }
 
 .linked-task-item .task-status {
@@ -50,4 +65,10 @@
 /* Adaptação para tema escuro */
 .dark .linked-task-item {
     background-color: #3f4653;
+    color: white;
+}
+
+.light .linked-task-item {
+    background-color: #f8f9fa;
+    color: black;
 }

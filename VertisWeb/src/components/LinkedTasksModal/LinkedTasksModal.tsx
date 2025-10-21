@@ -1,15 +1,19 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useContext } from 'react';
 import { Task } from '../../pages/Admin/Suporte/Tarefas/TarefasPage';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
+import DeleteIcon from '@mui/icons-material/Delete';
 import './LinkedTasksModal.css';
+import { AlertContext } from '../MainLayout';
 
 const EditTaskModal = lazy(() => import('../TaskModal/EditTaskModal'));
+const ConfirmationModal = lazy(() => import('../ConfirmationModal/ConfirmationModal'));
 
 interface LinkedTasksModalProps {
     isOpen: boolean;
     onClose: () => void;
-    vinculoId: number;
+    childTaskId: number; // ID da tarefa filha que estamos editando
+    parentTaskId: number; // ID da tarefa pai que está sendo visualizada
 }
 
 const statusConfig: { [key: string]: { backgroundColor: string, color?: string } } = {
@@ -22,19 +26,21 @@ const statusConfig: { [key: string]: { backgroundColor: string, color?: string }
     
 };
 
-const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, vinculoId }) => {
+const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, childTaskId, parentTaskId }) => {
+    const showAlert = useContext(AlertContext);
     const [parentTask, setParentTask] = useState<Task | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [isConfirmUnlinkOpen, setIsConfirmUnlinkOpen] = useState(false);
 
 
     useEffect(() => {
-        if (isOpen && vinculoId) {
+        if (isOpen && parentTaskId) {
             const fetchParentTask = async () => {
                 setIsLoading(true);
                 try {
-                    // Busca diretamente os detalhes da tarefa "pai" usando o vinculoId
-                    const response = await fetch(`/api/task/${vinculoId}`);
+                    // Busca diretamente os detalhes da tarefa "pai" usando o parentTaskId
+                    const response = await fetch(`/api/task/${parentTaskId}`);
                     if (response.ok) {
                         const taskData: Task = await response.json();
                         setParentTask(taskData);
@@ -50,7 +56,7 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, vi
             };
             fetchParentTask();
         }
-    }, [isOpen, vinculoId]);
+    }, [isOpen, parentTaskId]);
 
     const handleOpenDetails = () => {
         if (parentTask) {
@@ -72,10 +78,33 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, vi
                 setParentTask(returnedTask); // Atualiza os dados da tarefa pai no modal atual
                 setIsDetailsModalOpen(false); // Fecha o modal de detalhes
             } else {
-                alert('Falha ao salvar a tarefa pai.');
+                showAlert({ message: 'Falha ao salvar a tarefa pai.', type: 'error' });
             }
         } catch (error) {
             console.error('Erro ao salvar tarefa pai:', error);
+            showAlert({ message: 'Erro de rede ao salvar tarefa pai.', type: 'error' });
+        }
+    };
+
+    const confirmUnlinkParent = async () => {
+        if (!childTaskId) return;
+        setIsConfirmUnlinkOpen(false); // Fecha o modal de confirmação
+
+        try {
+            const response = await fetch(`/api/tasks/${childTaskId}/unlink-parent`, {
+                method: 'PATCH',
+            });
+
+            if (response.ok) {
+                showAlert({ message: 'Vínculo removido com sucesso.', type: 'success' });
+                onClose(); // Fecha o modal principal para forçar a atualização da tela anterior
+            } else {
+                const errorText = await response.text();
+                showAlert({ message: `Falha ao remover o vínculo: ${errorText}`, type: 'error' });
+            }
+        } catch (error) {
+            console.error('Erro de rede ao remover vínculo:', error);
+            showAlert({ message: 'Erro de rede ao remover o vínculo.', type: 'error' });
         }
     };
     if (!isOpen) return null;
@@ -84,7 +113,7 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, vi
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content linked-tasks-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Tarefa Pai Vinculada ID: {vinculoId}</h2>
+                    <h2>Tarefa Pai Vinculada ID: {parentTaskId}</h2>
                     <button onClick={onClose} className="close-button"><CloseIcon /></button>
                 </div>
                 <div className="modal-body">
@@ -98,6 +127,9 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, vi
                                 <span className="task-status" style={statusConfig[parentTask.ind_sit_tarefa] || {}}>{parentTask.ind_sit_tarefa}</span>
                                 <button className="search-button" onClick={handleOpenDetails} title="Ver detalhes da tarefa pai">
                                     <SearchIcon/>
+                                </button>
+                                <button className="delete-link-button" onClick={() => setIsConfirmUnlinkOpen(true)} title="Remover vínculo com a tarefa pai">
+                                    <DeleteIcon />
                                 </button>
                             </li>
                         </ul>
@@ -113,6 +145,16 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, vi
                             task={parentTask}
                             onSave={handleSaveParentTask}
                         />
+                    )}
+                </Suspense>
+                <Suspense>
+                    {isConfirmUnlinkOpen && (
+                        <ConfirmationModal
+                            isOpen={isConfirmUnlinkOpen}
+                            onClose={() => setIsConfirmUnlinkOpen(false)}
+                            onConfirm={confirmUnlinkParent}
+                            title="Confirmar Desvinculação"
+                            message={`Tem certeza que deseja remover o vínculo com a tarefa pai #${parentTask?.id}?`} />
                     )}
                 </Suspense>
             </div>

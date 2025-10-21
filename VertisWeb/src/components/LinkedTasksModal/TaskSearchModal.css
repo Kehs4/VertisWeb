@@ -41,7 +41,7 @@
 
 .task-search-item .task-id {
     font-weight: 600;
-    color: #888;
+    color: #ff6600;
 }
 
 .task-search-item .task-title {
@@ -56,4 +56,9 @@
     border-radius: 12px;
     font-size: 0.8rem;
     font-weight: 500;
+}
+
+.light .task-search-item {
+    background-color: #f8f9fa;
+    color: black;
 }

@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { Task } from '../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
+import { AlertContext } from '../components/MainLayout';
 
 type TaskContext = 'support' | 'development' | 'commercial';
 
@@ -8,6 +9,7 @@ type TaskContext = 'support' | 'development' | 'commercial';
  * @param context - O contexto das tarefas a serem buscadas ('support', 'development', etc.).
  */
 export const useTasks = (context: TaskContext) => {
+    const showAlert = useContext(AlertContext);
     // Função para formatar a data para o formato YYYY-MM-DD
     const getFormattedDate = (date: Date) => {
         return date.toISOString().split('T')[0];
@@ -143,11 +145,13 @@ export const useTasks = (context: TaskContext) => {
             } else {
                 const errorText = await response.text();
                 console.error(`Falha ao atualizar tarefa ${taskToUpdate.id}:`, errorText);
-                alert(`Erro ao atualizar tarefa: ${errorText}`);
+                showAlert({ message: `Erro ao atualizar tarefa: ${errorText}`, type: 'error' });
                 throw new Error(errorText); // Lança um erro para o .catch do chamador
             }
         } catch (error) {
             console.error(`Erro de rede ao atualizar tarefa ${taskToUpdate.id}:`, error);
+            // Não precisa de outro alerta aqui, pois o throw acima já é um erro de rede.
+            // Apenas relança para que o chamador saiba que falhou.
             throw error; // Re-lança o erro
         } finally {
             setIsLoading(false);
@@ -170,11 +174,11 @@ export const useTasks = (context: TaskContext) => {
             } else {
                 const errorText = await response.text();
                 console.error(`Falha ao remover tarefa ${taskId}:`, errorText);
-                alert(`Erro ao remover tarefa: ${errorText}`);
+                showAlert({ message: `Erro ao remover tarefa: ${errorText}`, type: 'error' });
             }
         } catch (error) {
             console.error(`Erro de rede ao remover tarefa ${taskId}:`, error);
-            alert('Erro de rede ao remover tarefa.');
+            showAlert({ message: 'Erro de rede ao remover tarefa.', type: 'error' });
         } finally {
             setIsLoading(false);
         }

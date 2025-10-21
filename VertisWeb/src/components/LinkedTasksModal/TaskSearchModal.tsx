@@ -3,6 +3,7 @@ import { Task } from '../../pages/Admin/Suporte/Tarefas/TarefasPage';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import './TaskSearchModal.css';
+import { gridLegacyClasses } from '@mui/material/GridLegacy';
 
 interface TaskSearchModalProps {
     isOpen: boolean;
@@ -81,6 +82,7 @@ const TaskSearchModal: React.FC<TaskSearchModalProps> = ({ isOpen, onClose, onSe
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="filter-search-input"
+                            style={{ color: 'black', backgroundColor: 'white'}}
                         />
                     </div>
                 </div>

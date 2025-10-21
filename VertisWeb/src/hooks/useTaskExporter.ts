@@ -1,5 +1,7 @@
+import { useContext } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { AlertContext } from '../components/MainLayout';
 import { Task } from '../pages/Admin/Suporte/Tarefas/TarefasPage'; // Ajuste o caminho se necessário
 
 type TaskContext = 'support' | 'development' | 'commercial';
@@ -41,10 +43,11 @@ const getBase64Image = (url: string): Promise<string> => {
 };
 
 export const useTaskExporter = (tasks: Task[], contextType?: TaskContext) => {
+    const showAlert = useContext(AlertContext);
 
     const handleExport = async (format: 'csv' | 'pdf') => {
         if (tasks.length === 0) {
-            alert("Não há tarefas para exportar.");
+            showAlert({ message: "Não há tarefas para exportar.", type: 'info' });
             return;
         }
 
