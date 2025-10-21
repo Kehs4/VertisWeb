@@ -165,12 +165,11 @@ export const useTasks = (context: TaskContext) => {
                 method: 'DELETE',
             });
 
-            if (response.ok) {
+            // Se a resposta for OK (204) ou Not Found (404 - já foi removida), removemos do estado local.
+            if (response.ok || response.status === 404) {
                 // Se a exclusão no backend for bem-sucedida, remove a tarefa do estado local
                 setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-                // Opcional: Se houver alguma complexidade na atualização da lista,
-                // você pode chamar fetchTasks() novamente para garantir a consistência.
-                // await fetchTasks();
+                showAlert({ message: 'Tarefa removida com sucesso.', type: 'success' });
             } else {
                 const errorText = await response.text();
                 console.error(`Falha ao remover tarefa ${taskId}:`, errorText);
@@ -182,7 +181,7 @@ export const useTasks = (context: TaskContext) => {
         } finally {
             setIsLoading(false);
         }
-    }, []); // Não há dependências externas que mudem o comportamento desta função
+    }, [showAlert]);
 
 
     // Retorna os estados e as funções para serem usados no componente

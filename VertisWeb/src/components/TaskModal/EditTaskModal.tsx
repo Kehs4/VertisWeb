@@ -261,10 +261,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         };
     }, [formData?.id_tarefa_pai]);
 
-    useEffect(() => {
-        
-    }, []);
-
     if (!isOpen) {
         return null;
     }

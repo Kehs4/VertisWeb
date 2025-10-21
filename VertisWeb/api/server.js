@@ -155,7 +155,7 @@ app.get('/tasks', async (req, res) => { // endpoint que retorna todas as tasks n
                 (
                     SELECT COALESCE(array_agg(utm.id_marcador::text), ARRAY[]::text[])
                     FROM unid_oper_tarefa_x_marcador utm
-                    WHERE utm.id_tarefa = t.id
+                    WHERE utm.id_tarefa = t.id and dth_exclusao is null
                 ) as tipo_chamado, 
                 t.dth_inclusao, t.dth_abertura, t.dth_encerramento, t.dth_prev_entrega, t.dth_exclusao
             FROM unid_oper_tarefa t
@@ -166,6 +166,8 @@ app.get('/tasks', async (req, res) => { // endpoint que retorna todas as tasks n
         const whereClauses = [];
 
         // Adiciona a cláusula WHERE dinamicamente
+        whereClauses.push('t.dth_exclusao IS NULL'); // Adiciona a condição para não buscar tarefas excluídas
+        
         if (final_dat_inicial) {
             params.push(final_dat_inicial);
             whereClauses.push(`t.dth_inclusao::date >= $${params.length}`);
@@ -185,7 +187,7 @@ app.get('/tasks', async (req, res) => { // endpoint que retorna todas as tasks n
                 SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
                 FROM unid_oper_tarefa_x_recurso utr
                 JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
-                WHERE utr.id_tarefa = $1`;
+                WHERE utr.id_tarefa = $1 AND utr.dth_exclusao IS NULL`;
             const { rows: resources } = await pool.query(resourceQuery, [task.id]);
             task.recursos = resources; 
 
@@ -199,7 +201,7 @@ app.get('/tasks', async (req, res) => { // endpoint que retorna todas as tasks n
                     utc.dth_inclusao
                 FROM unid_oper_tarefa_comentario utc
                 LEFT JOIN unid_oper_contatos uoc ON utc.id_incluido_por = uoc.id_contato
-                WHERE utc.id_tarefa = $1 ORDER BY utc.dth_inclusao ASC;`;
+                WHERE utc.id_tarefa = $1 AND utc.dth_exclusao IS NULL ORDER BY utc.dth_inclusao ASC;`;
             const { rows: comentario } = await pool.query(commentQuery, [task.id]);
             task.comentarios = comentario;
             // A propriedade 'comentarios' é adicionada ao objeto 'task' antes de ser enviada.
@@ -225,8 +227,8 @@ app.get('/task/:id', async (req, res) => { // endpoint para get na aba de detalh
                 (
                     SELECT COALESCE(array_agg(utm.id_marcador::text), ARRAY[]::text[])
                     FROM unid_oper_tarefa_x_marcador utm
-                    WHERE utm.id_tarefa = t.id
-                ) as tipo_chamado, -- Corrigido o alias de 'comentarios' para 'tipo_chamado'
+                    WHERE utm.id_tarefa = t.id and dth_exclusao is null
+                ) as tipo_chamado, 
                 t.dth_inclusao,
                 t.dth_abertura,
                 t.dth_encerramento,
@@ -234,7 +236,7 @@ app.get('/task/:id', async (req, res) => { // endpoint para get na aba de detalh
                 t.dth_exclusao
             FROM unid_oper_tarefa t
             LEFT JOIN unid_oper_contatos creator ON t.id_criado_por = creator.id_contato
-            WHERE t.id = $1;
+            WHERE t.id = $1 AND t.dth_exclusao IS NULL;
         `;
         const { rows: taskRows, rowCount } = await pool.query(taskQuery, [taskId]);
 
@@ -249,7 +251,7 @@ app.get('/task/:id', async (req, res) => { // endpoint para get na aba de detalh
             SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
             FROM unid_oper_tarefa_x_recurso utr
             JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
-            WHERE utr.id_tarefa = $1`;
+            WHERE utr.id_tarefa = $1 and dth_exclusao is null`;
         const { rows: resources } = await pool.query(resourceQuery, [taskId]);
         task.recursos = resources;
 
@@ -263,7 +265,7 @@ app.get('/task/:id', async (req, res) => { // endpoint para get na aba de detalh
                 utc.dth_inclusao
             FROM unid_oper_tarefa_comentario utc
             LEFT JOIN unid_oper_contatos uoc ON utc.id_incluido_por = uoc.id_contato
-            WHERE utc.id_tarefa = $1 ORDER BY utc.dth_inclusao ASC;`;
+            WHERE utc.id_tarefa = $1 and dth_exclusao is null ORDER BY utc.dth_inclusao ASC;`;
         const { rows: comentario } = await pool.query(commentQuery, [taskId]);
         task.comentarios = comentario;
         // A propriedade 'comentarios' é adicionada ao objeto 'task' antes de ser enviada.
@@ -275,34 +277,45 @@ app.get('/task/:id', async (req, res) => { // endpoint para get na aba de detalh
 })
 
 app.delete('/tasks/:id', async (req, res) => { // Endpoint de remoção de task por id.
+    // Alterado para fazer "soft delete" (exclusão lógica)
     const { id } = req.params;
-    const client = await pool.connect();
+    const client = await pool.connect(); // Obter cliente para transação
     try {
         await client.query('BEGIN'); // Inicia a transação
 
-         // 1. Remover associações de recursos na tabela de junção.
-        // É importante fazer isso primeiro para evitar violações de chave estrangeira.
-        await client.query('DELETE FROM unid_oper_tarefa_x_recurso WHERE id_tarefa = $1', [id]);
-
-        // 2. Remover a tarefa principal da tabela de tarefas.
-        const { rowCount } = await client.query('DELETE FROM unid_oper_tarefa WHERE id = $1', [id]);
+        // 1. Soft-delete a tarefa principal
+        const taskUpdateQuery = `
+            UPDATE unid_oper_tarefa 
+            SET dth_exclusao = NOW() 
+            WHERE id = $1 AND dth_exclusao IS NULL
+            RETURNING id;
+        `;
+        const { rowCount } = await client.query(taskUpdateQuery, [id]);
 
         if (rowCount === 0) {
-            // Se a tarefa não foi encontrada, desfaz a transação e retorna 404.
-            await client.query('ROLLBACK');
-            return res.status(404).send('Tarefa não encontrada.');
+            await client.query('ROLLBACK'); // Rollback se a tarefa não for encontrada
+            return res.status(404).send('Tarefa não encontrada ou já foi removida.');
         }
 
-        await client.query('COMMIT'); // Confirma a transação se tudo deu certo.
-        console.log(`[API /tasks] Tarefa ${id} e seus recursos associados foram removidos com sucesso.`);
-        res.status(204).send(); // 204 No Content é a resposta padrão para um DELETE bem-sucedido.
+        // 2. Soft-delete associações de recursos (apenas as ativas)
+        await client.query('UPDATE unid_oper_tarefa_x_recurso SET dth_exclusao = NOW() WHERE id_tarefa = $1 AND dth_exclusao IS NULL', [id]);
 
+        // 3. Soft-delete associações de marcadores (apenas as ativas)
+        await client.query('UPDATE unid_oper_tarefa_x_marcador SET dth_exclusao = NOW() WHERE id_tarefa = $1 AND dth_exclusao IS NULL', [id]);
+
+        // 4. Soft-delete comentários associados
+        await client.query('UPDATE unid_oper_tarefa_comentario SET dth_exclusao = NOW() WHERE id_tarefa = $1 AND dth_exclusao IS NULL', [id]);
+
+
+        await client.query('COMMIT'); // Confirma a transação
+        console.log(`[API /tasks] Tarefa ${id} marcada como excluída (soft delete).`);
+        res.status(204).send(); // 204 No Content é a resposta padrão para um DELETE bem-sucedido.
     } catch (error) {
-        await client.query('ROLLBACK'); // Desfaz a transação em caso de erro.
+        await client.query('ROLLBACK'); // Desfaz a transação em caso de erro
         console.error(`Ocorreu um erro ao remover a tarefa ${id}:`, error);
         res.status(500).send('Erro interno do servidor');
     } finally {
-        client.release(); // Libera o cliente de volta para o pool.
+        if (client) client.release(); // Libera o cliente de volta para o pool, se ele foi conectado.
     }
 });
 
@@ -353,7 +366,7 @@ app.post('/tasks', async (req, res) => { // endpoint de criação de uma task pe
                 creator.nom_contato as nom_criado_por
             FROM unid_oper_tarefa t
             LEFT JOIN unid_oper_contatos creator ON t.id_criado_por = creator.id_contato
-            WHERE t.id = $1;
+            WHERE t.id = $1 AND t.dth_exclusao IS NULL;
         `;
         const { rows: [fullTask] } = await client.query(selectFullTaskQuery, [newTask.id]);
 
@@ -362,7 +375,7 @@ app.post('/tasks', async (req, res) => { // endpoint de criação de uma task pe
             SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
             FROM unid_oper_tarefa_x_recurso utr
             JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
-            WHERE utr.id_tarefa = $1`;
+            WHERE utr.id_tarefa = $1 AND utr.dth_exclusao IS NULL;`;
         const { rows: finalResources } = await client.query(resourceQuery, [newTask.id]);
         fullTask.recursos = finalResources;
 
@@ -473,28 +486,70 @@ app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma 
             return res.status(404).send('Tarefa não encontrada.');
         }
 
-        // 2. Atualiza os recursos associados
-        // Primeiro, remove todos os recursos existentes para esta tarefa
-        await client.query('DELETE FROM unid_oper_tarefa_x_recurso WHERE id_tarefa = $1', [id]);
+        // --- 2. Gerenciamento de Recursos Associados (Soft Delete) ---
+        // Busca os recursos atualmente ativos para esta tarefa
+        const currentActiveResourcesQuery = `
+            SELECT id_recurso FROM unid_oper_tarefa_x_recurso 
+            WHERE id_tarefa = $1 AND dth_exclusao IS NULL;
+        `;
+        const { rows: currentActiveResourcesRows } = await client.query(currentActiveResourcesQuery, [id]);
+        const currentActiveResourceIds = new Set(currentActiveResourcesRows.map(r => r.id_recurso));
 
-        // Em seguida, insere os novos recursos
-        if (recursos && recursos.length > 0) {
-            const insertResourceQuery = 'INSERT INTO unid_oper_tarefa_x_recurso (id_tarefa, id_recurso, dth_inclusao) VALUES ($1, $2, NOW())';
-            for (const recurso of recursos) {
-                await client.query(insertResourceQuery, [id, recurso.id_recurso]);
+        const newResourceIds = new Set(recursos.map(r => r.id_recurso));
+
+        // Processa recursos a serem adicionados
+        for (const newResourceId of newResourceIds) {
+            if (!currentActiveResourceIds.has(newResourceId)) {
+                // Insere um novo registro de associação, independentemente de ter existido antes.
+                await client.query(
+                    `INSERT INTO unid_oper_tarefa_x_recurso (id_tarefa, id_recurso, dth_inclusao) VALUES ($1, $2, NOW());`,
+                    [id, newResourceId]
+                );
             }
         }
 
-        // Atualiza os marcadores (flags)
-        // Primeiro, remove todos os marcadores existentes para esta tarefa
-        await client.query('DELETE FROM unid_oper_tarefa_x_marcador WHERE id_tarefa = $1', [id]);
-        // Em seguida, insere os novos marcadores
-        if (tipo_chamado && tipo_chamado.length > 0) {
-            const insertMarkerQuery = 'INSERT INTO unid_oper_tarefa_x_marcador (id_tarefa, id_marcador, dth_inclusao) VALUES ($1, $2, NOW())';
-            for (const id_marcador of tipo_chamado) {
-                await client.query(insertMarkerQuery, [id, id_marcador]);
+        // Processa recursos a serem soft-deletados
+        for (const oldResourceId of currentActiveResourceIds) {
+            if (!newResourceIds.has(oldResourceId)) {
+                await client.query(
+                    `UPDATE unid_oper_tarefa_x_recurso SET dth_exclusao = NOW() WHERE id_tarefa = $1 AND id_recurso = $2;`,
+                    [id, oldResourceId]
+                );
             }
         }
+
+        // --- 3. Gerenciamento de Marcadores (Flags) Associados (Soft Delete) ---
+        // Busca os marcadores atualmente ativos para esta tarefa
+        const currentActiveMarkersQuery = `
+            SELECT id_marcador FROM unid_oper_tarefa_x_marcador 
+            WHERE id_tarefa = $1 AND dth_exclusao IS NULL;
+        `;
+        const { rows: currentActiveMarkersRows } = await client.query(currentActiveMarkersQuery, [id]);
+        const currentActiveMarkerIds = new Set(currentActiveMarkersRows.map(m => m.id_marcador));
+
+        const newMarkerIds = new Set(tipo_chamado.map(id => parseInt(id, 10))); // Converte para número para consistência
+
+        // Processa marcadores a serem adicionados
+        for (const newMarkerId of newMarkerIds) {
+            if (!currentActiveMarkerIds.has(newMarkerId)) {
+                // Insere um novo registro de associação, independentemente de ter existido antes.
+                await client.query(
+                    `INSERT INTO unid_oper_tarefa_x_marcador (id_tarefa, id_marcador, dth_inclusao) VALUES ($1, $2, NOW());`,
+                    [id, newMarkerId]
+                );
+            }
+        }
+
+        // Processa marcadores a serem soft-deletados
+        for (const oldMarkerId of currentActiveMarkerIds) {
+            if (!newMarkerIds.has(oldMarkerId)) {
+                await client.query(
+                    `UPDATE unid_oper_tarefa_x_marcador SET dth_exclusao = NOW() WHERE id_tarefa = $1 AND id_marcador = $2;`,
+                    [id, oldMarkerId]
+                );
+            }
+        }
+
 
         // 3. Busca a tarefa completa para retornar ao frontend
         const selectFullTaskQuery = `
@@ -511,14 +566,14 @@ app.put('/tasks/:id', async (req, res) => { // Endpoint de atualização de uma 
         const resourceQuery = `
             SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
             FROM unid_oper_tarefa_x_recurso utr
-            JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
-            WHERE utr.id_tarefa = $1`;
+            JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso 
+            WHERE utr.id_tarefa = $1 AND utr.dth_exclusao IS NULL;`; // Retorna apenas recursos ativos
         const { rows: finalResources } = await client.query(resourceQuery, [id]);
         fullTask.recursos = finalResources;
 
         // Busca os marcadores associados para adicionar à resposta
         const markerQuery = `
-            SELECT id_marcador::text FROM unid_oper_tarefa_x_marcador WHERE id_tarefa = $1
+            SELECT DISTINCT id_marcador::text FROM unid_oper_tarefa_x_marcador WHERE id_tarefa = $1 AND dth_exclusao IS NULL;
         `;
         const { rows: finalMarkers } = await client.query(markerQuery, [id]);
         // Mapeia para um array de strings, como o frontend espera
@@ -694,6 +749,9 @@ app.get('/contacts', async (req, res) => {
         const params = [];
         const whereClauses = [];
 
+        // Adiciona a condição para não buscar contatos excluídos logicamente
+        whereClauses.push('c.dth_exclusao IS NULL');
+
         if (search) {
             params.push(`%${search}%`);
             whereClauses.push(`(c.nom_contato ILIKE $${params.length} OR c.num_telefone1 ILIKE $${params.length} OR c.email_1 ILIKE $${params.length} OR c.inf_adicional ILIKE $${params.length})`);
@@ -763,7 +821,7 @@ app.put('/contacts/:id', async (req, res) => {
 app.delete('/contacts/:id', async (req, res) => {
     const contactId = parseInt(req.params.id, 10);
     try {
-        const { rowCount } = await pool.query('DELETE FROM unid_oper_contatos WHERE id_contato = $1', [contactId]);
+        const { rowCount } = await pool.query('UPDATE unid_oper_contatos SET dth_exclusao = NOW() WHERE id_contato = $1', [contactId]);
         if (rowCount === 0) {
             return res.status(404).send('Contato não encontrado.');
         }
@@ -794,7 +852,7 @@ app.get('/resources', async (req, res) => {
         const params = [];
         if (search) {
             // Busca por nome, função (inf_adicional), telefone ou email
-            query += ` WHERE nom_contato ILIKE $1 OR inf_adicional ILIKE $1 OR num_telefone1 ILIKE $1 OR email_1 ILIKE $1`;
+            query += ` WHERE nom_contato ILIKE $1 OR inf_adicional ILIKE $1 OR num_telefone1 ILIKE $1 OR email_1 ILIKE $1 AND dth_exclusao IS NULL`;
             params.push(`%${search}%`);
         }
         query += ' ORDER BY nom_recurso';
@@ -854,7 +912,7 @@ app.put('/resources/:id', async (req, res) => {
 app.delete('/resources/:id', async (req, res) => {
     const resourceId = parseInt(req.params.id, 10);
     try {
-        const { rowCount } = await pool.query('DELETE FROM unid_oper_contatos WHERE id_contato = $1', [resourceId]);
+        const { rowCount } = await pool.query('UPDATE unid_oper_contatos SET dth_exclusao = NOW() WHERE id_contato = $1', [resourceId]);
         if (rowCount === 0) return res.status(404).send('Recurso não encontrado.');
         console.log(`[API /resources] Recurso ${resourceId} excluído.`);
         res.status(204).send();
