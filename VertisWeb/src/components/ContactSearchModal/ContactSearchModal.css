@@ -1,0 +1,152 @@
+.contact-search-modal {
+    width: 80%;
+    max-width: 900px;
+    /* Fundo herdado do .modal-content */
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+ }
+ 
+ .contact-modal-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #eee;
+ }
+ 
+ .contact-modal-toolbar .search-input-wrapper {
+    flex-grow: 1;
+    margin-right: 1rem;
+ }
+ 
+ .contact-table-wrapper {
+    flex-grow: 1;
+    overflow-y: auto;
+ }
+ 
+ .contact-table {
+    width: 100%;
+    border-collapse: collapse;
+    /* Fundo herdado */
+ }
+ 
+ .contact-table th, .contact-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+ }
+ 
+ .contact-table th {
+    font-weight: 600;
+    color: #ffffff;
+    position: sticky;
+    top: 0;
+    background-color: #5c5c5c;
+ }
+ 
+ .contact-table tbody tr:hover {
+    background-color: #f0f0f0;
+ }
+ 
+ .contact-table .selectable-cell {
+    cursor: pointer;
+    color: #333;
+ }
+ 
+ .contact-table .cell-actions {
+    text-align: center;
+    width: 100px;
+ }
+ 
+ /* Formulário de Edição/Adição */
+ .contact-edit-form {
+    padding: 1rem 1.5rem;
+    color: black;
+    animation: slide-down 0.3s ease-out;
+ }
+ 
+ .contact-edit-form h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+ }
+ 
+ .contact-edit-form .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+ }
+ 
+ .contact-edit-form input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #333;
+ }
+ 
+ .edit-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+ }
+ 
+ /* --- Estilos dos Botões --- */
+ .contact-modal-toolbar .add-task-button,
+ .edit-form-actions .save-btn,
+ .btn-primary,
+ .edit-form-actions .cancel-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem; /* Espaçamento entre ícone e texto */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+ }
+ 
+ .edit-form-actions .cancel-btn {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+ }
+ 
+ .edit-form-actions .cancel-btn:hover {
+    background-color: #e0e0e0;
+ }
+ 
+ .contact-modal-toolbar .add-task-button,
+ .edit-form-actions .save-btn {
+    background-color: #ff6600;
+    color: white;
+ }
+ 
+ .contact-modal-toolbar .add-task-button:hover,
+ .edit-form-actions .save-btn:hover {
+    background-color: #e65c00;
+ }
+
+ /* Mantém a cor vermelha para ícones de erro/excluir */
+ .contact-table .cell-actions .MuiIconButton-root .MuiSvgIcon-root[color="error"] {
+    color: #dc3545;
+ }
+
+ @keyframes slide-down {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+ }
+ 
