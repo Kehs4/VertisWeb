@@ -182,23 +182,19 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     const handleContactSelect = (contact: Contact) => {
         setFormData(prev => ({
             ...prev,
-            id_criado_por: contact.id as number,
-            nom_criado_por: contact.nome,
-            nom_unid_oper: contact.nom_unid_oper,
-            id_unid_oper: contact.id_unid_oper,
-            nom_unid_negoc: contact.nom_unid_negoc,
-            id_unid_negoc: contact.id_unid_negoc,
+            id_criado_por: contact.cod_usuario as number,
+            nom_criado_por: contact.nom_parceiro,
         }));
         setIsContactModalOpen(false);
     };
 
-    const handleUnitSelect = (unit: { id: number; nom_unid_oper: string; nom_unid_negoc: string; }) => {
+    const handleUnitSelect = (unit: { cod_unid_oper: number; nom_unid_oper: string; fkid_unid_negoc: number; nom_unid_negoc: string; }) => {
         setFormData(prev => ({
             ...prev,
-            id_unid_oper: unit.id,
+            id_unid_oper: unit.cod_unid_oper,
             nom_unid_oper: unit.nom_unid_oper,
-            // Opcional: Atualizar a unidade de negócio se vier junto
-            nom_unid_negoc: unit.nom_unid_negoc || prev.nom_unid_negoc,
+            id_unid_negoc: unit.fkid_unid_negoc,
+            nom_unid_negoc: unit.nom_unid_negoc,
         }));
         setIsUnitModalOpen(false);
     };
@@ -410,7 +406,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                             isOpen={isContactModalOpen}
                             onClose={() => setIsContactModalOpen(false)}
                             onSelect={handleContactSelect}
-                            id_unid_oper={formData.id_unid_oper} />
+                            id_unid_oper={formData.id_unid_oper}
+                            id_unid_negoc={formData.id_unid_negoc} />
                     )}
                     {isUnitModalOpen && (
                         <OperationalUnitSearchModal

@@ -847,57 +847,6 @@ app.get('/task/:id', async (req, res) => {
 */
 
 /**
- * @route GET /contacts
- * @description Retorna uma lista de contatos ativos, com opções de filtro por termo de busca
- * e por ID da unidade operacional.
- */
-app.get('/contacts', async (req, res) => {
-    const { search, id_unid_oper } = req.query;
-    try {
-        let query = `
-            SELECT 
-                c.id_contato as id, 
-                c.nom_contato as nome, 
-                c.id_unid_oper, 
-                uo.nom_unid_oper,
-                un.id_unid_negoc,
-                un.nom_unid_negoc,
-                c.num_telefone1 as telefone,
-                c.email_1 as email,
-                c.inf_adicional
-            FROM unid_oper_contatos c
-            LEFT JOIN unid_operacional uo ON c.id_unid_oper = uo.id_unid_oper
-            LEFT JOIN unid_negocio un ON uo.id_unid_negoc = un.id_unid_negoc
-        `;
-        const params = [];
-        const whereClauses = [];
-
-        // Adiciona a condição para não buscar contatos excluídos logicamente
-        whereClauses.push('c.dth_exclusao IS NULL');
-
-        if (search) {
-            params.push(`%${search}%`);
-            whereClauses.push(`(c.nom_contato ILIKE $${params.length} OR c.num_telefone1 ILIKE $${params.length} OR c.email_1 ILIKE $${params.length} OR c.inf_adicional ILIKE $${params.length})`);
-        }
-        if (id_unid_oper) {
-            params.push(id_unid_oper);
-            whereClauses.push(`c.id_unid_oper = $${params.length}`);
-        }
-
-        if (whereClauses.length > 0) {
-            query += ` WHERE ${whereClauses.join(' AND ')}`;
-        }
-
-        query += ' ORDER BY c.nom_contato;';
-        const { rows } = await pool.query(query, params);
-        res.status(200).json(rows);
-    } catch (error) {
-        console.error('Erro ao buscar contatos:', error);
-        res.status(500).send('Erro interno do servidor');
-    }
-});
-
-/**
  * @route POST /contacts
  * @description Cria um novo registro de contato no banco de dados.
  */
@@ -1352,6 +1301,51 @@ app.post('/tasks/:id/comments', async (req, res) => {
         res.status(500).send('Erro interno do servidor');
     } finally {
         client.release(); // Libera a conexão de volta para o pool
+    }
+});
+
+/**
+ * @route POST /consulta_contatos
+ * @description Atua como um proxy para o endpoint externo de consulta de contatos,
+ * usando o token de autenticação do cookie.
+ * Retorna uma lista de contatos ativos, com opções de filtro por termo de busca
+ * e por ID da unidade operacional.
+ */
+app.post('/consulta_contatos', async (req, res) => {
+    const { nom_contato, cod_unid_negoc, cod_unid_oper } = req.body;
+
+    if (!req.cookies.authToken) {
+        return res.status(401).json({ error: 'Não autorizado', message: 'Token de autenticação não fornecido.' });
+    }
+
+    try {
+        const payload = {
+            nom_contato: nom_contato || "",
+            cod_unid_negoc: cod_unid_negoc,
+            cod_unid_oper: cod_unid_oper
+        };
+
+        const apiResponse = await fetch('http://177.11.209.38:80/constellation/IISConstellationAPI.dll/constellation-api/V1.1/consulta_contatos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${req.cookies.authToken}`,
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (apiResponse.ok) {
+            const data = await apiResponse.json();
+            res.status(200).json(data);
+        } else {
+            const errorText = await apiResponse.text();
+            console.error(`[API /consulta_contatos] Erro na API externa: ${apiResponse.status} - ${errorText}`);
+            res.status(apiResponse.status).json({ error: 'Erro na API externa', message: errorText });
+        }
+
+    } catch (error) {
+        console.error('[API /consulta_contatos] Erro ao processar a requisição:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
 
