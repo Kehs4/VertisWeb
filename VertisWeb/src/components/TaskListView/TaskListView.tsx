@@ -86,7 +86,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
     const labels = {
         task: contextType === 'development' ? 'Tarefa' : 'Chamado', // Singular
         tasks: contextType === 'development' ? 'Tarefas' : 'Chamados', // Plural
-        analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista', // Papel
+        // analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista', // Papel
         taskDescription: contextType === 'development' ? 'Descrição da Tarefa' : 'Descrição do Chamado',
         saveBtn: contextType === 'development' ? 'Salvar Tarefa' : 'Salvar Chamado',
         // Labels para os cards de análise
@@ -713,7 +713,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                             )}
                             <th onClick={() => requestSort('recursos')} className={getSortClassName('recursos')}>
                                 <div className="th-content">
-                                    <PersonPinIcon /> {labels.analyst}
+                                    <PersonPinIcon /> Recurso
                                     <IconButton size="small" onClick={handleResourceFilterOpen} className="th-filter-button" title="Filtrar por recurso"><FilterListIcon fontSize="inherit" /></IconButton>
                                 </div>
                             </th>

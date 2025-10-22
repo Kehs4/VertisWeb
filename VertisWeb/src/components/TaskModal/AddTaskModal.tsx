@@ -51,7 +51,7 @@ const initialFormState: Omit<Task, 'id' | 'dth_inclusao' | 'sit_tarefa'> & {
 const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onSave, contextType = 'support' }) => {
     const labels = {
         taskDescription: contextType === 'development' ? 'Descrição da Tarefa' : 'Descrição do Chamado',
-        analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista',
+        // analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista',
         saveBtn: contextType === 'development' ? 'Salvar Tarefa' : 'Salvar Chamado',
     };
 
@@ -320,7 +320,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label htmlFor='nom_recurso'>{labels.analyst}</label>
+                            <label htmlFor='nom_recurso'>Recurso</label>
                             <div className="resource-pills-container">
                                 {Array.isArray(formData.recursos) && formData.recursos.map(resource => (
                                     <div key={resource.id_recurso} className="resource-pill">

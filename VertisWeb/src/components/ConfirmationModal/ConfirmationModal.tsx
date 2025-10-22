@@ -32,7 +32,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
                         Cancelar
                     </button>
                     <button type="button" className="confirm-btn-delete" onClick={onConfirm}>
-                        Confirmar Exclusão
+                        Confirmar
                     </button>
                 </div>
             </div>

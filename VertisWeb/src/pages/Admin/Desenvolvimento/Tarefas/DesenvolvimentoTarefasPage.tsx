@@ -5,7 +5,7 @@ import { useTasks } from '../../../../hooks/useTasks';
 
 function DesenvolvimentoTarefasPage() {
     // Utiliza o hook customizado para buscar e gerenciar as tarefas de desenvolvimento
-    const { tasks, isLoading, startDate, endDate, setStartDate, setEndDate, addTask, updateTask, deleteTask } = useTasks('development');
+    const { tasks, isLoading, startDate, endDate, setStartDate, setEndDate, addTask, updateTask, deleteTask, updateTaskStatus } = useTasks('development');
 
     // Efeito para atualizar o título da página no navegador
     useEffect(() => {
@@ -27,6 +27,7 @@ function DesenvolvimentoTarefasPage() {
             endDate={endDate}
             onAddTask={addTask}
             onUpdateTask={updateTask}
+            updateTaskStatus={updateTaskStatus}
             onDeleteTask={deleteTask}
             onDateChange={handleDateChange} // Passa a função de callback para o filho
             contextType="development"

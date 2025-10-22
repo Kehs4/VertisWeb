@@ -64,17 +64,18 @@ export const useTasks = (context: TaskContext) => {
                     const data: Task[] = await response.json();
 
                     // Filtra os dados com base no contexto recebido
-                    const filteredData = data.filter(task => {
-                        if (context === 'support') {
-                            return task.id_unid_negoc !== 1000; // Exclui Desenvolvimento
-                        }
-                        if (context === 'development') {
-                            return task.id_unid_negoc === 1000; // Apenas Desenvolvimento
-                        }
-                        return true; // Retorna tudo se não houver filtro específico
-                    });
+                   // const filteredData = data.filter(task => {
+                   //     if (context === 'support') {
+                   //         return task.id_unid_negoc !== 1000; // Exclui Desenvolvimento
+                   //     }
+                   //     if (context === 'development') {
+                   //         return task.id_unid_negoc === 1000; // Apenas Desenvolvimento
+                   //     }
+                   //     return true; // Retorna tudo se não houver filtro específico
+                   // });
 
-                    setTasks(filteredData);
+                    //setTasks(filteredData);
+                    setTasks(data);
                 } else {
                     console.error(`Falha ao buscar tarefas para o contexto ${context}:`, response.statusText);
                 }
