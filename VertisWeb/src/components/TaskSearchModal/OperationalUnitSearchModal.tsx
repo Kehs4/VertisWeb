@@ -4,7 +4,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 
 export interface OperationalUnit {
-    id: number;
+    fkid_unid_negoc: number; // ID da unidade de negócio
+    cod_unid_oper: number;
     nom_unid_oper: string;
     nom_unid_negoc: string;
 }
@@ -19,17 +20,34 @@ const OperationalUnitSearchModal: React.FC<OperationalUnitSearchModalProps> = ({
     const [units, setUnits] = useState<OperationalUnit[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+    // Efeito para aplicar o "debounce" no termo de busca.
+    // Ele aguarda 300ms após o usuário parar de digitar para atualizar o termo de busca que será usado na API.
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300); // 300ms de atraso
+
+        // A função de limpeza é crucial: ela cancela o timeout anterior se o usuário digitar novamente.
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchTerm]); // Este efeito roda sempre que o `searchTerm` (do input) muda.
 
     useEffect(() => {
         if (isOpen) {
             const fetchUnits = async () => {
                 setIsLoading(true);
                 try {
-                    // O endpoint /api/units já existe e busca por nome por padrão
-                    const response = await fetch(`/api/units?search_term=${searchTerm}`);
+                    // Agora, usa o termo "debounced" para fazer a busca, reduzindo as requisições.
+                    const response = await fetch(`/api/units?search=${debouncedSearchTerm}`);
                     if (response.ok) {
-                        const data = await response.json();
-                        setUnits(data);
+                        // A API retorna um objeto { data: [...] }, então precisamos acessar a propriedade 'data'
+                        const responseData = await response.json();
+                        if (Array.isArray(responseData.data)) {
+                            setUnits(responseData.data);
+                        }
                     } else {
                         console.error("Falha ao buscar unidades operacionais.");
                     }
@@ -41,7 +59,7 @@ const OperationalUnitSearchModal: React.FC<OperationalUnitSearchModalProps> = ({
             };
             fetchUnits();
         }
-    }, [isOpen, searchTerm]);
+    }, [isOpen, debouncedSearchTerm]); // A busca agora depende do termo "debounced".
 
     const handleSelectUnit = (unit: OperationalUnit) => {
         onSelect(unit);
@@ -77,9 +95,10 @@ const OperationalUnitSearchModal: React.FC<OperationalUnitSearchModalProps> = ({
                     <table className="operational-unit-table">
                         <thead>
                             <tr>
-                                <th>Código</th>
-                                <th>Unidade Operacional</th>
+                                <th>Código Unid.Neg</th>
                                 <th>Unidade de Negócio</th>
+                                <th>Código Unid. Oper</th>
+                                <th>Unidade Operacional</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -87,10 +106,11 @@ const OperationalUnitSearchModal: React.FC<OperationalUnitSearchModalProps> = ({
                                 <tr><td colSpan={3} className="table-loading-state">Carregando...</td></tr>
                             ) : units.length > 0 ? (
                                 units.map(unit => (
-                                    <tr key={unit.id} onDoubleClick={() => handleSelectUnit(unit)} title="Dê um duplo clique para selecionar">
-                                        <td className="selectable-cell" onClick={() => handleSelectUnit(unit)}>{unit.id}</td>
-                                        <td className="selectable-cell" onClick={() => handleSelectUnit(unit)}>{unit.nom_unid_oper}</td>
+                                    <tr key={unit.fkid_unid_negoc} onDoubleClick={() => handleSelectUnit(unit)} title="Dê um duplo clique para selecionar">
+                                        <td className="selectable-cell" onClick={() => handleSelectUnit(unit)}>{unit.fkid_unid_negoc}</td>
                                         <td className="selectable-cell" onClick={() => handleSelectUnit(unit)}>{unit.nom_unid_negoc}</td>
+                                        <td className="selectable-cell" onClick={() => handleSelectUnit(unit)}>{unit.cod_unid_oper}</td>
+                                        <td className="selectable-cell" onClick={() => handleSelectUnit(unit)}>{unit.nom_unid_oper}</td>
                                     </tr>
                                 ))
                             ) : (

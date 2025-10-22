@@ -11,7 +11,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
+    padding: 0.5rem 1rem;
     border-bottom: 1px solid #eee;
  }
  
@@ -22,19 +22,28 @@
  .operational-unit-table-wrapper {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 0 1.5rem 1rem 1.5rem;
+    padding: 0 1.5rem;
  }
  
  .operational-unit-table {
     width: 100%;
     border-collapse: collapse;
  }
+
+ .operational-unit-table th {
+   padding: 0.5rem;
+   text-align: left;
+   font-size: 0.8rem;
+ }
  
- .operational-unit-table th, .operational-unit-table td {
+ .operational-unit-table td {
     padding: 0.75rem;
     text-align: left;
     border-bottom: 1px solid #eee;
     color: #333;
+    border-right: 1px solid #eee;
+    border-left: 1px solid #eee;
+
  }
  
  .operational-unit-table th {
@@ -42,7 +51,7 @@
     color: #ffffff;
     position: sticky;
     top: 0;
-    background-color: #5c5c5c;
+    background-color: #252525;
  }
  
  .operational-unit-table tbody tr:hover {

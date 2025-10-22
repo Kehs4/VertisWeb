@@ -1204,30 +1204,106 @@ app.patch('/tasks/:id/unlink-parent', async (req, res) => {
  * por nome ou ID.
  */
 app.get('/units', async (req, res) => {
-    const { search_by = 'nom_unid_oper', search_term = '' } = req.query;
-
-    // Validação simples para evitar SQL Injection
-    const allowedSearchFields = ['nom_unid_oper', 'id_unid_oper'];
-    if (!allowedSearchFields.includes(search_by)) {
-        return res.status(400).send('Critério de busca inválido.');
+    const { search, limit = 100, offset = 0 } = req.query;
+    
+    // Validação do token de autenticação
+    if (!req.cookies.authToken) {
+        return res.status(401).json({ 
+            error: 'Token de autenticação não fornecido',
+            message: 'É necessário estar logado para acessar as unidades operacionais'
+        });
     }
 
     try {
-        const query = `
-            SELECT 
-                uo.id_unid_oper as id,
-                uo.nom_unid_oper,
-                un.nom_unid_negoc
-            FROM unid_operacional uo
-            LEFT JOIN unid_negocio un ON uo.id_unid_negoc = un.id_unid_negoc
-            WHERE ${search_by}::text ILIKE $1
-            ORDER BY uo.nom_unid_oper;
-        `;
-        const { rows } = await pool.query(query, [`%${search_term}%`]);
-        res.status(200).json(rows);
+        console.log(`[API /units] Buscando unidades operacionais - Filtro: ${search || 'nenhum'}`);
+        
+        // Configuração da requisição com timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos de timeout
+        
+        const apiResponse = await fetch(
+            `http://177.11.209.38:80/constellation/IISConstellationAPI.dll/constellation-api/V1.1/get_unid_operacional`, 
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${req.cookies.authToken}`,
+                },
+                signal: controller.signal
+            }
+        );
+
+        clearTimeout(timeoutId);
+
+        // Verificação do status da resposta
+        if (!apiResponse.ok) {
+            const errorText = await apiResponse.text();
+            console.error(`[API /units] Erro na API externa: ${apiResponse.status} - ${errorText}`);
+            
+            if (apiResponse.status === 401) {
+                return res.status(401).json({ 
+                    error: 'Token inválido ou expirado',
+                    message: 'Sessão expirada. Faça login novamente.'
+                });
+            }
+            
+            return res.status(apiResponse.status).json({ 
+                error: 'Erro na API externa',
+                message: `Falha ao buscar unidades operacionais: ${apiResponse.statusText}`
+            });
+        }
+
+        const units = await apiResponse.json();
+        
+        // Validação da resposta
+        if (!Array.isArray(units)) {
+            console.error('[API /units] Resposta da API externa não é um array:', typeof units);
+            return res.status(500).json({ 
+                error: 'Formato de dados inválido',
+                message: 'A API retornou dados em formato inesperado'
+            });
+        }
+
+        // Aplicação de filtros se fornecidos
+        let filteredUnits = units;
+        
+        if (search) {
+            const searchTerm = search.toString().toLowerCase();
+            filteredUnits = units.filter(unit => 
+                (unit.nom_unid_oper && unit.nom_unid_oper.toLowerCase().includes(searchTerm)) ||
+                (unit.cod_unid_oper && unit.cod_unid_oper.toString().includes(searchTerm))
+            );
+        }
+
+        // Aplicação de paginação
+        const startIndex = parseInt(offset.toString()) || 0;
+        const maxLimit = parseInt(limit.toString()) || 100;
+        const paginatedUnits = filteredUnits.slice(startIndex, startIndex + maxLimit);
+
+        console.log(`[API /units] Retornando ${paginatedUnits.length} de ${filteredUnits.length} unidades`);
+        
+        res.status(200).json({
+            data: paginatedUnits,
+            total: filteredUnits.length,
+            limit: maxLimit,
+            offset: startIndex,
+            hasMore: startIndex + maxLimit < filteredUnits.length
+        });
+        
     } catch (error) {
-        console.error('Erro ao buscar unidades operacionais:', error);
-        res.status(500).send('Erro interno do servidor');
+        if (error.name === 'AbortError') {
+            console.error('[API /units] Timeout na requisição para a API externa');
+            return res.status(504).json({ 
+                error: 'Timeout',
+                message: 'A requisição demorou muito para ser processada'
+            });
+        }
+        
+        console.error('[API /units] Erro ao buscar unidades operacionais:', error);
+        res.status(500).json({ 
+            error: 'Erro interno do servidor',
+            message: 'Não foi possível buscar as unidades operacionais no momento'
+        });
     }
 });
 

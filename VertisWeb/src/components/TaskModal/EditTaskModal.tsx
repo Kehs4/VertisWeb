@@ -525,7 +525,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                 {Array.isArray(formData.comentarios) && formData.comentarios.length > 0 ? (
                                     (formData.comentarios as Comentario[]).map((comment, index) => (
                                         <div key={index} className="comment-item">
-                                            <p className="comment-text">{comment.comentario}</p>
+                                            {/* Usa dangerouslySetInnerHTML para renderizar o HTML do comentário */}
+                                            <div className="comment-text" dangerouslySetInnerHTML={{ __html: comment.comentario }} />
                                             <div className="comment-footer">
                                                 <span className="comment-author">{comment.nom_recurso}</span>
                                                 <span className="comment-date">{new Date(comment.dth_inclusao).toLocaleString()}</span>

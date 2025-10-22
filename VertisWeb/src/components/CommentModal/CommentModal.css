@@ -34,11 +34,6 @@
     border-bottom: 1px solid #eee;
 }
 
-.modal-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-}
-
 .close-button {
     background: none;
     border: none;
@@ -58,17 +53,71 @@
     margin-bottom: 20px;
 }
 
-.comment-textarea-large {
-    width: 100%;
-    padding: 15px;
+/* --- Estilos para o Editor TipTap --- */
+
+.editor-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px;
+    background-color: #292929;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
     border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 1rem;
-    line-height: 1.5;
-    resize: vertical; /* Allow vertical resizing */
-    min-height: 200px; /* Minimum height */
-    resize: none;
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    border-bottom: none;
+}
+
+.editor-toolbar .divider {
+    width: 1px;
+    background-color: #ddd;
+    margin: 4px 8px;
+    align-self: stretch;
+}
+
+.editor-toolbar button {
+    background-color: #00000000;
+    border: none;
+    border-radius: 4px;
+    padding: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.editor-toolbar button:hover {
+    background-color: #99999933;
+    transition: color 0.5;
+}
+
+.editor-toolbar button svg:hover {
+    color: #be56fa !important; /* Muda a cor do ícone no hover */
+
+}
+
+.editor-toolbar button.is-active {
+    background-color: #99999933;
+}
+
+.tiptap-editor-content {
+    border: 1px solid #ccc;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    padding: 20px;
+    min-height: 250px;
+    flex-grow: 1;
+    color: #333; /* Garante que o texto padrão seja escuro */
+    overflow-y: auto;
+}
+
+/* Estilos para o conteúdo dentro do editor */
+.tiptap-editor-content:focus {
+    outline: none;
+}
+
+.tiptap-editor-content p {
+    margin: 0;
 }
 
 .modal-footer {
