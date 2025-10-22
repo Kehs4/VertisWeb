@@ -25,7 +25,6 @@ const pool = new Pool({
 });
 
 const app = express();
-const port = 9000;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -152,7 +151,7 @@ app.get('/tasks', async (req, res) => {
     // Pega as datas da query string ou usa a data atual como padrão
     const today = getFormattedDate(new Date());
     // Pega os valores da query. Se não vierem, o padrão é `undefined`.
-    let { dat_inicial, dat_final } = req.query;
+    let { dat_inicial, dat_final } = req.query; // Removido resource_ids daqui
 
     // Se a data final não for fornecida, usa a data de hoje como padrão.
     if (!dat_final) {
@@ -167,15 +166,16 @@ app.get('/tasks', async (req, res) => {
     try {
         let query = `
             SELECT
-                t.id, t.id_unid_negoc, t.id_unid_oper, t.id_sist_modulo, t.id_criado_por,
+                t.id, t.id_unid_oper,
                 creator.nom_contato as nom_criado_por, -- Adiciona o nome do criador
-                t.ind_prioridade, t.ind_sit_tarefa, t.qtd_pontos, t.titulo_tarefa, t.tarefa_avaliacao, t.id_tarefa_pai,
+                t.ind_prioridade, t.ind_sit_tarefa, t.titulo_tarefa,
                 (
                     SELECT COALESCE(array_agg(utm.id_marcador::text), ARRAY[]::text[])
                     FROM unid_oper_tarefa_x_marcador utm
                     WHERE utm.id_tarefa = t.id and dth_exclusao is null
-                ) as tipo_chamado, 
-                t.dth_inclusao, t.dth_abertura, t.dth_encerramento, t.dth_prev_entrega, t.dth_exclusao
+                ) as tipo_chamado,
+                t.tarefa_avaliacao,
+                t.dth_inclusao, t.dth_prev_entrega, t.dth_encerramento
             FROM unid_oper_tarefa t
             LEFT JOIN unid_oper_contatos creator ON t.id_criado_por = creator.id_contato
         `;
@@ -209,24 +209,103 @@ app.get('/tasks', async (req, res) => {
             const { rows: resources } = await pool.query(resourceQuery, [task.id]);
             task.recursos = resources; 
 
-            // Busca os comentários associados
-            const commentQuery = `
-                SELECT
-                    utc.id,
-                    utc.id_incluido_por as id_recurso,
-                    uoc.nom_contato as nom_recurso,
-                    utc.comentario,
-                    utc.dth_inclusao
-                FROM unid_oper_tarefa_comentario utc
-                LEFT JOIN unid_oper_contatos uoc ON utc.id_incluido_por = uoc.id_contato
-                WHERE utc.id_tarefa = $1 AND utc.dth_exclusao IS NULL ORDER BY utc.dth_inclusao ASC;`;
-            const { rows: comentario } = await pool.query(commentQuery, [task.id]);
-            task.comentarios = comentario;
-            // A propriedade 'comentarios' é adicionada ao objeto 'task' antes de ser enviada.
         }
         res.status(200).json(rows);
     } catch (error) {
         console.error('Ocorreu um erro ao buscar as listas de tarefas:', error);
+        res.status(500).send('Erro interno do servidor');
+    }
+});
+
+/**
+ * @route GET /tasks/basic/:id
+ * @description Retorna apenas os dados básicos (id, titulo, status) de uma tarefa ativa.
+ * Usado para carregamento rápido em modais que não precisam de todos os detalhes.
+ */
+app.get('/tasks/basic/:id', async (req, res) => {
+    try {
+        const taskId = req.params.id;
+        console.log(`[API /tasks/basic/:id] Buscando dados básicos da tarefa vinculada com ID: ${taskId}`);
+
+        const query = `
+            SELECT
+                id,
+                titulo_tarefa,
+                ind_sit_tarefa
+            FROM unid_oper_tarefa
+            WHERE id = $1 AND dth_exclusao IS NULL;
+        `;
+        const { rows, rowCount } = await pool.query(query, [taskId]);
+
+        if (rowCount === 0) {
+            return res.status(404).send('Tarefa básica não encontrada.');
+        }
+        res.status(200).json(rows[0]);
+    } catch (error) {
+        console.error(`[API /tasks/basic/:id] Erro ao buscar dados básicos da tarefa ${req.params.id}:`, error);
+        res.status(500).send('Erro interno do servidor');
+    }
+});
+/**
+ * @route GET /tasks/search-for-linking
+ * @description Retorna uma lista de tarefas ativas, filtradas por IDs de recursos e/ou termo de busca.
+ * Usado especificamente para o modal de vinculação de tarefas.
+ * Também anexa os recursos, marcadores e comentários associados a cada tarefa.
+ */
+app.get('/tasks/search-for-linking', async (req, res) => {
+    const { resource_ids, search_term } = req.query;
+
+    try {
+        let query = `
+            SELECT
+                t.id, 
+                t.ind_sit_tarefa, 
+                t.titulo_tarefa,
+                t.id_tarefa_pai
+            FROM unid_oper_tarefa t
+        `;
+
+        const params = [];
+        const whereClauses = [];
+
+        whereClauses.push(`t.dth_exclusao IS NULL AND t.ind_sit_tarefa not in ('FN', 'CA')`);
+
+        // Adiciona filtro por IDs de recursos, se fornecido
+        if (resource_ids) {
+            // Converte a string '1,2,3' para um array de inteiros [1, 2, 3]
+            const resourceIdsArray = String(resource_ids).split(',').map(id => parseInt(id.trim(), 10));
+            params.push(resourceIdsArray);
+            // Verifica se existe algum recurso associado à tarefa que esteja na lista de IDs fornecida
+            whereClauses.push(`t.ind_sit_tarefa not in('FN', 'CA') AND EXISTS (SELECT 1 FROM unid_oper_tarefa_x_recurso utr WHERE utr.id_tarefa = t.id AND utr.id_recurso = ANY($${params.length}))`);
+        }
+
+        // Adiciona filtro por termo de busca, se fornecido
+        if (search_term) {
+            params.push(`%${search_term.toLowerCase()}%`);
+            whereClauses.push(`(LOWER(t.titulo_tarefa) ILIKE $${params.length} OR t.id::text ILIKE $${params.length})`);
+        }
+
+        if (whereClauses.length > 0) {
+            query += ` WHERE ${whereClauses.join(' AND ')}`;
+        }
+        query += ' ORDER BY t.dth_inclusao DESC;';
+
+        const { rows } = await pool.query(query, params);
+        
+        // Adiciona os recursos associados a cada tarefa
+        for (const task of rows) {
+            // Busca os recursos na tabela 'unid_oper_contatos'
+            const resourceQuery = `
+                SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
+                FROM unid_oper_tarefa_x_recurso utr
+                JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
+                WHERE utr.id_tarefa = $1 AND utr.dth_exclusao IS NULL`;
+            const { rows: resources } = await pool.query(resourceQuery, [task.id]);
+            task.recursos = resources; 
+        }
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error('Ocorreu um erro ao buscar as listas de tarefas para vinculação:', error);
         res.status(500).send('Erro interno do servidor');
     }
 });
@@ -1193,8 +1272,10 @@ app.post('/tasks/:id/comments', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`);
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`API Rodando em http://0.0.0.0:${PORT}`);
 });
 
 process.stdin.resume();

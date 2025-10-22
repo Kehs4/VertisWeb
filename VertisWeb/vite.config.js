@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       // Redireciona requisições que começam com /api para o seu backend
       '/api': {
-        target: 'http://localhost:9000', // O endereço do seu servidor Express
+        target: 'http://localhost:3000', // O endereço do seu servidor Express
         changeOrigin: true, // Necessário para o proxy funcionar corretamente
         rewrite: (path) => path.replace(/^\/api/, ''), // Remove /api do caminho final
       },

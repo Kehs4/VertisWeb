@@ -47,11 +47,11 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, ch
             const fetchParentTask = async () => {
                 setIsLoading(true);
                 try {
-                    // Busca diretamente os detalhes da tarefa "pai" usando o parentTaskId
-                    const response = await fetch(`/api/task/${parentTaskId}`);
+                    // Busca apenas os dados básicos da tarefa "pai" usando o novo endpoint
+                    const response = await fetch(`/api/tasks/basic/${parentTaskId}`);
                     if (response.ok) {
-                        const taskData: Task = await response.json();
-                        setParentTask(taskData);
+                        const taskData: Pick<Task, 'id' | 'titulo_tarefa' | 'ind_sit_tarefa'> = await response.json();
+                        setParentTask(taskData as Task); // Trata o objeto parcial como uma Task completa
                     } else {
                         console.error("Falha ao buscar a tarefa pai.");
                         setParentTask(null);
@@ -76,7 +76,7 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, ch
     };
 
     /**
-     * Lida com o salvamento de alterações feitas na tarefa pai dentro do `EditTaskModal`.
+     * Lida com o salvamento de alterações feitas na tarefa pai dentro do `EditTaskModal` ao ser aberto pelo botão de detalhes nesta página.
      * @param updatedTask O objeto da tarefa pai com os dados atualizados.
      */
     const handleParentTaskSave = async (updatedTask: Task) => {
@@ -87,6 +87,7 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, ch
                 body: JSON.stringify(updatedTask)
             });
             const savedTask = await response.json();
+            setParentTask(savedTask); // Atualiza o estado do parentTask com os dados completos e atualizados
             setIsDetailsModalOpen(false); // Fecha o modal de detalhes primeiro
             // onClose(); // A remoção desta linha impede o fechamento do modal pai, permitindo que o usuário veja a tarefa pai atualizada.
         } catch (error) {

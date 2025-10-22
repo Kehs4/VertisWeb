@@ -3,7 +3,6 @@ import { Task } from '../../pages/Admin/Suporte/Tarefas/TarefasPage';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import './TaskSearchModal.css';
-import { gridLegacyClasses } from '@mui/material/GridLegacy';
 
 interface TaskSearchModalProps {
     isOpen: boolean;
@@ -32,26 +31,20 @@ const TaskSearchModal: React.FC<TaskSearchModalProps> = ({ isOpen, onClose, onSe
             const fetchTasks = async () => {
                 setIsLoading(true);
                 try {
-                    // Busca todas as tarefas para permitir a vinculação com qualquer uma
-                    const response = await fetch(`/api/tasks`);
+                    // Constrói a URL da API dinamicamente com os parâmetros de busca
+                    const params = new URLSearchParams();
+                    if (resourceIds.length > 0) {
+                        params.append('resource_ids', resourceIds.join(','));
+                    }
+                    if (searchTerm) {
+                        params.append('search_term', searchTerm);
+                    }
+
+                    // Chama o novo endpoint específico para busca de tarefas para vinculação
+                    const response = await fetch(`/api/tasks/search-for-linking?${params.toString()}`);
+
                     if (response.ok) {
                         let allTasks: Task[] = await response.json();
-
-                        // Filtra no frontend
-                        if (searchTerm) {
-                            allTasks = allTasks.filter(task =>
-                                task.titulo_tarefa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                String(task.id).includes(searchTerm)
-                            );
-                        }
-                        // Filtra pelas tarefas que contêm pelo menos um dos recursos selecionados
-                        if (resourceIds.length > 0) {
-                            allTasks = allTasks.filter(task =>
-                                Array.isArray(task.recursos) &&
-                                task.recursos.some(r => resourceIds.includes(r.id_recurso))
-                            );
-                        }
-
                         setTasks(allTasks);
                     }
                 } catch (error) {
