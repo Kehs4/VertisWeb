@@ -14,6 +14,8 @@ import { AlertContext } from '../MainLayout';
 const ResourceSearchModal = lazy(() => import('../ResourceSearchModal/ResourceSearchModal'));
 const LinkedTasksModal = lazy(() => import('../LinkedTasksModal/LinkedTasksModal'));
 const TaskSearchModal = lazy(() => import('../LinkedTasksModal/TaskSearchModal.tsx'));
+const CommentModal = lazy(() => import('../CommentModal/CommentModal'));
+
 
 interface EditTaskModalProps {
     isOpen: boolean;
@@ -31,12 +33,14 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
     const labels = {
         task: contextType === 'development' ? 'Tarefa' : 'Chamado',
         taskDescription: contextType === 'development' ? 'Descrição da Tarefa' : 'Descrição do Chamado',
-        // analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista',
+        analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista',
         saveBtn: contextType === 'development' ? 'Salvar Tarefa' : 'Salvar Alterações',
     };
 
 
     const [newComment, setNewComment] = useState('');
+    const [currentCommentText, setCurrentCommentText] = useState(''); // Estado para o texto do modal
+    const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false); // Novo estado para controlar o modo de edição
     const [isAddingFlags, setIsAddingFlags] = useState(false); // Estado para mostrar/esconder flags disponíveis
     const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
@@ -93,6 +97,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
             setIsLinkedTasksModalOpen(false);
             setIsTaskSearchModalOpen(false);
             setIsSaving(false);
+            setIsCommentModalOpen(false);
+            setCurrentCommentText('');
         }
     }, [isOpen]); // Depende apenas do estado de abertura do modal.
 
@@ -109,6 +115,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
             return '';
         }
     };
+
+    const openCommentModal = () => {
+        setCurrentCommentText(newComment); // Transfere o texto do campo rápido para o modal
+        setIsCommentModalOpen(true);
+    };
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         if (!formData) return;
@@ -252,6 +264,38 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         setNewComment(''); // Limpa o campo de comentário
     };
 
+    /**
+     * Salva um novo comentário vindo do CommentModal.
+     * @param commentText O texto do comentário a ser salvo.
+     */
+    const handleSaveFromCommentModal = async (commentText: string) => {
+        if (!formData || !commentText.trim()) return;
+
+        const payload = {
+            id_incluido_por: 10, // TODO: Substituir pelo ID do usuário logado
+            comentario: commentText,
+        };
+
+        try {
+            const response = await fetch(`/api/tasks/${formData.id}/comments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                const newCommentData = await response.json();
+                // Atualiza o estado local de forma otimizada, sem refazer a busca completa da tarefa
+                setFormData(prev => prev ? { ...prev, comentarios: [...((prev.comentarios || []) as Comentario[]), newCommentData] } : null);
+            } else {
+                showAlert({ message: 'Falha ao adicionar comentário.', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Erro de rede ao adicionar comentário:', error);
+            showAlert({ message: 'Erro de rede ao adicionar comentário.', type: 'error' });
+        }
+    };
+
     const handleCommentKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
         // Envia o comentário ao pressionar Enter (sem Shift)
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -364,7 +408,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor='nom_recurso'>Recurso</label>
+                                    <label htmlFor='nom_recurso'>{labels.analyst}</label>
                                     <div className="resource-pills-container">
                                         {Array.isArray(formData.recursos) && formData.recursos.map(resource => (
                                             <div key={resource.id_recurso} className="resource-pill">
@@ -492,9 +536,17 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                     <p className="no-comments">Nenhum comentário ainda.</p>
                                 )}
                             </div>
+                            <div className='box-comment-modal'>
+                                {/* Este botão agora abre o modal sofisticado */}
+                                <button
+                                    type='button'
+                                    className="add-comment-detailed-btn"
+                                    onClick={openCommentModal}
+                                    title="Adicionar comentário detalhado"><AddCircleOutlineIcon /> Comentário Detalhado</button>
+                            </div>
                             <div className="add-comment-section">
                                 <textarea
-                                    placeholder="Adicionar um comentário..."
+                                    placeholder="Adicione um comentário..."
                                     value={newComment}
                                     onChange={(e) => setNewComment(e.target.value)}
                                     onKeyDown={handleCommentKeyDown}
@@ -504,6 +556,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                     <SendIcon />
                                 </button>
                             </div>
+
                         </div>
                     </div>
 
@@ -544,6 +597,15 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                             onClose={() => setIsTaskSearchModalOpen(false)}
                             onSelectTask={handleTaskLinkSelect}
                             resourceIds={Array.isArray(formData?.recursos) ? formData.recursos.map(r => r.id_recurso) : []}
+                        />
+                    )}
+                    {isCommentModalOpen && (
+                        <CommentModal
+                            isOpen={isCommentModalOpen}
+                            onClose={() => setIsCommentModalOpen(false)}
+                            initialComment={currentCommentText}
+                            onSave={handleSaveFromCommentModal}
+                            title="Comentário Detalhado"
                         />
                     )}
                 </Suspense>

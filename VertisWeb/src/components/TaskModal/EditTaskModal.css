@@ -59,7 +59,7 @@
 
 .comments-list {
     flex-grow: 1;
-    max-height: 400px; /* Altura máxima para a lista de comentários */
+    max-height: 440px; /* Altura máxima para a lista de comentários */
     overflow-y: auto; /* Garante que a barra de rolagem apareça quando necessário */
     padding-right: 10px;
     margin-bottom: 15px;
@@ -109,12 +109,12 @@
 
 .add-comment-section textarea {
     flex-grow: 1;
-    padding: 7px;
+    padding: 7px 10px;
     border: 1px solid #ccc;
     border-radius: 8px;
     resize: none;
     font-size: 0.9rem;
-    min-height: 120px;
+    min-height: 60px;
 }
 
 .add-comment-section button {
@@ -123,7 +123,7 @@
     color: white;
     border: none;
     border-radius: 8px;
-    width: 60px;
+    width: 55px;
     height: 100%;
     cursor: pointer;
     display: flex;
@@ -137,9 +137,28 @@
 }
 
 .add-comment-section button svg {
-    font-size: 1rem;
+    font-size: 1.3rem;
 }
 
+
+.box-comment-modal .add-comment-detailed-btn {
+    background-color: #132130; /* Cor azul para o botão de adicionar comentário */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.3s;
+    margin-top: auto;
+    margin-bottom: 10px;
+}
+.add-comment-detailed-btn:hover {
+    background-color: #123a55;
+}
 /* --- Estilos para a Barra de Rolagem Modernizada --- */
 .comments-list::-webkit-scrollbar {
     width: 6px; /* Largura da barra de rolagem */
@@ -161,14 +180,21 @@
 
 .edit-btn {
     padding: 10px 25px;
-    background-color: #3498db; /* Cor azul para diferenciar */
+    background-color: #132130; /* Cor azul para diferenciar */
     color: white;
     border: none;
     border-radius: 8px;
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
+
+.edit-btn:hover {
+    background-color: #123a55;
+}
+
+
 
 /* --- Estilos para campos bloqueados (modo de visualização) --- */
 .form-column-main input[readOnly],

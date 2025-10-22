@@ -1,0 +1,115 @@
+/* Base styles for modal overlay and content, similar to other modals */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content.comment-edit-modal {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 800px; /* Increased max-width for more space */
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s;
+}
+
+.close-button:hover {
+    color: #333;
+}
+
+.modal-body {
+    flex-grow: 1;
+    overflow-y: auto; /* Allow scrolling if content is too long */
+    margin-bottom: 20px;
+}
+
+.comment-textarea-large {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    line-height: 1.5;
+    resize: vertical; /* Allow vertical resizing */
+    min-height: 200px; /* Minimum height */
+    resize: none;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.modal-footer .cancel-btn,
+.modal-footer .save-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+.modal-footer .cancel-btn {
+    background-color: #ccc;
+    color: #333;
+}
+
+.modal-footer .cancel-btn:hover {
+    background-color: #bbb;
+}
+
+.modal-footer .save-btn {
+    background-color: #ff6600;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.modal-footer .save-btn:hover {
+    background-color: #e65c00;
+}
+
+.modal-footer .save-btn svg {
+    font-size: 1.2rem;
+}

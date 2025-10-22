@@ -1244,31 +1244,38 @@ app.post('/tasks/:id/comments', async (req, res) => {
         return res.status(400).send('ID do usuário e comentário são obrigatórios.');
     }
 
+    const client = await pool.connect(); // Pega uma conexão do pool para a transação
     try {
-        // Insere o novo comentário
+        await client.query('BEGIN'); // Inicia a transação
+
+        // 1. Insere o novo comentário e retorna seu ID dentro da transação
         const insertQuery = `
             INSERT INTO unid_oper_tarefa_comentario (id_tarefa, id_incluido_por, comentario, dth_inclusao)
             VALUES ($1, $2, $3, NOW())
             RETURNING id;
         `;
-        const { rows: [newComment] } = await pool.query(insertQuery, [id_tarefa, id_incluido_por, comentario]);
+        const { rows: [newComment] } = await client.query(insertQuery, [id_tarefa, id_incluido_por, comentario]);
 
-        // Busca o comentário completo (com o nome do usuário) para retornar ao frontend
+        // 2. Busca o comentário completo (com o nome do usuário) dentro da mesma transação
         const selectQuery = `
             SELECT
                 c.id, c.id_tarefa, c.id_incluido_por as id_recurso, u.nom_contato as nom_recurso, c.comentario, c.dth_inclusao
             FROM unid_oper_tarefa_comentario c
-            JOIN unid_oper_contatos u ON c.id_incluido_por = u.id_contato
+            LEFT JOIN unid_oper_contatos u ON c.id_incluido_por = u.id_contato
             WHERE c.id = $1;
         `;
-        const { rows: [fullComment] } = await pool.query(selectQuery, [newComment.id]);
+        const { rows: [fullComment] } = await client.query(selectQuery, [newComment.id]);
 
+        await client.query('COMMIT'); // Confirma a transação
         console.log(`[API /tasks/:id/comments] Novo comentário adicionado à tarefa ${id_tarefa}.`);
         res.status(201).json(fullComment);
 
     } catch (error) {
+        await client.query('ROLLBACK'); // Desfaz a transação em caso de erro
         console.error(`Erro ao adicionar comentário à tarefa ${id_tarefa}:`, error);
         res.status(500).send('Erro interno do servidor');
+    } finally {
+        client.release(); // Libera a conexão de volta para o pool
     }
 });
 
