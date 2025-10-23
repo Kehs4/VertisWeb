@@ -6,6 +6,7 @@ import SendIcon from '@mui/icons-material/Send';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import LinkIcon from '@mui/icons-material/Link';
 import StarIcon from '@mui/icons-material/Star';
+import HistoryIcon from '@mui/icons-material/History';
 import SearchIcon from '@mui/icons-material/Search';
 import { flags, flagsMap, FlagConfig } from '../TaskListView/taskFlags.ts';
 import { IconButton } from '@mui/material';
@@ -15,6 +16,7 @@ const ResourceSearchModal = lazy(() => import('../ResourceSearchModal/ResourceSe
 const LinkedTasksModal = lazy(() => import('../LinkedTasksModal/LinkedTasksModal.tsx'));
 const TaskSearchModal = lazy(() => import('../LinkedTasksModal/TaskSearchModal.tsx'));
 const CommentModal = lazy(() => import('../CommentModal/CommentModal.tsx'));
+const HistoryModal = lazy(() => import('../HistoryModal/HistoryModal.tsx'));
 
 
 interface TaskModalProps {
@@ -50,6 +52,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
     const [contextMenu, setContextMenu] = useState<{ x: number; y: number; comment: Comentario } | null>(null);
     const [editingComment, setEditingComment] = useState<Comentario | null>(null);
     const [isTaskSearchModalOpen, setIsTaskSearchModalOpen] = useState(false);
+    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
     // Mapeamento de status para ser usado no select e na lógica
     const statusOptions: { [key: string]: string } = {
@@ -124,6 +127,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
             setContextMenu(null); // Fecha o menu de contexto
             setEditingComment(null); // Limpa o comentário em edição
             setIsCommentModalOpen(false);
+            setIsHistoryModalOpen(false);
             setCurrentCommentText('');
         }
     }, [isOpen]); // Depende apenas do estado de abertura do modal.
@@ -211,7 +215,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
     };
 
     const handleTaskLinkSelect = async (parentTaskId: number) => {
-        if (!isEditing || !formData?.id) return;
+        if (!formData?.id) return;
 
         setIsSaving(true); // Mostra um feedback de que algo está acontecendo
         try {
@@ -446,6 +450,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
                         {formData.id_tarefa_pai && (
                             <IconButton onClick={() => setIsLinkedTasksModalOpen(true)} title={`Ver tarefas com vínculo: ${formData.id_tarefa_pai}`} className="link-icon-button"><LinkIcon /></IconButton>
                         )}
+                        {/* Botão para abrir o histórico */}
+                        <IconButton onClick={() => setIsHistoryModalOpen(true)} title="Ver histórico da tarefa" className="history-icon-button"><HistoryIcon /></IconButton>
+
                     </div>
                     <button onClick={onClose} className="close-button"><CloseIcon /></button>
                 </div>
@@ -552,10 +559,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
                                             onChange={handleChange}
                                             placeholder={vinculoPlaceholder}
                                             readOnly
+                                            disabled
                                         />
-                                        {isEditing && <button type="button" className="icon-button" onClick={handleOpenTaskSearchModal} title="Pesquisar Tarefa para Vincular">
+                                         <button type="button" className="icon-button" onClick={handleOpenTaskSearchModal} title="Pesquisar Tarefa para Vincular">
                                             <SearchIcon />
-                                        </button>}
+                                        </button>
                                     </div>
                                 </div>
 
@@ -697,6 +705,13 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
                             initialComment={editingComment ? editingComment.comentario : currentCommentText}
                             onSave={editingComment ? handleUpdateComment : handleSaveFromCommentModal}
                             title={editingComment ? 'Editar Comentário' : 'Adicionar Comentário'}
+                        />
+                    )}
+                    {isHistoryModalOpen && task?.id && (
+                        <HistoryModal
+                            isOpen={isHistoryModalOpen}
+                            onClose={() => setIsHistoryModalOpen(false)}
+                            taskId={task.id}
                         />
                     )}
                 </Suspense>

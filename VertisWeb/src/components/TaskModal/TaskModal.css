@@ -50,6 +50,15 @@
     background-color: #f0f0f0;
 }
 
+.history-icon-button {
+    color: #888;
+}
+
+.history-icon-button:hover {
+    color: #3498db;
+    background-color: #f0f0f0;
+}
+
 .section-header h4 {
     margin-top: 0;
     margin-bottom: 0;

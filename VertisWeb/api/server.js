@@ -1285,6 +1285,107 @@ app.put('/comments/:id', async (req, res) => {
 });
 
 /**
+ * @route GET /tasks/:id/history
+ * @description Retorna o histórico completo de uma tarefa, incluindo alocação de recursos e um log de alterações.
+ */
+app.get('/tasks/:id/history', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // 1. Busca o histórico de alocação de recursos
+        const resourceHistoryQuery = `
+            SELECT 
+                utr.id, -- ID do registro de alocação
+                utr.id_recurso, -- ID do recurso
+                c.nom_contato as nom_recurso,
+                utr.dth_inclusao,
+                utr.dth_exclusao
+            FROM unid_oper_tarefa_x_recurso utr
+            JOIN unid_oper_contatos c ON utr.id_recurso = c.id_contato
+            WHERE utr.id_tarefa = $1
+            ORDER BY utr.dth_inclusao;
+        `;
+        const { rows: resources } = await pool.query(resourceHistoryQuery, [id]);
+
+        // 2. Monta o log de alterações (timeline)
+        const changes = [];
+
+        // Evento de Criação da Tarefa
+        const taskCreationQuery = `
+            SELECT t.dth_inclusao, c.nom_contato as nom_criado_por 
+            FROM unid_oper_tarefa t
+            LEFT JOIN unid_oper_contatos c ON t.id_criado_por = c.id_contato
+            WHERE t.id = $1;
+        `;
+        const { rows: [taskCreation] } = await pool.query(taskCreationQuery, [id]);
+        if (taskCreation) {
+            changes.push({
+                type: 'CRIAÇÃO',
+                description: 'Tarefa foi criada.',
+                author: taskCreation.nom_criado_por || 'Sistema',
+                date: taskCreation.dth_inclusao
+            });
+        }
+
+        // Eventos de Comentários
+        const commentsQuery = `
+            SELECT c.comentario, u.nom_contato as nom_recurso, c.dth_inclusao
+            FROM unid_oper_tarefa_comentario c
+            LEFT JOIN unid_oper_contatos u ON c.id_incluido_por = u.id_contato
+            WHERE c.id_tarefa = $1;
+        `;
+        const { rows: comments } = await pool.query(commentsQuery, [id]);
+        comments.forEach(comment => {
+            changes.push({
+                type: 'COMENTÁRIO',
+                description: comment.comentario,
+                author: comment.nom_recurso || 'Usuário desconhecido',
+                date: comment.dth_inclusao
+            });
+        });
+
+        // Ordena todas as alterações pela data
+        changes.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        res.status(200).json({ resources, changes });
+
+    } catch (error) {
+        console.error(`Erro ao buscar histórico da tarefa ${id}:`, error);
+        res.status(500).send('Erro interno do servidor');
+    }
+});
+
+/**
+ * @route DELETE /tasks/:taskId/resources/:resourceId
+ * @description Realiza a exclusão permanente (hard delete) de um registro de alocação de recurso para uma tarefa específica.
+ * Usado na tela de histórico para remover um registro específico.
+ */
+app.delete('/tasks/:taskId/resources/:resourceId', async (req, res) => {
+    const { taskId, resourceId } = req.params;
+
+    try {
+        const deleteQuery = `
+            DELETE FROM unid_oper_tarefa_x_recurso
+            WHERE id_tarefa = $1 AND id_recurso = $2;
+        `;
+        const { rowCount } = await pool.query(deleteQuery, [taskId, resourceId]);
+
+        if (rowCount === 0) {
+            // Pode acontecer se o registro já foi deletado, então não é necessariamente um erro fatal.
+            // Retornamos sucesso para a UI ser atualizada de qualquer forma.
+            console.log(`[API] Tentativa de exclusão, mas registro de alocação não foi encontrado para tarefa ${taskId} e recurso ${resourceId}.`);
+            return res.status(204).send();
+        }
+
+        console.log(`[API] Alocação do recurso ${resourceId} na tarefa ${taskId} excluída permanentemente.`);
+        res.status(204).send(); // 204 No Content para sucesso na exclusão
+    } catch (error) {
+        console.error(`Erro ao excluir alocação do recurso ${resourceId} na tarefa ${taskId}:`, error);
+        res.status(500).send('Erro interno do servidor');
+    }
+});
+
+/**
  * @route POST /consulta_contatos
  * @description Atua como um proxy para o endpoint externo de consulta de contatos,
  * usando o token de autenticação do cookie.
