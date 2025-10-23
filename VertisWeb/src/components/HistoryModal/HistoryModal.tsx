@@ -114,7 +114,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ isOpen, onClose, taskId }) 
                         <div className="history-list">
                             {historyData?.resources.map((res, index) => (
                                 <div key={res.id} className={`history-item resource-item ${res.dth_exclusao ? 'inactive' : 'active'}`}>
-                                    <div className="resource-info">
+                                    <div className="resource-infos">
                                         <span className="history-author">{res.nom_recurso}</span>
                                         <IconButton size="small" className="delete-history-btn" onClick={() => setResourceToDelete(res)} title="Excluir este registro de alocação">
                                             <DeleteIcon fontSize="small" />
