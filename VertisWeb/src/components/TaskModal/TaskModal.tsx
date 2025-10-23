@@ -17,6 +17,7 @@ const LinkedTasksModal = lazy(() => import('../LinkedTasksModal/LinkedTasksModal
 const TaskSearchModal = lazy(() => import('../LinkedTasksModal/TaskSearchModal.tsx'));
 const CommentModal = lazy(() => import('../CommentModal/CommentModal.tsx'));
 const HistoryModal = lazy(() => import('../HistoryModal/HistoryModal.tsx'));
+const SetDefaultResourceModal = lazy(() => import('../SetDefaultResourceModal/SetDefaultResourceModal.tsx'));
 
 
 interface TaskModalProps {
@@ -53,6 +54,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
     const [editingComment, setEditingComment] = useState<Comentario | null>(null);
     const [isTaskSearchModalOpen, setIsTaskSearchModalOpen] = useState(false);
     const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+    const [isSetDefaultResourceModalOpen, setIsSetDefaultResourceModalOpen] = useState(false);
 
     // Mapeamento de status para ser usado no select e na lógica
     const statusOptions: { [key: string]: string } = {
@@ -128,6 +130,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
             setEditingComment(null); // Limpa o comentário em edição
             setIsCommentModalOpen(false);
             setIsHistoryModalOpen(false);
+            setIsSetDefaultResourceModalOpen(false);
             setCurrentCommentText('');
         }
     }, [isOpen]); // Depende apenas do estado de abertura do modal.
@@ -413,6 +416,36 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
         setIsSaving(false); // Reseta o estado de salvamento
     };
 
+    const handleSetDefaultResource = async (selectedResourceId: number) => {
+        if (!formData) return;
+
+        try {
+            const response = await fetch(`/api/tasks/${formData.id}/set-default-resource`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resourceId: selectedResourceId }),
+            });
+
+            if (response.ok) {
+                // Atualiza o estado local para refletir a mudança imediatamente
+                setFormData(prev => {
+                    if (!prev) return null;
+                    const currentResources = Array.isArray(prev.recursos) ? prev.recursos : [];
+                    const updatedResources = currentResources.map(r => ({
+                        ...r,
+                        ind_responsavel: r.id_recurso === selectedResourceId ? 'S' as const : 'N' as const,
+                    }));
+                    return { ...prev, recursos: updatedResources };
+                });
+                showAlert({ message: 'Recurso responsável definido com sucesso!', type: 'success' });
+            } else {
+                showAlert({ message: 'Falha ao definir o recurso responsável.', type: 'error' });
+            }
+        } catch (error) {
+            showAlert({ message: 'Erro de rede ao definir o recurso responsável.', type: 'error' });
+        }
+    };
+
     // Memoiza as listas de flags para otimização
     const selectedFlagIds = formData?.tipo_chamado || [];
     const availableFlags = useMemo(() => flags.filter(flag => !selectedFlagIds.includes(flag.id)), [selectedFlagIds]);
@@ -503,14 +536,22 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
                                 <div className="form-group">
                                     <label htmlFor='nom_recurso'>{labels.analyst}</label>
                                     <div className="resource-pills-container">
-                                        {Array.isArray(formData.recursos) && formData.recursos.map(resource => (
-                                            <div key={resource.id_recurso} className="resource-pill">
+                                        {Array.isArray(formData.recursos) && formData.recursos.map((resource) => (
+                                            <div key={resource.id_recurso} className={`resource-pill ${resource.ind_responsavel === 'S' ? 'default-resource' : ''}`}>
                                                 {resource.nom_recurso}
                                                 {isEditing && <button type="button" onClick={() => {
                                                     handleResourceConfirm((Array.isArray(formData.recursos) ? formData.recursos : []).filter(r => r.id_recurso !== resource.id_recurso))
                                                 }}>&times;</button>}
                                             </div>
                                         ))}
+                                        {isEditing && Array.isArray(formData.recursos) && formData.recursos.length > 0 && (
+                                            <button
+                                                type="button"
+                                                className="set-default-resource-btn"
+                                                onClick={() => setIsSetDefaultResourceModalOpen(true)}
+                                                title="Definir recurso responsável"
+                                            >Definir Responsável</button>
+                                        )}
                                         {isEditing &&
                                             <button type="button" className="add-resource-btn" onClick={() => setIsResourceModalOpen(true)}>
                                                 <AddCircleOutlineIcon />
@@ -712,6 +753,14 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
                             isOpen={isHistoryModalOpen}
                             onClose={() => setIsHistoryModalOpen(false)}
                             taskId={task.id}
+                        />
+                    )}
+                    {isSetDefaultResourceModalOpen && Array.isArray(formData?.recursos) && (
+                        <SetDefaultResourceModal
+                            isOpen={isSetDefaultResourceModalOpen}
+                            onClose={() => setIsSetDefaultResourceModalOpen(false)}
+                            resources={formData.recursos}
+                            onSave={handleSetDefaultResource}
                         />
                     )}
                 </Suspense>

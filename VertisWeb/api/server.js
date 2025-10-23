@@ -202,7 +202,7 @@ app.get('/tasks', async (req, res) => {
         for (const task of rows) {
             // Busca os recursos na tabela 'unid_oper_contatos'
             const resourceQuery = `
-                SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
+                SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso, utr.ind_responsavel
                 FROM unid_oper_tarefa_x_recurso utr
                 JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
                 WHERE utr.id_tarefa = $1 AND utr.dth_exclusao IS NULL`;
@@ -296,7 +296,7 @@ app.get('/tasks/search-for-linking', async (req, res) => {
         for (const task of rows) {
             // Busca os recursos na tabela 'unid_oper_contatos'
             const resourceQuery = `
-                SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
+                SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso, utr.ind_responsavel
                 FROM unid_oper_tarefa_x_recurso utr
                 JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
                 WHERE utr.id_tarefa = $1 AND utr.dth_exclusao IS NULL`;
@@ -349,7 +349,7 @@ app.get('/task/:id', async (req, res) => {
 
         // Query para buscar os recursos associados
         const resourceQuery = `
-            SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
+            SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso, utr.ind_responsavel
             FROM unid_oper_tarefa_x_recurso utr
             JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
             WHERE utr.id_tarefa = $1 and dth_exclusao is null`;
@@ -455,9 +455,9 @@ app.post('/tasks', async (req, res) => {
 
         // 2. Insere os recursos associados
         if (recursos && recursos.length > 0) {
-            const resourceQuery = 'INSERT INTO unid_oper_tarefa_x_recurso (id_tarefa, id_recurso, dth_inclusao) VALUES ($1, $2, NOW())';
+            const resourceQuery = 'INSERT INTO unid_oper_tarefa_x_recurso (id_tarefa, id_recurso, ind_responsavel, dth_inclusao) VALUES ($1, $2, $3, NOW())';
             for (const recurso of recursos) {
-                await client.query(resourceQuery, [newTask.id, recurso.id_recurso]);
+                await client.query(resourceQuery, [newTask.id, recurso.id_recurso, recurso.ind_responsavel || 'N']);
             }
         }
 
@@ -482,7 +482,7 @@ app.post('/tasks', async (req, res) => {
 
         // Busca os recursos associados para adicionar à resposta
         const resourceQuery = `
-            SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
+            SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso, utr.ind_responsavel
             FROM unid_oper_tarefa_x_recurso utr
             JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
             WHERE utr.id_tarefa = $1 AND utr.dth_exclusao IS NULL;`;
@@ -679,7 +679,7 @@ app.put('/tasks/:id', async (req, res) => {
 
         // Busca os recursos associados para adicionar à resposta
         const resourceQuery = `
-            SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso 
+            SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso, utr.ind_responsavel
             FROM unid_oper_tarefa_x_recurso utr
             JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso 
             WHERE utr.id_tarefa = $1 AND utr.dth_exclusao IS NULL;`; // Retorna apenas recursos ativos
@@ -1299,7 +1299,8 @@ app.get('/tasks/:id/history', async (req, res) => {
                 utr.id_recurso, -- ID do recurso
                 c.nom_contato as nom_recurso,
                 utr.dth_inclusao,
-                utr.dth_exclusao
+                utr.dth_exclusao,
+                utr.ind_responsavel
             FROM unid_oper_tarefa_x_recurso utr
             JOIN unid_oper_contatos c ON utr.id_recurso = c.id_contato
             WHERE utr.id_tarefa = $1
@@ -1312,7 +1313,7 @@ app.get('/tasks/:id/history', async (req, res) => {
 
         // Evento de Criação da Tarefa
         const taskCreationQuery = `
-            SELECT t.dth_inclusao, c.nom_contato as nom_criado_por 
+            SELECT t.dth_inclusao, t.dth_encerramento, c.nom_contato as nom_criado_por 
             FROM unid_oper_tarefa t
             LEFT JOIN unid_oper_contatos c ON t.id_criado_por = c.id_contato
             WHERE t.id = $1;
@@ -1325,6 +1326,16 @@ app.get('/tasks/:id/history', async (req, res) => {
                 author: taskCreation.nom_criado_por || 'Sistema',
                 date: taskCreation.dth_inclusao
             });
+
+            // Adiciona o evento de encerramento, se existir
+            if (taskCreation.dth_encerramento) {
+                changes.push({
+                    type: 'FINALIZAÇÃO',
+                    description: 'Tarefa foi finalizada.',
+                    author: 'Sistema', // Não temos o autor do encerramento, então usamos 'Sistema'
+                    date: taskCreation.dth_encerramento
+                });
+            }
         }
 
         // Eventos de Comentários
@@ -1342,6 +1353,32 @@ app.get('/tasks/:id/history', async (req, res) => {
                 author: comment.nom_recurso || 'Usuário desconhecido',
                 date: comment.dth_inclusao
             });
+        });
+
+        // Eventos de Vínculo de Tarefa
+        const linksQuery = `
+            SELECT id_tarefa_top, dth_inclusao, dth_exclusao
+            FROM unid_oper_tarefa_vinculo
+            WHERE id_tarefa = $1;
+        `;
+        const { rows: links } = await pool.query(linksQuery, [id]);
+        links.forEach(link => {
+            // Adiciona o evento de criação do vínculo
+            changes.push({
+                type: 'VÍNCULO',
+                description: `Vinculada à tarefa pai #${link.id_tarefa_top}.`,
+                author: 'Sistema', // A ação de vincular não tem um autor registrado
+                date: link.dth_inclusao
+            });
+            // Adiciona o evento de remoção do vínculo, se houver
+            if (link.dth_exclusao) {
+                changes.push({
+                    type: 'DESVINCULO',
+                    description: `Vínculo com a tarefa pai #${link.id_tarefa_top} foi removido.`,
+                    author: 'Sistema',
+                    date: link.dth_exclusao
+                });
+            }
         });
 
         // Ordena todas as alterações pela data
@@ -1382,6 +1419,50 @@ app.delete('/tasks/:taskId/resources/:resourceId', async (req, res) => {
     } catch (error) {
         console.error(`Erro ao excluir alocação do recurso ${resourceId} na tarefa ${taskId}:`, error);
         res.status(500).send('Erro interno do servidor');
+    }
+});
+
+/**
+ * @route PATCH /tasks/:taskId/set-default-resource
+ * @description Define um recurso como o padrão/responsável para uma tarefa,
+ * garantindo que apenas um recurso seja o padrão por vez.
+ */
+app.patch('/tasks/:taskId/set-default-resource', async (req, res) => {
+    const { taskId } = req.params;
+    const { resourceId } = req.body;
+
+    if (!resourceId) {
+        return res.status(400).send('O ID do recurso é obrigatório.');
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Remove a flag 'S' de qualquer outro recurso nesta tarefa
+        await client.query(
+            `UPDATE unid_oper_tarefa_x_recurso 
+             SET ind_responsavel = 'N' 
+             WHERE id_tarefa = $1 AND ind_responsavel = 'S'`,
+            [taskId]
+        );
+
+        // 2. Define o novo recurso como responsável
+        const { rowCount } = await client.query(
+            `UPDATE unid_oper_tarefa_x_recurso 
+             SET ind_responsavel = 'S' 
+             WHERE id_tarefa = $1 AND id_recurso = $2`,
+            [taskId, resourceId]
+        );
+
+        await client.query('COMMIT');
+        res.status(200).json({ message: 'Recurso responsável atualizado com sucesso.' });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error(`Erro ao definir recurso padrão para a tarefa ${taskId}:`, error);
+        res.status(500).send('Erro interno do servidor');
+    } finally {
+        client.release();
     }
 });
 

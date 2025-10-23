@@ -7,7 +7,7 @@ import './HistoryModal.css';
 const ConfirmationModal = lazy(() => import('../ConfirmationModal/ConfirmationModal'));
 
 interface HistoryEvent {
-    type: 'CRIAÇÃO' | 'COMENTÁRIO' | 'FINALIZAÇÃO';
+    type: 'CRIAÇÃO' | 'COMENTÁRIO' | 'FINALIZAÇÃO' | 'VÍNCULO' | 'DESVINCULO';
     description: string;
     author: string;
     date: string;
@@ -17,6 +17,7 @@ interface ResourceHistory {
     id: number; // ID do registro de alocação
     id_recurso: number; // ID do recurso
     nom_recurso: string;
+    ind_responsavel: 'S' | 'N';
     dth_inclusao: string;
     dth_exclusao: string | null;
 }
@@ -115,7 +116,12 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ isOpen, onClose, taskId }) 
                             {historyData?.resources.map((res, index) => (
                                 <div key={res.id} className={`history-item resource-item ${res.dth_exclusao ? 'inactive' : 'active'}`}>
                                     <div className="resource-infos">
-                                        <span className="history-author">{res.nom_recurso}</span>
+                                        <div className="resource-name-wrapper">
+                                            <span className="history-author">{res.nom_recurso}</span>
+                                            {res.ind_responsavel === 'S' && (
+                                                <span className="default-resource-label">Responsável pela Tarefa</span>
+                                            )}
+                                        </div>
                                         <IconButton size="small" className="delete-history-btn" onClick={() => setResourceToDelete(res)} title="Excluir este registro de alocação">
                                             <DeleteIcon fontSize="small" />
                                         </IconButton>

@@ -10,6 +10,7 @@ import { flags, flagsMap, FlagConfig } from '../TaskListView/taskFlags.ts';
 const ContactSearchModal = lazy(() => import('../TaskSearchModal/ContactSearchModal.tsx'));
 const OperationalUnitSearchModal = lazy(() => import('../TaskSearchModal/OperationalUnitSearchModal.tsx'));
 const ResourceSearchModal = lazy(() => import('../ResourceSearchModal/ResourceSearchModal'));
+const SetDefaultResourceModal = lazy(() => import('../SetDefaultResourceModal/SetDefaultResourceModal'));
 const TaskSearchModal = lazy(() => import('../LinkedTasksModal/TaskSearchModal'));
 
 interface AddTaskModalProps {
@@ -63,6 +64,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
     const [isAddingFlags, setIsAddingFlags] = useState(false); // Estado para mostrar/esconder flags disponíveis
     const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
     const [isTaskSearchModalOpen, setIsTaskSearchModalOpen] = useState(false);
+    const [isSetDefaultResourceModalOpen, setIsSetDefaultResourceModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false); // Novo estado para controlar o status de salvamento
 
     useEffect(() => {
@@ -76,6 +78,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
             setIsAddingFlags(false); // Garante que a lista de flags esteja fechada
             setIsResourceModalOpen(false);
             setIsUnitModalOpen(false);
+            setIsSetDefaultResourceModalOpen(false);
             setIsTaskSearchModalOpen(false);
             setIsSaving(false); // Reseta o estado de salvamento
         }
@@ -129,6 +132,18 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
         });
     };
 
+    const handleSetDefaultResource = (selectedResourceId: number) => {
+        setFormData(prev => {
+            const updatedResources = prev.recursos.map(r => ({
+                ...r,
+                ind_responsavel: r.id_recurso === selectedResourceId ? 'S' as const : 'N' as const,
+            }));
+            return { ...prev, recursos: updatedResources };
+        });
+        setIsSetDefaultResourceModalOpen(false);
+    };
+
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (isSaving) return; // Previne envio duplo
@@ -149,7 +164,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                 id_unid_oper: formData.id_unid_oper,
                 ind_prioridade: formData.ind_prioridade,
                 dth_prev_entrega: formData.dth_prev_entrega || null, // YYYY-MM-DD ou null
-                recursos: Array.isArray(formData.recursos) ? formData.recursos.map(r => ({ id_recurso: r.id_recurso })) : [],
+                recursos: Array.isArray(formData.recursos) ? formData.recursos : [], // Envia o array completo com a flag
                 tipo_chamado: formData.tipo_chamado,
                 id_tarefa_pai: formData.id_tarefa_pai || null,
             };
@@ -317,15 +332,23 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                     <div className="form-row">
                         <div className="form-group">
                             <label htmlFor='nom_recurso'>Recurso</label>
-                            <div className="resource-pills-container">
+                            <div className="resource-pills-container add-mode">
                                 {Array.isArray(formData.recursos) && formData.recursos.map(resource => (
-                                    <div key={resource.id_recurso} className="resource-pill">
+                                    <div key={resource.id_recurso} className={`resource-pill ${resource.ind_responsavel === 'S' ? 'default-resource' : ''}`}>
                                         {resource.nom_recurso}
                                         <button type="button" onClick={() => {
                                             handleResourceConfirm((Array.isArray(formData.recursos) ? formData.recursos : []).filter(r => r.id_recurso !== resource.id_recurso))
                                         }}>&times;</button>
                                     </div>
                                 ))}
+                                {Array.isArray(formData.recursos) && formData.recursos.length > 0 && (
+                                    <button
+                                        type="button"
+                                        className="set-default-resource-btn"
+                                        onClick={() => setIsSetDefaultResourceModalOpen(true)}
+                                        title="Definir recurso responsável"
+                                    >Definir Responsável</button>
+                                )}
                                 <button type="button" className="add-resource-btn" onClick={() => setIsResourceModalOpen(true)}>
                                     <AddCircleOutlineIcon />
                                 </button>
@@ -429,6 +452,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
                             onClose={() => setIsTaskSearchModalOpen(false)}
                             onSelectTask={handleTaskLinkSelect}
                             resourceIds={Array.isArray(formData.recursos) ? formData.recursos.map(r => r.id_recurso) : []}
+                        />
+                    )}
+                    {isSetDefaultResourceModalOpen && (
+                        <SetDefaultResourceModal
+                            isOpen={isSetDefaultResourceModalOpen}
+                            onClose={() => setIsSetDefaultResourceModalOpen(false)}
+                            resources={formData.recursos}
+                            onSave={handleSetDefaultResource}
                         />
                     )}
                 </Suspense>

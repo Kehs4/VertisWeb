@@ -408,9 +408,37 @@
  transition: all 0.5s;
 }
 
+.resource-pills-container.add-mode {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
 .add-resource-btn {
     background: none;
     border: none;
     cursor: pointer;
     color: #888;
+}
+
+.set-default-resource-btn {
+    background-color: #132130;
+    border: 1px solid var(--widget-border-color);
+    padding: 3px 6px;
+    border-radius: 16px;
+    color: rgb(214, 214, 214);
+    font-size: 0.65rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.set-default-resource-btn:hover {
+    color: white;
+}
+
+.resource-pill.default-resource {
+    background-color: #132130;
+    color: white;
+    font-weight: 600;
+    border: 1px solid #132130;
 }

@@ -9,6 +9,7 @@ export interface Recurso { // Exportando para utilizar no edit task
     id_recurso: number;
     nom_recurso: string;
     recurso_funcao?: string; // Mapeado de inf_adicional
+    ind_responsavel?: 'S' | 'N';
     telefone?: string;
     email?: string;
 }

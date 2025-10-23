@@ -78,6 +78,18 @@
     align-items: center;
 }
 
+.resource-name-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.default-resource-label {
+    font-size: 0.75rem;
+    color: #3498db;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
 .delete-history-btn {
     color: #aaa;
 }
@@ -114,9 +126,11 @@
     text-transform: uppercase;
 }
 
-.type-criação { background-color: #2ecc71; }
+.type-criação { background-color: #e6b413; }
 .type-comentário { background-color: #3498db; }
-.type-finalização { background-color: #9b59b6; }
+.type-finalização { background-color: #48a015; }
+.type-vínculo { background-color: #8e44ad; } /* Roxo para vínculo */
+.type-desvinculo { background-color: #7f8c8d; } /* Cinza para desvinculo */
 
 .history-author {
     font-weight: 600;
@@ -130,8 +144,13 @@
 }
 
 .history-description {
-    padding-left: 10px;
+    padding-left: 6px;
+    max-width: max-content;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     border-left: 3px solid #e0e0e0;
     font-size: 0.9rem;
     color: #999;
+
 }

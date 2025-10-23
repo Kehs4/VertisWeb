@@ -152,7 +152,7 @@
 
 .box-comment-modal .add-comment-detailed-btn {
     background-color: #132130; /* Cor azul para o botão de adicionar comentário */
-    color: white;
+    color: rgb(214, 214, 214);
     border: none;
     border-radius: 8px;
     padding: 5px 10px;
@@ -161,12 +161,13 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, color 0.3s;
     margin-top: auto;
     margin-bottom: 10px;
 }
 .add-comment-detailed-btn:hover {
     background-color: #123a55;
+    color: white;
 }
 /* --- Estilos para a Barra de Rolagem Modernizada --- */
 .comments-list::-webkit-scrollbar {
