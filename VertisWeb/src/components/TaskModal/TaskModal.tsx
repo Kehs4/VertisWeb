@@ -1,23 +1,23 @@
 import React, { useState, useEffect, KeyboardEvent, useMemo, lazy, Suspense, useContext } from 'react';
-import './EditTaskModal.css';
-import { Task, Comentario, Recurso } from '../../pages/Admin/Suporte/Tarefas/TarefasPage'; // Reutilizando a tipagem
+import './TaskModal.css';
+import { Task, Comentario, Recurso } from '../../pages/Admin/Suporte/Tarefas/TarefasPage.tsx'; // Reutilizando a tipagem
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import LinkIcon from '@mui/icons-material/Link';
 import StarIcon from '@mui/icons-material/Star';
 import SearchIcon from '@mui/icons-material/Search';
-import { flags, flagsMap, FlagConfig } from '../TaskListView/taskFlags';
+import { flags, flagsMap, FlagConfig } from '../TaskListView/taskFlags.ts';
 import { IconButton } from '@mui/material';
-import { AlertContext } from '../MainLayout';
+import { AlertContext } from '../MainLayout.tsx';
 
-const ResourceSearchModal = lazy(() => import('../ResourceSearchModal/ResourceSearchModal'));
-const LinkedTasksModal = lazy(() => import('../LinkedTasksModal/LinkedTasksModal'));
+const ResourceSearchModal = lazy(() => import('../ResourceSearchModal/ResourceSearchModal.tsx'));
+const LinkedTasksModal = lazy(() => import('../LinkedTasksModal/LinkedTasksModal.tsx'));
 const TaskSearchModal = lazy(() => import('../LinkedTasksModal/TaskSearchModal.tsx'));
-const CommentModal = lazy(() => import('../CommentModal/CommentModal'));
+const CommentModal = lazy(() => import('../CommentModal/CommentModal.tsx'));
 
 
-interface EditTaskModalProps {
+interface TaskModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (updatedTask: Task) => void;
@@ -26,9 +26,10 @@ interface EditTaskModalProps {
     contextType?: 'support' | 'development' | 'commercial';
 }
 
-const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, task, contextType = 'support' }) => {
+const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, contextType = 'support' }) => {
     const showAlert = useContext(AlertContext);
     const [formData, setFormData] = useState<Task | null>(null);
+    const [fetchedTaskDetails, setFetchedTaskDetails] = useState<Task | null>(null); // Novo estado para guardar os detalhes completos
     const [isFetchingDetails, setIsFetchingDetails] = useState(false);
     const labels = {
         task: contextType === 'development' ? 'Tarefa' : 'Chamado',
@@ -71,15 +72,18 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                     const response = await fetch(`/api/task/${taskId}`);
                     if (response.ok) {
                         const detailedTask = await response.json();
-                        setFormData(detailedTask);
+                        setFormData(detailedTask); // Popula o formulário
+                        setFetchedTaskDetails(detailedTask); // Guarda a versão completa
                     } else {
                         console.error("Falha ao buscar detalhes da tarefa:", response.statusText);
                         // Em caso de erro, carrega os dados básicos para não quebrar o modal
                         setFormData(task);
+                        setFetchedTaskDetails(task);
                     }
                 } catch (error) {
                     console.error("Erro de rede ao buscar detalhes da tarefa:", error);
                     setFormData(task);
+                    setFetchedTaskDetails(task);
                 } finally {
                     setIsFetchingDetails(false);
                 }
@@ -398,8 +402,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
 
     const handleCancelEdit = () => {
         // Restaura os dados originais da tarefa e volta para o modo de visualização
-        if (task) {
-            setFormData({ ...task });
+        if (fetchedTaskDetails) {
+            setFormData({ ...fetchedTaskDetails }); // Usa os detalhes completos que foram buscados
         }
         setIsEditing(false);
         setIsSaving(false); // Reseta o estado de salvamento
@@ -724,4 +728,4 @@ const ContextMenu: React.FC<{ x: number; y: number; onEdit: () => void; onRemove
     );
 };
 
-export default EditTaskModal;
+export default TaskModal;

@@ -6,7 +6,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import './LinkedTasksModal.css';
 import { AlertContext } from '../MainLayout';
 
-const EditTaskModal = lazy(() => import('../TaskModal/EditTaskModal'));
+const TaskModal = lazy(() => import('../TaskModal/TaskModal.tsx'));
 const ConfirmationModal = lazy(() => import('../ConfirmationModal/ConfirmationModal'));
 
 interface LinkedTasksModalProps {
@@ -152,9 +152,9 @@ const LinkedTasksModal: React.FC<LinkedTasksModalProps> = ({ isOpen, onClose, ch
                 </div>
                 <Suspense fallback={<div>Carregando detalhes...</div>}>
                     {isDetailsModalOpen && (
-                        <EditTaskModal
+                        <TaskModal
                             isOpen={isDetailsModalOpen}
-                            onClose={() => setIsDetailsModalOpen(false)}
+                            onClose={() => { setIsDetailsModalOpen(false); }}
                             task={parentTask}
                             onSave={handleParentTaskSave}
                         />

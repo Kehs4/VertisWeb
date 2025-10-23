@@ -7,7 +7,7 @@ import { flagsMap } from './taskFlags'; // Importa o mapa de configurações das
 import { IconButton, Menu, MenuItem } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 const AddTaskModal = lazy(() => import('../TaskModal/AddTaskModal.tsx'));
-const EditTaskModal = lazy(() => import('../TaskModal/EditTaskModal.tsx'));
+const EditTaskModal = lazy(() => import('../TaskModal/TaskModal.tsx'));
 const ConfirmationModal = lazy(() => import('../ConfirmationModal/ConfirmationModal.tsx'));
 
 // Ícones para os cabeçalhos da tabela
@@ -40,7 +40,7 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 interface TaskListViewProps {
     title: string;
     tasks: Task[];
-    isLoading: boolean;
+    isLoading: boolean; 
     onUpdateTask: (updatedTask: Task) => void;
     updateTaskStatus: (taskId: number, newStatus: string) => void;
     onDeleteTask: (taskId: number) => void;
@@ -49,8 +49,8 @@ interface TaskListViewProps {
     endDate: string; // Recebe a data final do pai
     onDateChange: (startDate: string, endDate: string) => void; // Prop para notificar mudança de data
     contextType?: 'support' | 'development' | 'commercial'; // Nova prop para definir o contexto
-}
-
+} 
+ 
 
 
 const priorityConfig: { [key: number]: { color: string, label: string } } = {
@@ -99,7 +99,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
     const { theme, setTheme } = useTheme();
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
     // Estado para controlar a ordenação da tabela
@@ -496,7 +496,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
 
     // Funções para as opções do menu
     const handleEditOptionClick = () => {
-        setIsEditModalOpen(true);
+        setIsTaskModalOpen(true);
         handleMenuClose();
     };
 
@@ -517,7 +517,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
         // onUpdateTask agora é uma função async que faz a chamada à API.
         // Usamos .then() para fechar o modal apenas quando a operação for concluída.
         (onUpdateTask as (task: Task) => Promise<void>)(updatedTask).then(() => {
-            setIsEditModalOpen(false);
+            setIsTaskModalOpen(false);
         });
     };
 
@@ -926,10 +926,10 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                     onSave={handleSaveTask}
                     contextType={contextType}
                 />}
-                {isEditModalOpen && <EditTaskModal
+                {isTaskModalOpen && <EditTaskModal
                     contextType={contextType}
-                    isOpen={isEditModalOpen}
-                    onClose={() => setIsEditModalOpen(false)}
+                    isOpen={isTaskModalOpen}
+                    onClose={() => setIsTaskModalOpen(false)}
                     task={selectedTask}
                     onSave={handleUpdateTask}
                 />}
