@@ -46,6 +46,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
     const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
     const [isLinkedTasksModalOpen, setIsLinkedTasksModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false); // Novo estado para controlar o status de salvamento
+    const [contextMenu, setContextMenu] = useState<{ x: number; y: number; comment: Comentario } | null>(null);
+    const [editingComment, setEditingComment] = useState<Comentario | null>(null);
     const [isTaskSearchModalOpen, setIsTaskSearchModalOpen] = useState(false);
 
     // Mapeamento de status para ser usado no select e na lógica
@@ -87,6 +89,24 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         } // Depende de isOpen, task.id e formData.id para controlar a busca de forma precisa.
     }, [isOpen, task?.id, formData?.id, task]);
 
+    // Efeito para fechar o menu de contexto ao clicar em qualquer lugar da tela.
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setContextMenu(null);
+        };
+
+        // Adiciona o listener quando o menu de contexto é aberto.
+        if (contextMenu) {
+            document.addEventListener('click', handleClickOutside);
+        }
+
+        // Função de limpeza para remover o listener quando o componente for desmontado
+        // ou quando o menu for fechado, evitando vazamentos de memória.
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, [contextMenu]); // Este efeito depende do estado do menu de contexto.
+
     useEffect(() => {
         // Efeito para resetar os estados internos sempre que o modal é aberto.
         // Isso não refaz a busca de dados, apenas limpa a UI.
@@ -97,6 +117,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
             setIsLinkedTasksModalOpen(false);
             setIsTaskSearchModalOpen(false);
             setIsSaving(false);
+            setContextMenu(null); // Fecha o menu de contexto
+            setEditingComment(null); // Limpa o comentário em edição
             setIsCommentModalOpen(false);
             setCurrentCommentText('');
         }
@@ -118,6 +140,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
 
     const openCommentModal = () => {
         setCurrentCommentText(newComment); // Transfere o texto do campo rápido para o modal
+        setEditingComment(null); // Garante que estamos adicionando, não editando
         setIsCommentModalOpen(true);
     };
 
@@ -296,12 +319,68 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         }
     };
 
+    /**
+     * Salva as alterações de um comentário existente.
+     * @param updatedCommentText O novo texto do comentário.
+     */
+    const handleUpdateComment = async (updatedCommentText: string) => {
+        if (!editingComment || !updatedCommentText.trim()) return;
+
+        try {
+            const response = await fetch(`/api/comments/${editingComment.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comentario: updatedCommentText }),
+            });
+
+            if (response.ok) {
+                const updatedComment = await response.json();
+                // Atualiza o comentário na lista de comentários do estado
+                setFormData(prev => {
+                    if (!prev) return null;
+                    const updatedComments = (prev.comentarios as Comentario[]).map(c =>
+                        c.id === updatedComment.id ? updatedComment : c
+                    );
+                    return { ...prev, comentarios: updatedComments };
+                });
+                showAlert({ message: 'Comentário atualizado com sucesso!', type: 'success' });
+            } else {
+                showAlert({ message: 'Falha ao atualizar o comentário.', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Erro de rede ao atualizar comentário:', error);
+            showAlert({ message: 'Erro de rede ao atualizar comentário.', type: 'error' });
+        }
+        setEditingComment(null); // Limpa o estado de edição
+    };
+
     const handleCommentKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
         // Envia o comentário ao pressionar Enter (sem Shift)
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault(); // Impede a quebra de linha padrão
             handleAddComment();
         }
+    };
+
+    /**
+     * Abre o menu de contexto ao clicar com o botão direito em um comentário.
+     */
+    const handleContextMenu = (event: React.MouseEvent, comment: Comentario) => {
+        event.preventDefault();
+        setContextMenu({
+            x: event.clientX,
+            y: event.clientY,
+            comment: comment,
+        });
+    };
+
+    const handleEditCommentClick = () => {
+        if (contextMenu) {
+            setEditingComment(contextMenu.comment);
+            setCurrentCommentText(contextMenu.comment.comentario);
+            setIsCommentModalOpen(true);
+        }
+        setContextMenu(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -345,7 +424,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div 
+                className="modal-content edit-modal" 
+                onClick={(e) => { e.stopPropagation(); setContextMenu(null); }}
+            >
                 {isFetchingDetails ? (
                     <div className="modal-loading-state">
                         <div className="loading-spinner-modal"></div>
@@ -524,7 +606,11 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                             <div className="comments-list">
                                 {Array.isArray(formData.comentarios) && formData.comentarios.length > 0 ? (
                                     (formData.comentarios as Comentario[]).map((comment, index) => (
-                                        <div key={index} className="comment-item">
+                                        <div
+                                            key={comment.id || index}
+                                            className="comment-item"
+                                            onContextMenu={(e) => handleContextMenu(e, comment)}
+                                        >
                                             {/* Usa dangerouslySetInnerHTML para renderizar o HTML do comentário */}
                                             <div className="comment-text" dangerouslySetInnerHTML={{ __html: comment.comentario }} />
                                             <div className="comment-footer">
@@ -604,15 +690,36 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                         <CommentModal
                             isOpen={isCommentModalOpen}
                             onClose={() => setIsCommentModalOpen(false)}
-                            initialComment={currentCommentText}
-                            onSave={handleSaveFromCommentModal}
-                            title="Comentário Detalhado"
+                            initialComment={editingComment ? editingComment.comentario : currentCommentText}
+                            onSave={editingComment ? handleUpdateComment : handleSaveFromCommentModal}
+                            title={editingComment ? 'Editar Comentário' : 'Adicionar Comentário'}
                         />
                     )}
                 </Suspense>
+                {/* Renderiza o menu de contexto quando o estado `contextMenu` não for nulo */}
+                {contextMenu && (
+                    <ContextMenu
+                        x={contextMenu.x}
+                        y={contextMenu.y}
+                        onEdit={handleEditCommentClick}
+                        onRemove={() => {
+                            console.log('Excluir clicado para o comentário:', contextMenu.comment.id);
+                            setContextMenu(null); // Fecha o menu por enquanto
+                        }}
+                    />
+                )}
                 </>
                 ) : null}
             </div>
+        </div>
+    );
+};
+
+const ContextMenu: React.FC<{ x: number; y: number; onEdit: () => void; onRemove: () => void; }> = ({ x, y, onEdit, onRemove }) => {
+    return (
+        <div className="context-menu" style={{ top: y, left: x }} onClick={(e) => e.stopPropagation()}>
+            <div className="context-menu-item" onClick={onEdit}>Visualizar</div>
+            <div className="context-menu-item remove" onClick={onRemove}>Excluir</div>
         </div>
     );
 };

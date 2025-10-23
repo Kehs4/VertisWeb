@@ -336,3 +336,33 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* --- Estilos para o Menu de Contexto --- */
+.context-menu {
+    position: fixed;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    z-index: 1001; /* Acima do overlay do modal */
+    min-width: 150px;
+    padding: 5px 0;
+}
+
+.context-menu-item {
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.context-menu-item:hover {
+    background-color: #f0f0f0;
+}
+
+.context-menu-item.remove {
+    color: #e74c3c;
+}
+.context-menu-item.remove:hover {
+    background-color: #fbecec;
+}

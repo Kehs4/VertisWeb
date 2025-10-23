@@ -746,39 +746,6 @@ app.get('/flags', async (req, res) => {
     }
 });
 
-
-
-
-
-/* app.get('/tasks', async (req, res) => {
-    try {
-        // Pega as datas da query string ou usa a data atual como padrão
-        const today = getFormattedDate(new Date());
-        const { dat_inicial = today, dat_final = today } = req.query;
-
-        console.log(`[API /tasks] Buscando tarefas de ${dat_inicial} até ${dat_final}.`);
-        const apiUrl = `http://177.11.209.38:80/constellation/IISConstellationAPI.dll/constellation-api/V1.1/unid_oper_tarefa?dat_inicial=${dat_inicial}&dat_final=${dat_final}`;
-
-        const apiResponse = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + req.cookies.authToken, // Usa o token do cookie
-            },
-        });
-
-        if (apiResponse.ok) {
-            const tasks = await apiResponse.json();
-            res.status(200).json(tasks);
-        } else {
-            res.status(apiResponse.status).send('Erro ao buscar tarefas da API externa.');
-        }
-    } catch (error) {
-        console.error('Ocorreu um erro ao buscar as listas de tarefas:', error);
-        res.status(500).send('Erro interno do servidor');
-    }
-});
-
 /*
 app.get('/oldest-pending-task-date', async (req, res) => {
     try {
@@ -817,33 +784,6 @@ app.get('/oldest-pending-task-date', async (req, res) => {
         res.status(500).send('Erro interno do servidor');
     }
 });
-
-app.get('/task/:id', async (req, res) => {
-    try {
-        const taskId = req.params.id;
-        console.log(`[API /task/${taskId}] Recebida requisição para buscar detalhes da tarefa.`);
-        const apiResponse = await fetch(`http://177.11.209.38:80/constellation/IISConstellationAPI.dll/constellation-api/V1.1/unid_oper_tarefa/${taskId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + req.cookies.authToken, // Usa o token do cookie
-        },
-        });
-        
-        if (apiResponse.ok) {
-            const task = await apiResponse.json();
-            res.status(200).json(task);
-        } else {
-            res.status(apiResponse.status).send('Erro ao buscar detalhes da tarefa da API externa.');
-        }
-        
-    } catch (error) {
-        console.error(`[API /task/${taskId}] Ocorreu um erro ao buscar detalhes da tarefa:`, error);
-        res.status(500).send('Erro interno do servidor');
-    }
-
-})
-
 */
 
 /**
@@ -1301,6 +1241,46 @@ app.post('/tasks/:id/comments', async (req, res) => {
         res.status(500).send('Erro interno do servidor');
     } finally {
         client.release(); // Libera a conexão de volta para o pool
+    }
+});
+
+/**
+ * @route PUT /comments/:id
+ * @description Atualiza o texto de um comentário existente.
+ */
+app.put('/comments/:id', async (req, res) => {
+    const { id } = req.params;
+    const { comentario } = req.body;
+
+    if (!comentario) {
+        return res.status(400).send('O texto do comentário é obrigatório.');
+    }
+
+    try {
+        const updateQuery = `
+            UPDATE unid_oper_tarefa_comentario
+            SET comentario = $1
+            WHERE id = $2
+            RETURNING id;
+        `;
+        const { rowCount } = await pool.query(updateQuery, [comentario, id]);
+
+        if (rowCount === 0) {
+            return res.status(404).send('Comentário não encontrado.');
+        }
+
+        // Retorna o comentário atualizado completo
+        const selectQuery = `
+            SELECT c.id, c.id_tarefa, c.id_incluido_por as id_recurso, u.nom_contato as nom_recurso, c.comentario, c.dth_inclusao
+            FROM unid_oper_tarefa_comentario c
+            LEFT JOIN unid_oper_contatos u ON c.id_incluido_por = u.id_contato
+            WHERE c.id = $1;
+        `;
+        const { rows: [updatedComment] } = await pool.query(selectQuery, [id]);
+        res.status(200).json(updatedComment);
+    } catch (error) {
+        console.error(`Erro ao atualizar comentário ${id}:`, error);
+        res.status(500).send('Erro interno do servidor');
     }
 });
 

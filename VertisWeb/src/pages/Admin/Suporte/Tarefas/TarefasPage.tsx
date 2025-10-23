@@ -14,6 +14,7 @@ export interface Recurso { // Exportando para utilizar no edit task
 }
 
 export interface Comentario { // Exportando para utilizar no edit task
+    id?: number;
     id_recurso: number;
     nom_recurso: string;
     comentario: string;
