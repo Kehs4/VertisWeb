@@ -1,6 +1,6 @@
 .operational-unit-search-modal {
     width: 100%;
-    max-width: 800px;
+    min-width: 800px;
     height: 70vh;
     display: flex;
     flex-direction: column;
@@ -33,7 +33,9 @@
  .operational-unit-table th {
    padding: 0.5rem;
    text-align: left;
-   font-size: 0.8rem;
+   border-bottom: 1px solid #ff5100;
+   color: #333;
+   font-size: 0.7rem;
  }
  
  .operational-unit-table td {
@@ -41,6 +43,7 @@
     text-align: left;
     border-bottom: 1px solid #eee;
     color: #333;
+    font-size: 0.85rem;
     border-right: 1px solid #eee;
     border-left: 1px solid #eee;
 
@@ -73,4 +76,45 @@
     width: 100%;
     padding: 10px 10px 10px 40px;
     color: white;
+}
+
+.pagination-footer {
+display: flex;
+justify-content: center;
+align-items: center;
+padding-top: 15px;
+border-top: 1px solid #e0e0e0;
+}
+
+.pagination-controls {
+display: flex;
+align-items: center;
+gap: 15px;
+font-size: 0.9rem;
+color: #5f5f5f;
+}
+
+.pagination-button {
+background-color: #fcfcfc;
+border: 1px solid #d3d3d3;
+border-radius: 8px;
+width: 32px;
+height: 32px;
+cursor: pointer;
+transition: background-color 0.2s;
+}
+
+.pagination-button.active {
+   background-color: #ff6600;
+   border-color: #292929;
+   color: white;
+}
+
+.pagination-button:hover:not(:disabled) {
+background-color: #ff6600;
+color: white;
+}
+.pagination-button:disabled {
+cursor: not-allowed;
+opacity: 0.7;
 }
