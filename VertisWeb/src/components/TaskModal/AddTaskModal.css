@@ -143,13 +143,14 @@
 }
 
 .cancel-btn {
-    background-color: #f0f0f0; 
-    color: #333;
+    background-color: #8b8b8b; 
+    color: #ffffff;
     border: 1px solid #ddd;
+    transition: background-color 0.5s;
 }
 
 .cancel-btn:hover {
-    background-color: #e0e0e0; 
+    background-color: #5f1f1f; 
 }
 
 .save-btn, .btn-primary {

@@ -21,6 +21,56 @@ import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 
 import './CommentModal.css';
 
+// Componente para a barra de ferramentas do editor
+const MenuBar: React.FC<{ editor: Editor | null; forceUpdate: number }> = ({ editor }) => {
+    if (!editor) {
+        return null;
+    }
+
+    return (
+        <div className="editor-toolbar">
+            {/* Botões de formatação de texto */}
+            <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive('bold') ? 'is-active' : ''} title="Negrito" >
+                <FormatBoldIcon style={{ color: editor.isActive('bold') ? 'rgb(255, 102, 0)' : '#888' }} />
+            </button>
+            <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={editor.isActive('italic') ? 'is-active' : ''} title="Itálico" >
+                <FormatItalicIcon style={{ color: editor.isActive('italic') ? 'rgb(255, 102, 0)' : '#888' }} />
+            </button>
+            <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={editor.isActive('strike') ? 'is-active' : ''} title="Tachado">
+                <FormatStrikethroughIcon style={{ color: editor.isActive('strike') ? 'rgb(255, 102, 0)' : '#888' }} />
+            </button>
+            <div className="divider"></div>
+            {/* Botões de formatação de parágrafo */}
+            <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={editor.isActive('heading', { level: 2 }) ? 'is-active' : ''} title="Título" >
+                <TitleIcon style={{ color: editor.isActive('heading', { level: 2 }) ? 'rgb(255, 102, 0)' : '#888' }} />
+            </button>
+            <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={editor.isActive('bulletList') ? 'is-active' : ''} title="Lista com marcadores" >
+                <FormatListBulletedIcon style={{ color: editor.isActive('bulletList') ? 'rgb(255, 102, 0)' : '#888' }} />
+            </button>
+            <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={editor.isActive('orderedList') ? 'is-active' : ''} title="Lista numerada" >
+                <FormatListNumberedIcon style={{ color: editor.isActive('orderedList') ? 'rgb(255, 102, 0)' : '#888' }} />
+            </button>
+            <div className="divider"></div>
+            {/* Botões de alinhamento */}
+            <button type="button" onClick={() => editor.chain().focus().setTextAlign('left').run()} className={editor.isActive({ textAlign: 'left' }) ? 'is-active' : ''} title="Alinhar à Esquerda" >
+                <FormatAlignLeftIcon style={{ color: editor.isActive({ textAlign: 'left' }) ? 'rgb(255, 102, 0)' : '#888' }} />
+            </button>
+            <button type="button" onClick={() => editor.chain().focus().setTextAlign('center').run()} className={editor.isActive({ textAlign: 'center' }) ? 'is-active' : ''} title="Centralizar" >
+                <FormatAlignCenterIcon style={{ color: editor.isActive({ textAlign: 'center' }) ? 'rgb(255, 102, 0)' : '#888' }} />
+            </button>
+            <button type="button" onClick={() => editor.chain().focus().setTextAlign('right').run()} className={editor.isActive({ textAlign: 'right' }) ? 'is-active' : ''} title="Alinhar à Direita" >
+                <FormatAlignRightIcon style={{ color: editor.isActive({ textAlign: 'right' }) ? 'rgb(255, 102, 0)' : '#888' }} />
+            </button>
+            <div className="divider"></div>
+            {/* Botão de cor com input */}
+            <button type="button" onClick={() => (document.querySelector('input[type="color"]') as HTMLInputElement)?.click()} title="Cor do Texto">
+                <FormatColorTextIcon style={{ color: editor.getAttributes('textStyle').color || 'rgb(216, 216, 216)' }} />
+                <input type="color" onChange={event => editor.chain().focus().setColor(event.target.value).run()} value={editor.getAttributes('textStyle').color || '#000000'} style={{ display: 'none' }} />
+            </button>
+        </div>
+    );
+};
+
 interface CommentModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -29,57 +79,8 @@ interface CommentModalProps {
     title: string;
 }
 
-// Componente para a barra de ferramentas do editor
-const MenuBar: React.FC<{ editor: Editor | null }> = ({ editor }) => {
-    if (!editor) {
-        return null;
-    }
-
-    return (
-        <div className="editor-toolbar">
-            {/* Botões de formatação de texto */}
-            <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive('bold') ? 'is-active' : ''} title="Negrito">
-                <FormatBoldIcon style={{ color: editor.isActive('bold') ? '#be56fa' : '#888' }} />
-            </button>
-            <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={editor.isActive('italic') ? 'is-active' : ''} title="Itálico">
-                <FormatItalicIcon style={{ color: editor.isActive('italic') ? '#be56fa' : '#888' }} />
-            </button>
-            <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={editor.isActive('strike') ? 'is-active' : ''} title="Tachado">
-                <FormatStrikethroughIcon style={{ color: editor.isActive('strike') ? '#be56fa' : '#888' }} />
-            </button>
-            <div className="divider"></div>
-            {/* Botões de formatação de parágrafo */}
-            <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={editor.isActive('heading', { level: 2 }) ? 'is-active' : ''} title="Título">
-                <TitleIcon style={{ color: editor.isActive('heading', { level: 2 }) ? '#be56fa' : '#888' }} />
-            </button>
-            <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={editor.isActive('bulletList') ? 'is-active' : ''} title="Lista com marcadores">
-                <FormatListBulletedIcon style={{ color: editor.isActive('bulletList') ? '#be56fa' : '#888' }} />
-            </button>
-            <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={editor.isActive('orderedList') ? 'is-active' : ''} title="Lista numerada">
-                <FormatListNumberedIcon style={{ color: editor.isActive('orderedList') ? '#be56fa' : '#888' }} />
-            </button>
-            <div className="divider"></div>
-            {/* Botões de alinhamento */}
-            <button type="button" onClick={() => editor.chain().focus().setTextAlign('left').run()} className={editor.isActive({ textAlign: 'left' }) ? 'is-active' : ''} title="Alinhar à Esquerda">
-                <FormatAlignLeftIcon style={{ color: editor.isActive({ textAlign: 'left' }) ? '#be56fa' : '#888' }} />
-            </button>
-            <button type="button" onClick={() => editor.chain().focus().setTextAlign('center').run()} className={editor.isActive({ textAlign: 'center' }) ? 'is-active' : ''} title="Centralizar">
-                <FormatAlignCenterIcon style={{ color: editor.isActive({ textAlign: 'center' }) ? '#be56fa' : '#888' }} />
-            </button>
-            <button type="button" onClick={() => editor.chain().focus().setTextAlign('right').run()} className={editor.isActive({ textAlign: 'right' }) ? 'is-active' : ''} title="Alinhar à Direita">
-                <FormatAlignRightIcon style={{ color: editor.isActive({ textAlign: 'right' }) ? '#be56fa' : '#888' }} />
-            </button>
-            <div className="divider"></div>
-            {/* Botão de cor com input */}
-            <button type="button" onClick={() => (document.querySelector('input[type="color"]') as HTMLInputElement)?.click()} title="Cor do Texto">
-                <FormatColorTextIcon style={{ color: editor.getAttributes('textStyle').color || '#888' }} />
-                <input type="color" onChange={event => editor.chain().focus().setColor(event.target.value).run()} value={editor.getAttributes('textStyle').color || '#000000'} style={{ display: 'none' }} />
-            </button>
-        </div>
-    );
-};
-
 const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, initialComment, onSave, title }) => {
+    const [forceUpdate, setForceUpdate] = useState(0);
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -96,6 +97,10 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, initialCom
             attributes: {
                 class: 'tiptap-editor-content', // Classe para estilização do campo de texto
             },
+        },
+        // Este é o gatilho: a cada atualização do editor, forçamos um re-render
+        onUpdate: () => {
+            setForceUpdate(prev => prev + 1);
         },
     });
 
@@ -120,12 +125,12 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, initialCom
                     <button onClick={onClose} className="close-button"><CloseIcon /></button>
                 </div>
                 <div className="modal-body">
-                    <MenuBar editor={editor} />
+                    <MenuBar editor={editor} forceUpdate={forceUpdate} />
                     <EditorContent editor={editor} />
                 </div>
                 <div className="modal-footer">
                     <button type="button" className="cancel-btn" onClick={onClose}>Cancelar</button>
-                    <button type="button" className="save-btn" onClick={handleSave}><SendIcon /> Salvar Comentário</button>
+                    <button type="button" className="save-btn" onClick={handleSave}><SendIcon /> Enviar Comentário</button>
                 </div>
             </div>
         </div>

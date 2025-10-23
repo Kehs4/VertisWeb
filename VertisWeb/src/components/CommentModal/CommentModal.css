@@ -13,12 +13,11 @@
 }
 
 .modal-content.comment-edit-modal {
-    background-color: #fff;
     padding: 25px;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     width: 90%;
-    max-width: 800px; /* Increased max-width for more space */
+    max-width: 1200px; /* Increased max-width for more space */
     max-height: 90vh;
     display: flex;
     flex-direction: column;
@@ -60,7 +59,7 @@
     flex-wrap: wrap;
     gap: 4px;
     padding: 8px;
-    background-color: #292929;
+    background-color: var(--background-color);
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     border: 1px solid #ccc;
@@ -69,7 +68,7 @@
 
 .editor-toolbar .divider {
     width: 1px;
-    background-color: #ddd;
+    background-color: #a1a1a1;
     margin: 4px 8px;
     align-self: stretch;
 }
@@ -91,23 +90,22 @@
     transition: color 0.5;
 }
 
-.editor-toolbar button svg:hover {
-    color: #be56fa !important; /* Muda a cor do ícone no hover */
-
+ 
+.editor-toolbar button.is-active,
+.editor-toolbar button.is-active:hover {
+    background-color: #99999933; /* Fundo claro para o botão ativo */
 }
 
-.editor-toolbar button.is-active {
-    background-color: #99999933;
-}
 
 .tiptap-editor-content {
     border: 1px solid #ccc;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
-    padding: 20px;
-    min-height: 250px;
+    background-color: #ffffff;
+    padding: 20px 25px;
+    min-height: 500px;
     flex-grow: 1;
-    color: #333; /* Garante que o texto padrão seja escuro */
+    color: #111; /* Garante que o texto padrão seja escuro */
     overflow-y: auto;
 }
 
@@ -138,14 +136,6 @@
     transition: background-color 0.2s;
 }
 
-.modal-footer .cancel-btn {
-    background-color: #ccc;
-    color: #333;
-}
-
-.modal-footer .cancel-btn:hover {
-    background-color: #bbb;
-}
 
 .modal-footer .save-btn {
     background-color: #ff6600;
