@@ -26,7 +26,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
 // Componentes do Material-UI para o novo filtro
-import { TextField, List, ListItemIcon, Checkbox, ListItemText, ListSubheader, Button } from '@mui/material';
+import { TextField, List, ListItemIcon, Checkbox, ListItemText, ListSubheader, Button, ListItemButton } from '@mui/material';
 
 // Ícones para os cards de análise
 import AllInboxIcon from '@mui/icons-material/AllInbox';
@@ -128,6 +128,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
     const isResourceFilterOpen = Boolean(resourceFilterAnchorEl);
     const [resourceSearch, setResourceSearch] = useState('');
     const [selectedResources, setSelectedResources] = useState<string[]>([]);
+    const [filterByResponsible, setFilterByResponsible] = useState(false);
+    const [filterByRemoved, setFilterByRemoved] = useState(false);
 
     // --- Estados para o novo filtro de Solicitantes ---
     const [solicitanteFilterAnchorEl, setSolicitanteFilterAnchorEl] = useState<null | HTMLElement>(null);
@@ -267,9 +269,32 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
             }
 
             // 3. Filtro de Recurso
-            if (selectedResources.length > 0) {
-                if (!Array.isArray(task.recursos) || !task.recursos.some(r => selectedResources.includes(r.nom_recurso))) {
-                    return false;
+            // A tarefa só passa se atender a todas as condições de filtro de recurso ativas.
+            const taskResources = Array.isArray(task.recursos) ? task.recursos : [];
+
+            // Se nenhum filtro de recurso estiver ativo, a tarefa passa.
+            if (selectedResources.length === 0 && !filterByResponsible && !filterByRemoved) {
+                // Nenhuma ação, continua para os próximos filtros.
+            } else {
+                // Pelo menos um filtro de recurso está ativo. A tarefa deve ter um recurso que corresponda.
+                const hasMatchingResource = taskResources.some(resource => {
+                    // Se um nome de recurso for selecionado, ele deve corresponder.
+                    if (selectedResources.length > 0 && !selectedResources.includes(resource.nom_recurso)) {
+                        return false;
+                    }
+                    // Se "Apenas responsáveis" estiver marcado, o recurso deve ser o responsável.
+                    if (filterByResponsible && resource.ind_responsavel !== 'S') {
+                        return false;
+                    }
+                    // Se "Incluir retirados" estiver marcado, o recurso deve ter sido removido.
+                    if (filterByRemoved && resource.dth_exclusao === null) {
+                        return false;
+                    }
+                    return true; // O recurso atende a todas as condições ativas.
+                });
+
+                if (!hasMatchingResource) {
+                    return false; // Se nenhum recurso na tarefa corresponder, a tarefa é filtrada.
                 }
             }
 
@@ -279,7 +304,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                     return false;
                 }
             }
-
+            
             // 5. Filtro de Status
             if (selectedStatuses.length > 0) {
                 if (!selectedStatuses.includes(task.ind_sit_tarefa)) {
@@ -295,7 +320,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
             }
             return true;
         });
-
+        
         const sortableItems = [...filteredItems];
         if (sortConfig.key !== null) {
             const sortKey = sortConfig.key; // Captura a chave de ordenação em uma constante
@@ -304,7 +329,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                 // Função auxiliar para extrair o valor de forma segura
                 const getValue = (task: Task, key: keyof Task) => {
                     if (key === 'recursos') {
-                        // Ordena pelo nome do primeiro recurso, se existir
+                        // Ordena pelo nome do primeiro recurso ativo, se existir
                         return Array.isArray(task.recursos) && task.recursos.length > 0 ? task.recursos[0].nom_recurso : '';
                     }
                     if (key === 'nom_criado_por') { // Alterado de 'criado_por'
@@ -330,7 +355,7 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
             });
         }
         return sortableItems;
-    }, [tasks, sortConfig, searchTerm, startDate, endDate, selectedResources, selectedSolicitantes, selectedStatuses, selectedUnits]);
+    }, [tasks, sortConfig, searchTerm, startDate, endDate, selectedResources, selectedSolicitantes, selectedStatuses, selectedUnits, filterByResponsible, filterByRemoved]);
 
     // Efeito para resetar a página para 1 sempre que os filtros mudarem
     useEffect(() => {
@@ -448,6 +473,8 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
         const newSelected = [...selectedResources];
         currentIndex === -1 ? newSelected.push(resourceName) : newSelected.splice(currentIndex, 1);
         setSelectedResources(newSelected);
+        setFilterByResponsible(false); // Desmarca os filtros avançados ao mudar a seleção principal
+        setFilterByRemoved(false);
     };
 
     // Funções para o filtro de solicitantes
@@ -776,15 +803,23 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                                     <td>
                                         {Array.isArray(task.recursos) && task.recursos.length > 0 ? (
                                             <div className="resource-list-cell">
-                                                <span>{task.recursos[0].nom_recurso}</span>
-                                                {task.recursos.length > 1 && (
+                                                <span>
+                                                    {(() => {
+                                                        const responsibleResource = task.recursos.find(r => r.ind_responsavel === 'S' && !r.dth_exclusao);
+                                                        const firstActiveResource = task.recursos.find(r => !r.dth_exclusao);
+                                                        return responsibleResource?.nom_recurso || firstActiveResource?.nom_recurso || 'N/A';
+                                                    })()}
+                                                </span>
+                                                {/* A contagem agora considera apenas os recursos ativos */}
+                                                {task.recursos.filter(r => !r.dth_exclusao).length > 1 && (
                                                     <span className="resource-count-badge">
-                                                        +{task.recursos.length - 1}
+                                                         +{task.recursos.filter(r => !r.dth_exclusao).length - 1}
                                                     </span>
                                                 )}
                                                 {/* Elemento que aparecerá no hover */}
                                                 <div className="resource-hover-list">
-                                                    {task.recursos.map(r => (
+                                                    {/* Filtra para mostrar apenas recursos ativos (sem dth_exclusao) */}
+                                                    {task.recursos.filter(r => !r.dth_exclusao).map(r => (
                                                         <div key={r.id_recurso} className="resource-hover-item">{r.nom_recurso}</div>
                                                     ))}
                                                 </div>
@@ -828,13 +863,15 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                 open={isStatusFilterOpen}
                 onClose={handleStatusFilterClose}
             >
-                <ListSubheader>Filtrar por Status</ListSubheader>
-                {Object.entries(statusOptions).map(([code, label]) => (
-                    <MenuItem key={code} onClick={() => handleStatusToggle(code)}>
-                        <ListItemIcon><Checkbox edge="start" checked={selectedStatuses.includes(code)} tabIndex={-1} disableRipple /></ListItemIcon>
-                        <ListItemText primary={label} />
-                    </MenuItem>
-                ))}
+                <List dense>
+                    <ListSubheader>Filtrar por Status</ListSubheader>
+                    {Object.entries(statusOptions).map(([code, label]) => (
+                        <ListItemButton key={code} dense onClick={() => handleStatusToggle(code)}>
+                            <ListItemIcon><Checkbox edge="start" checked={selectedStatuses.includes(code)} tabIndex={-1} disableRipple /></ListItemIcon>
+                            <ListItemText primary={label} />
+                        </ListItemButton>
+                    ))}
+                </List>
                 <div className="filter-menu-actions">
                     <Button size="small" onClick={() => setSelectedStatuses([])}>Limpar</Button>
                     <Button size="small" variant="contained" onClick={handleStatusFilterClose}>Aplicar</Button>
@@ -846,13 +883,15 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                 onClose={handleUnitFilterClose}
                 slotProps={{ paper: { sx: { width: 300, maxHeight: 400 } } }}
             >
-                <ListSubheader>Filtrar por Unidade</ListSubheader>
-                {allUnits.map(unit => (
-                    <MenuItem key={unit} onClick={() => handleUnitToggle(unit)}>
-                        <ListItemIcon><Checkbox edge="start" checked={selectedUnits.includes(unit)} tabIndex={-1} disableRipple /></ListItemIcon>
-                        <ListItemText primary={unit} />
-                    </MenuItem>
-                ))}
+                <List dense>
+                    <ListSubheader>Filtrar por Unidade</ListSubheader>
+                    {allUnits.map(unit => (
+                        <ListItemButton key={unit} dense onClick={() => handleUnitToggle(unit)}>
+                            <ListItemIcon><Checkbox edge="start" checked={selectedUnits.includes(unit)} tabIndex={-1} disableRipple /></ListItemIcon>
+                            <ListItemText primary={unit} />
+                        </ListItemButton>
+                    ))}
+                </List>
                 <div className="filter-menu-actions">
                     <Button size="small" onClick={() => setSelectedUnits([])}>Limpar</Button>
                     <Button size="small" variant="contained" onClick={handleUnitFilterClose}>Aplicar</Button>
@@ -875,16 +914,30 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                         onKeyDown={(e) => e.stopPropagation()} // Impede que o menu capture eventos de teclado do input
                     />
                 </ListSubheader>
-                <List dense component="div" role="list" sx={{ overflow: 'auto' }}>
+                <List dense component="div" role="list" sx={{ pt: 0 }}>
+                    <ListItemButton dense onClick={() => setFilterByResponsible(!filterByResponsible)}>
+                        <ListItemIcon><Checkbox edge="start" checked={filterByResponsible} tabIndex={-1} disableRipple /></ListItemIcon>
+                        <ListItemText primary="Apenas responsáveis" primaryTypographyProps={{ style: { fontSize: '0.9rem', fontStyle: 'italic' } }} />
+                    </ListItemButton>
+                    <ListItemButton dense onClick={() => setFilterByRemoved(!filterByRemoved)}>
+                        <ListItemIcon><Checkbox edge="start" checked={filterByRemoved} tabIndex={-1} disableRipple /></ListItemIcon>
+                        <ListItemText primary="Incluir retirados" primaryTypographyProps={{ style: { fontSize: '0.9rem', fontStyle: 'italic' } }} />
+                    </ListItemButton>
+                </List>
+                <List dense component="div" role="list" sx={{ overflow: 'auto', pt: 0 }}>
                     {allResources.filter(r => r.toLowerCase().includes(resourceSearch.toLowerCase())).map(resource => (
-                        <MenuItem key={resource} onClick={() => handleResourceToggle(resource)}>
+                        <ListItemButton key={resource} dense onClick={() => handleResourceToggle(resource)}>
                             <ListItemIcon><Checkbox edge="start" checked={selectedResources.indexOf(resource) !== -1} tabIndex={-1} disableRipple /></ListItemIcon>
                             <ListItemText primary={resource} />
-                        </MenuItem>
+                        </ListItemButton>
                     ))}
                 </List>
                 <div className="filter-menu-actions">
-                    <Button size="small" onClick={() => setSelectedResources([])}>Limpar</Button>
+                    <Button size="small" onClick={() => {
+                        setSelectedResources([]);
+                        setFilterByResponsible(false);
+                        setFilterByRemoved(false);
+                    }}>Limpar</Button>
                     <Button size="small" variant="contained" onClick={handleResourceFilterClose}>Aplicar</Button>
                 </div>
             </Menu>
@@ -905,12 +958,12 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                         onKeyDown={(e) => e.stopPropagation()}
                     />
                 </ListSubheader>
-                <List dense component="div" role="list" sx={{ overflow: 'auto' }}>
+                <List dense component="div" role="list" sx={{ overflow: 'auto', pt: 0 }}>
                     {allSolicitantes.filter(s => s.toLowerCase().includes(solicitanteSearch.toLowerCase())).map(solicitante => (
-                        <MenuItem key={solicitante} onClick={() => handleSolicitanteToggle(solicitante)}>
+                        <ListItemButton key={solicitante} dense onClick={() => handleSolicitanteToggle(solicitante)}>
                             <ListItemIcon><Checkbox edge="start" checked={selectedSolicitantes.indexOf(solicitante) !== -1} tabIndex={-1} disableRipple /></ListItemIcon>
                             <ListItemText primary={solicitante} />
-                        </MenuItem>
+                        </ListItemButton>
                     ))}
                 </List>
                 <div className="filter-menu-actions">

@@ -202,10 +202,10 @@ app.get('/tasks', async (req, res) => {
         for (const task of rows) {
             // Busca os recursos na tabela 'unid_oper_contatos'
             const resourceQuery = `
-                SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso, utr.ind_responsavel
+                SELECT c.id_contato AS id_recurso, c.nom_contato AS nom_recurso, utr.ind_responsavel, utr.dth_exclusao
                 FROM unid_oper_tarefa_x_recurso utr
                 JOIN unid_oper_contatos c ON c.id_contato = utr.id_recurso
-                WHERE utr.id_tarefa = $1 AND utr.dth_exclusao IS NULL`;
+                WHERE utr.id_tarefa = $1`;
             const { rows: resources } = await pool.query(resourceQuery, [task.id]);
             task.recursos = resources; 
 
