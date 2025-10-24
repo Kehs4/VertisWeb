@@ -49,7 +49,7 @@ function Home() {
     return (
         <>
             <div className='header-vertis'>
-                <img src="/public/logo-white.png" alt="Logo Vertis" width={80} />
+                <img src="/logo-white.png" alt="Logo Vertis" width={80} />
 
                 <div className='header-menu'>
                     <nav className='header-nav'>
