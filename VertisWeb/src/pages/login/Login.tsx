@@ -43,11 +43,14 @@ function Login() {
         setTimeout(() => {
           navigate('/dashboard');
         }, 2000);
-      } else {
-        setError(error || 'Erro ao conectar. Tente novamente.');
+      } 
+      else {
+        const data = await response.json();
+        setError(data.error);
       }
+      
     } catch (error) {
-      setError('Erro ao conectar. Tente novamente.');
+      
     }
   }
 

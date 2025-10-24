@@ -54,9 +54,6 @@ app.post('/login', async (req, res) => { // endpoint de login que retorna o toke
             svcName: "desenv-vertis"
         };
 
-        // Log do que está sendo enviado para a API
-        console.log(`[API /login] Enviando payload para a API externa:`, payload);
- 
         const apiResponse = await fetch('http://177.11.209.38/constellation/IISConstellationAPI.dll/login', {
             method: 'POST',
             headers: {
@@ -69,14 +66,14 @@ app.post('/login', async (req, res) => { // endpoint de login que retorna o toke
         if (apiResponse.status === 200) {
             const data = await apiResponse.json();
             // Log da resposta de sucesso da API
-            console.log(`[API /login] Resposta de sucesso (200) da API externa:`, data);
+            console.log(`[API /login] Resposta de sucesso (200) da API externa:`, data, `Usuário: ${username}`);
 
             // Define o token em um cookie HttpOnly seguro
             res.setHeader('Set-Cookie', serialize('authToken', data.token, {
                 httpOnly: true, // Impede o acesso via JavaScript
                 secure: process.env.NODE_ENV !== 'development', // Garante HTTPS em produção
                 sameSite: 'strict', // Proteção contra CSRF
-                maxAge: 60 * 60 * 24, // Expira em 1 dia
+                maxAge: 3600, // Expira em 1 hora
                 path: '/', // Disponível em todo o site
             }));
 
@@ -88,13 +85,25 @@ app.post('/login', async (req, res) => { // endpoint de login que retorna o toke
 
             // Envia uma resposta de sucesso com dados não sensíveis do usuário
             res.status(200).json({ name: userName, message: 'Login bem-sucedido' });
+
+        } else if (apiResponse.status === 401){
+            console.error(`[API /login] Usuário não autorizado. Status:(${apiResponse.status}): Usuário: ${username}`);
+            res.status(apiResponse.status).send({error: 'Erro ao autenticar na API externa.'});
+
+        } else if (apiResponse.status === 404) {
+            console.error(`[API /login] Usuário não encontrados. Status:(${apiResponse.status}) Usuário: ${username}`);
+            res.status(apiResponse.status).send({error: 'Usuário não encontrado.'});
+
+        } else if (apiResponse.status === 403) {
+            console.error(`[API /login] Usuário ou senha incorretos. Status:(${apiResponse.status}), Usuário: ${username}`);
+            res.status(apiResponse.status).send({error: 'Usuário ou senha incorretos, tente novamente.'});
+
         } else {
-            // Log da resposta de erro da API
-            const errorText = await apiResponse.text();
-            console.error(`[API /login] Erro da API (${apiResponse.status}):`, errorText);
-            res.status(apiResponse.status).send(errorText || 'Erro ao autenticar na API externa.');
-        };
- 
+            console.error(`[API /login] Erro desconhecido. Status:(${apiResponse.status}) Usuário: ${username}`);
+            res.status(apiResponse.status).send({error: 'Erro desconhecido.'});
+        }
+            
+
     } catch (error) {
         console.error('Erro ao processar o login:', error);
         res.status(500).send('Erro interno do servidor');
@@ -345,7 +354,7 @@ app.get('/tasks/search-for-linking', async (req, res) => {
 app.get('/task/:id', async (req, res) => {
     try {
         const taskId = req.params.id;
-        console.log(`[API /task/:id] Buscando tarefa com ID: ${taskId}`);
+        console.log(`[API /task/:id] Buscando dados da tarefa ID: ${taskId}`);
 
         // Query principal para buscar os dados da tarefa e o nome do criador
         const taskQuery = `
@@ -539,7 +548,7 @@ app.post('/tasks', async (req, res) => {
         const { rows: finalComments } = await client.query(commentQuery, [newTask.id]);
         fullTask.comentarios = finalComments;
         await client.query('COMMIT'); // Confirma a transação
-        console.log('[API /tasks] Nova tarefa criada com sucesso:', fullTask);
+        console.log('[API /tasks] Tarefa criada com sucesso:', fullTask);
         res.status(201).json(fullTask);
 
     } catch (error) {
@@ -1539,13 +1548,14 @@ app.post('/consulta_contatos', async (req, res) => {
     }
 });
 
-/*const PORT = process.env.PORT || 3000;
+/*
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`API Rodando em http://0.0.0.0:${PORT}`);
 });
 
 process.stdin.resume();
-
 */
+ 
 export default app; 
