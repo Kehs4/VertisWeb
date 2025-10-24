@@ -331,7 +331,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ title, isOpen, onClose, onS
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label htmlFor='nom_recurso'>Recurso</label>
+                            <label htmlFor='nom_recurso'>Recurso(s)</label>
                             <div className="resource-pills-container add-mode">
                                 {Array.isArray(formData.recursos) && formData.recursos.map(resource => (
                                     <div key={resource.id_recurso} className={`resource-pill ${resource.ind_responsavel === 'S' ? 'default-resource' : ''}`}>

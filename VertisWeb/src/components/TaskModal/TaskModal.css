@@ -3,7 +3,7 @@
 
 .modal-content.edit-modal {
     max-width: 1300px; /* Modal mais largo para comportar as colunas */
-    max-height: 840px;
+    height: auto;
 }
 
 .form-columns {
@@ -42,7 +42,7 @@
 }
 
 .link-icon-button {
-    color: #888;
+    color: #bdbdbd;
 }
 
 .link-icon-button:hover {
@@ -51,7 +51,7 @@
 }
 
 .history-icon-button {
-    color: #888;
+    color: #bdbdbd;
 }
 
 .history-icon-button:hover {

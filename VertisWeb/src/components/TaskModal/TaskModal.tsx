@@ -37,7 +37,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
     const labels = {
         task: contextType === 'development' ? 'Tarefa' : 'Chamado',
         taskDescription: contextType === 'development' ? 'Descrição da Tarefa' : 'Descrição do Chamado',
-        analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista',
+    // analyst: contextType === 'development' ? 'Desenvolvedor' : 'Analista',
         saveBtn: contextType === 'development' ? 'Salvar Tarefa' : 'Salvar Alterações',
     };
 
@@ -534,7 +534,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, co
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor='nom_recurso'>{labels.analyst}</label>
+                                    <label htmlFor='nom_recurso'>Recurso(s)</label>
                                     <div className="resource-pills-container">
                                         {Array.isArray(formData.recursos) && formData.recursos.map((resource) => (
                                             <div key={resource.id_recurso} className={`resource-pill ${resource.ind_responsavel === 'S' ? 'default-resource' : ''}`}>

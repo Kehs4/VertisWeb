@@ -914,21 +914,24 @@ const TaskListView: React.FC<TaskListViewProps> = ({ title, tasks, isLoading, on
                         onKeyDown={(e) => e.stopPropagation()} // Impede que o menu capture eventos de teclado do input
                     />
                 </ListSubheader>
-                <List dense component="div" role="list" sx={{ pt: 0 }}>
-                    <ListItemButton dense onClick={() => setFilterByResponsible(!filterByResponsible)}>
+                <List style={{ padding: '0'}} dense component="div" role="list" sx={{ pt: 0 }}>
+                <span style={{fontSize: '0.8rem', marginLeft: '10px', fontWeight: '400', color: '#555' }}>Subfiltros</span>
+                    <ListItemButton style={{padding: '0 16px'}} dense onClick={() => setFilterByResponsible(!filterByResponsible)}>
                         <ListItemIcon><Checkbox edge="start" checked={filterByResponsible} tabIndex={-1} disableRipple /></ListItemIcon>
-                        <ListItemText primary="Apenas responsáveis" primaryTypographyProps={{ style: { fontSize: '0.9rem', fontStyle: 'italic' } }} />
+                        <ListItemText primary="Recurso responsável pela tarefa" primaryTypographyProps={{ style: { fontSize: '0.8rem', marginLeft: '-20px' } }} />
                     </ListItemButton>
-                    <ListItemButton dense onClick={() => setFilterByRemoved(!filterByRemoved)}>
+                    <ListItemButton style={{borderBottom: '1px solid #ccc', padding: '0 16px', marginBottom: '5px'}} dense onClick={() => setFilterByRemoved(!filterByRemoved)}>
                         <ListItemIcon><Checkbox edge="start" checked={filterByRemoved} tabIndex={-1} disableRipple /></ListItemIcon>
-                        <ListItemText primary="Incluir retirados" primaryTypographyProps={{ style: { fontSize: '0.9rem', fontStyle: 'italic' } }} />
+                        <ListItemText primary="Recurso retirado da tarefa" primaryTypographyProps={{ style: { fontSize: '0.8rem', marginLeft: '-20px'} }} />
                     </ListItemButton>
                 </List>
                 <List dense component="div" role="list" sx={{ overflow: 'auto', pt: 0 }}>
+                <span style={{fontSize: '0.8rem', marginLeft: '10px', fontWeight: '400', color: '#555' }}>Filtrar recursos</span>
+
                     {allResources.filter(r => r.toLowerCase().includes(resourceSearch.toLowerCase())).map(resource => (
                         <ListItemButton key={resource} dense onClick={() => handleResourceToggle(resource)}>
                             <ListItemIcon><Checkbox edge="start" checked={selectedResources.indexOf(resource) !== -1} tabIndex={-1} disableRipple /></ListItemIcon>
-                            <ListItemText primary={resource} />
+                            <ListItemText primary={resource} style={{marginLeft: '-18px'}}/>
                         </ListItemButton>
                     ))}
                 </List>

@@ -108,6 +108,24 @@ app.post('/logout', (req, res) => {
   });
 
 /**
+ * @route GET /verify-token
+ * @description Verifica se o cookie de autenticação existe e é válido.
+ * Usado pelo frontend para validar a sessão do usuário.
+ */
+app.get('/verify-token', (req, res) => {
+    const token = req.cookies.authToken;
+
+    if (!token) {
+        // Se não há token, o usuário não está autenticado.
+        return res.status(401).json({ isAuthenticated: false, message: 'Token não encontrado.' });
+    }
+
+    // Se o token existe, consideramos a sessão válida (a validação real ocorre em cada chamada à API externa).
+    // Em uma implementação mais complexa, poderíamos decodificar o JWT aqui para verificar a expiração.
+    res.status(200).json({ isAuthenticated: true });
+});
+
+/**
  * Formata um objeto Date para uma string no formato 'YYYY-MM-DD'.
  * @param {Date} date O objeto Date a ser formatado.
  * @returns {string} A data formatada.
