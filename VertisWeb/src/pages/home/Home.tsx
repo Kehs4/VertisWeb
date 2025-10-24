@@ -13,7 +13,7 @@ const mainFunctionalities = [
     },
     {
         title: 'Gestão',
-        content: ['Dados seguros e organizados para melhor uma boa gestão e um ótimo atendimento.']
+        content: ['Dados seguros e organizados para uma boa gestão e um ótimo atendimento.']
     },
     {
         title: 'Agendamentos',
@@ -49,7 +49,7 @@ function Home() {
     return (
         <>
             <div className='header-vertis'>
-                <img src="/public/logo-white.png" alt="Logo Vertis" width={60} height={40} />
+                <img src="/public/logo-white.png" alt="Logo Vertis" width={80} />
 
                 <div className='header-menu'>
                     <nav className='header-nav'>
@@ -97,12 +97,6 @@ function Home() {
                     </div>
                 </div>
             </main>
-
-            <footer className='section-analytics'>
-                <div>
-
-                </div>
-            </footer>
         </>
     )
 }

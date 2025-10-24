@@ -3,7 +3,7 @@
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 30px;
   justify-content: center;
   align-items: center;
   background-color: #151515;
@@ -41,24 +41,23 @@
   border-top-right-radius: 15px;
   border-top-left-radius: 15px;
   text-transform: uppercase;
-  font-size: 0.4rem;
+  font-size: 0.42rem;
   letter-spacing: -0.8px;
   padding: 18px;
-  margin-bottom: -15px;
+  margin-bottom: -35px;
   font-weight: 600;
   box-shadow: 2px 3px 5px 0px rgba(151, 151, 151, 0.37);
 }
 
 .login-form-container {
   padding: 35px 40px;
-
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
   width: 350px;
-  gap: 5px;
+  gap: 10px;
 }
 
 .login-label {
@@ -66,20 +65,20 @@
   font-weight: 300;
   color: rgba(0, 0, 0, 0.815);
   font-size: 0.9rem;
+  margin-top: 15px;
   letter-spacing: -0.5px;
-  text-shadow: 0px 1px 1px rgba(102, 102, 102, 0.068);
+  text-shadow: 0px 1px 4px rgba(102, 102, 102, 0.068);
 }
 
 .login-input {
   padding: 12px 8px;
-  border: 1px solid #c4c4c4e8;
+  border: 1px solid #c4c4c493;
   border-radius: 12px;
   color: black;
   outline: none;
   font-size: 0.9rem;
   width: 100%;
-  margin-bottom: 20px;
-
+  box-shadow: 0 1px 5px 1px rgba(189, 189, 189, 0.226);
 }
 
 .login-input::placeholder {
@@ -92,15 +91,11 @@
   transition: all 0.5s;
 }
 
-.login-options {
-  margin-top: -20px;
-}
-
 .login-forgot-password {
   text-align: right;
   font-size: 0.8rem;
-  font-weight: 300;
-  color: #fd5d00;
+  font-weight: 400;
+  color: #fd5d00e1;
   text-decoration: none;
   text-shadow: 0px 1px 1px rgba(68, 68, 68, 0.062);
 
@@ -111,8 +106,8 @@
 }
 
 .login-remember-me {
-  color: #8d8d8d;
-  font-weight: 300;
+  color: #464646c2;
+  font-weight: 400;
   text-decoration: none;
   font-size: 0.8rem;
   text-shadow: 0px 1px 1px rgba(77, 73, 73, 0.068);
@@ -120,6 +115,7 @@
 
 .login-button {
   width: 100%;
+  gap: 10px;
   padding: 12px;
   border-radius: 25px;
   background-color: black;
@@ -128,14 +124,38 @@
   font-size: 1rem;
   font-weight: 500;
   letter-spacing: -0.9px;
+  transition: background-color 0.4s, color 0.4s;
+  display: flex; /* Adicionado para centralizar o conteúdo */
+  align-items: center; /* Adicionado para centralizar verticalmente */
+  justify-content: center; /* Adicionado para centralizar horizontalmente */
   cursor: pointer;
   box-shadow: 0 1px 5px 2px rgba(95, 95, 95, 0.199);
-  margin-top: 40px;
+  margin-top: 20px;
 }
 
 .login-button:hover {
   background-color: white;
   border: 1px solid black;
   color: black;
-  transition: background-color 0.3s;
+}
+
+/* Estilos para o botão de mostrar/ocultar senha */
+.password-toggle-icon {
+  width: 25px;
+  height: 25px;
+  position: absolute;
+  left: 90%;
+  top: 50%; /* Posiciona o topo do ícone no meio do pai */
+  transform: translateY(-50%); /* Ajusta para centralizar verticalmente */
+  z-index: 2; /* Garante que o botão esteja acima do input e seja clicável */
+  color: #888; /* Garante a cor do ícone */
+  background: none; /* Garante que não tenha fundo */
+  cursor: pointer;
+  border: none;
+}
+
+.password-toggle-icon svg {
+  margin: -12px;
+  width: 22px;
+
 }

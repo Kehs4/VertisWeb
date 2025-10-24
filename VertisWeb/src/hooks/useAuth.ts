@@ -14,8 +14,8 @@ export const useAuth = () => {
         setIsAuthenticated(false);
         // Opcional: fazer uma chamada à API para invalidar o cookie no backend
         fetch('/api/logout', { method: 'POST' });
-        // Redireciona para a página de login
-        window.location.href = '/login';
+        // Redireciona para a página de home
+        window.location.href = '/';
     }, []);
 
     useEffect(() => {

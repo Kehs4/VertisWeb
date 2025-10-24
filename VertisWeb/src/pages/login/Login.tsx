@@ -4,6 +4,9 @@ import './Login.css'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import LoginIcon from '@mui/icons-material/Login';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -54,23 +57,26 @@ function Login() {
           <form className='login-form-container' onSubmit={VertisLogin}>
             <div className='login-container'>
 
-
               <div className='login-form'>
                 <label htmlFor="user" className='login-label'>Usuário</label>
-                <input
-                  type="text"
-                  name="user"
-                  id="user"
-                  className='login-input'
-                  placeholder='Digite seu usuário..'
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                />
+                <div className="input-with-icon">
+                  <PersonOutlineIcon className="input-icon" />
+                  <input
+                    type="text"
+                    name="user"
+                    id="user"
+                    className='login-input'
+                    placeholder='Digite seu usuário..'
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                  />
+                </div>
               </div>
 
-              <div className='login-form' style={{ position: 'relative' }}>
+              <div className='login-form'>
                 <label htmlFor="password" className='login-label'>Senha</label>
-                <div className='login-password-container' style={{ display: 'flex', alignItems: 'center' }}>
+                <div className="input-with-icon password-input-wrapper">
+                  <LockOutlinedIcon className="input-icon" />
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
@@ -80,33 +86,26 @@ function Login() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                   />
-                  <span
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      marginLeft: '-30px',
-                      cursor: 'pointer',
-                      color: 'white',
-                      position: 'relative',
-                      zIndex: 2
-                    }}
-                  >
-                    {showPassword ? <VisibilityIcon className='login-password-icon' style={{ width: '18px', height: '18px', top: '-19px', position: 'absolute', right: '-15px', color: 'rgb(78, 78, 78)', cursor: 'pointer' }} />
-                      : <VisibilityOffIcon className='login-password-icon' style={{ width: '18px', height: '18px', top: '-19px', position: 'absolute', right: '-15px', color: 'rgb(78, 78, 78)', cursor: 'pointer' }} />}
-                  </span>
+                  <button type="button" className="password-toggle-icon" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                  </button>
                 </div>
               </div>
             </div>
-            <div className='login-options' style={{ display: 'flex', marginBottom: '2px', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className='login-options' style={{ display: 'flex', marginBottom: '2px', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #ccc', paddingTop: '20px'}}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <input type="checkbox" name="remember" id="remember" className='login-checkbox' />
-                <label htmlFor="remember" className='login-remember-me'>Manter-me conectado</label>
+                <label htmlFor="remember" className='login-remember-me'>Mantenha-me conectado(a)</label>
               </div>
               <div>
-                <a href="#" className='login-forgot-password'>Esqueci minha senha</a>
+                <a href="#" className='login-forgot-password'>Esqueceu a senha?</a>
               </div>
             </div>
             {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
-            <button type='submit' className='login-button'>Entrar</button>
+            <button type='submit' className='login-button'>
+              <LoginIcon />
+              Entrar
+            </button>
           </form>
         </div>
       </div>
