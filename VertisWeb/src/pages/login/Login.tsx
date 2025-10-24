@@ -13,7 +13,7 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [modalLogged, setModalLogged] = useState(false);
+  const [modalLogged, setModalLogged] = useState(true);
   const navigate = useNavigate();
 
   async function VertisLogin(e: React.FormEvent) {
@@ -44,7 +44,7 @@ function Login() {
           navigate('/dashboard');
         }, 2000);
       } else {
-        setError('Usuário ou senha incorretos.');
+        setError(error || 'Erro ao conectar. Tente novamente.');
       }
     } catch (error) {
       setError('Erro ao conectar. Tente novamente.');
@@ -107,7 +107,7 @@ function Login() {
                 <a href="#" className='login-forgot-password'>Esqueceu a senha?</a>
               </div>
             </div>
-            {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+            {error && <div style={{ color: 'red', marginBottom: '10px', fontSize: '14px', textAlign: 'center', marginTop: '10px'}}>{error}</div>}
             <button type='submit' className='login-button'>
               <LoginIcon />
               Entrar
@@ -124,6 +124,16 @@ function Login() {
             </div>
             <div className='logged-body'>
               <span>Em breve você será redirecionado para o sistema.</span>
+
+              <div className="paw-animation-container">
+                <div className="paw"></div>
+                <div className="paw"></div>
+                <div className="paw"></div>
+                <div className="paw"></div>
+                <div className="paw"></div>
+                <div className="paw"></div>
+                <div className="paw"></div>
+              </div>
             </div>
           </div>
         </div>

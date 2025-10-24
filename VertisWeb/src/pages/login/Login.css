@@ -201,8 +201,53 @@
   color: #555;
 }
 
+/* --- Animação de Patinhas --- */
+.paw-animation-container {
+  position: relative;
+  height: 60px; /* Altura da área da animação */
+  margin-top: 30px;
+}
+
+.paw {
+  width: 15px; /* Aumenta o corpo da pata */
+  height: 15px; /* Aumenta o corpo da pata */
+  background-color: #a7a7a7;
+  border-top-left-radius: 20px;
+  border-bottom-right-radius: 27px;
+  border-bottom-left-radius: 27px;
+  border-top-right-radius: 33px;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  /* Ajusta o left para centralizar a animação no container maior */
+  /* left: 50%; */
+  animation-name: walk;
+  opacity: 0;
+  animation: walk 2.5s linear infinite;
+  /* Usamos box-shadow para criar os 3 "dedos" da patinha */
+  box-shadow: 
+    9px -8px 0 -4px #bdbdbd, /* Dedo esquerdo (offset x, offset y, blur, spread, color) */
+    13px 0px 0 -3.7px #bdbdbd,   /* Dedo do meio */
+    9px 8px 0 -4px #bdbdbd;  /* Dedo direito */
+
+}
+
+/* Animação de caminhada */
+@keyframes walk {
+  0%, 100% { opacity: 0; }
+  15%, 10% { opacity: 1; }
+}
+
+/* Aplica a animação com atrasos diferentes para cada patinha */
+.paw:nth-child(1) { left: 20%; animation-delay: 0s; }
+.paw:nth-child(2) { left: 30%; top: 4px; animation-delay: 0.3s; }
+.paw:nth-child(3) { left: 40%; animation-delay: 0.6s; }
+.paw:nth-child(4) { left: 50%; top: 9px; animation-delay: 0.9s; }
+.paw:nth-child(5) { left: 60%; animation-delay: 1.2s; }
+.paw:nth-child(6) { left: 70%; top: 5px; animation-delay: 1.5s; }
+.paw:nth-child(7) { left: 80%; animation-delay: 1.8s; }
+
 .password-toggle-icon svg {
   margin: -12px;
   width: 22px;
-
 }
