@@ -13,6 +13,7 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [modalLogged, setModalLogged] = useState(false);
   const navigate = useNavigate();
 
   async function VertisLogin(e: React.FormEvent) {
@@ -33,10 +34,15 @@ function Login() {
       });
 
       if (response.ok) {
+        setModalLogged(true);
+        
         localStorage.setItem('isAuthenticated', 'true'); // Salva um sinal de autenticação
         const data = await response.json();
         localStorage.setItem('userName', data.name); // Salva o nome do usuário
-        navigate('/dashboard');
+        // Aguarda 2 segundos para mostrar o modal antes de redirecionar
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
       } else {
         setError('Usuário ou senha incorretos.');
       }
@@ -109,6 +115,19 @@ function Login() {
           </form>
         </div>
       </div>
+
+      {modalLogged && (
+        <div className='logged-modal'>
+          <div className='logged-content'>
+            <div className='logged-header'>
+              <h1>Login realizado!</h1>
+            </div>
+            <div className='logged-body'>
+              <span>Em breve você será redirecionado para o sistema.</span>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

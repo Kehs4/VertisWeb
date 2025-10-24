@@ -159,3 +159,50 @@
   width: 22px;
 
 }
+
+/* Estilos para o modal de login bem-sucedido */
+.logged-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.logged-content {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  overflow: hidden; /* Para respeitar o border-radius nos filhos */
+}
+
+.logged-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.7rem;
+  background: linear-gradient(90deg, #FF6600 0%, #ff9100 100%);
+  color: white;
+  padding: 15px;
+}
+
+.logged-body {
+  padding: 30px 20px;
+  color: #555;
+}
+
+.password-toggle-icon svg {
+  margin: -12px;
+  width: 22px;
+
+}
