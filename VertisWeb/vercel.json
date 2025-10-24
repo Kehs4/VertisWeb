@@ -6,6 +6,7 @@
       "use": "@vercel/node"
     },
     {
+      "comment": "Este build executa 'npm run build' e serve o diretório 'dist'",
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
@@ -13,9 +14,14 @@
   ],
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/server.js"
+      "comment": "Redireciona chamadas de API para a função serverless, passando o caminho como query 'path'",
+      "source": "/api/:path*",
+      "destination": "/api/server.js?path=:path*"
     },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { 
+      "comment": "Fallback para o SPA: qualquer outra rota serve o index.html",
+      "source": "/(.*)", 
+      "destination": "/index.html" 
+    }
   ]
 }

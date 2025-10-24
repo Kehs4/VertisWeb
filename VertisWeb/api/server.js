@@ -30,6 +30,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser()); // Adiciona o middleware para processar cookies
 app.use(cors());
+
+// Middleware para reescrever a URL com base no parâmetro 'path' da Vercel
+// Isso garante que o roteamento do Express funcione sem precisar prefixar todas as rotas com /api
+app.use((req, res, next) => {
+  if (req.query.path) {
+    req.url = `/${req.query.path}`;
+  }
+  next();
+});
+
  
 app.post('/login', async (req, res) => { // endpoint de login que retorna o token
     try {
