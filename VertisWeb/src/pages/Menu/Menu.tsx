@@ -176,7 +176,7 @@ function Menu({ isOpen, onClose }: MenuProps) {
             <nav className={`sidebar-container ${isOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
                 <div className="sidebar-header">
                     <Link to={'/dashboard'} className='sidebar-logo-link' onClick={onClose}>
-                        <img src="/public/logo-white.png" alt="Vertis Logo" className="sidebar-logo" />
+                        <img src="/logo-white.png" alt="Vertis Logo" className="sidebar-logo" />
                     </Link>
                 </div>
                 <ul className='sidebar-menu'>

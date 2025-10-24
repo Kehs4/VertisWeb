@@ -15,7 +15,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                     <MenuIcon />
                 </button>
                 <Link to={'/dashboard'} className='header-logo-link'>
-                    <img src="/public/logo-white.png" alt="Vertis Logo" className="header-logo" />
+                    <img src="/logo-white.png" alt="Vertis Logo" className="header-logo" />
                 </Link>
             </div>
             {/* Você pode adicionar outros conteúdos ao cabeçalho aqui, como informações do usuário, notificações, etc. */}
