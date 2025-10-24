@@ -13,7 +13,7 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [modalLogged, setModalLogged] = useState(true);
+  const [modalLogged, setModalLogged] = useState(false);
   const navigate = useNavigate();
 
   async function VertisLogin(e: React.FormEvent) {
@@ -123,7 +123,7 @@ function Login() {
               <h1>Login realizado!</h1>
             </div>
             <div className='logged-body'>
-              <span>Em breve você será redirecionado para o sistema.</span>
+              <span>Em breve você será redirecionado(a) para o sistema.</span>
 
               <div className="paw-animation-container">
                 <div className="paw"></div>
